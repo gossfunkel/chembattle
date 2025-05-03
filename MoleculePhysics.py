@@ -28,6 +28,7 @@ def CreateMolecule(location, velocity, atom, player=0):
 	atom.parentMol = newIon
 	# add the molecule to the numpy array of all molecules
 	AddMolecule(newIon, player)
+	print(newIon.world_position)
 	# return the molecule object for any further assignments etc
 	return newIon
 
@@ -46,10 +47,10 @@ def SlideTo(pops, fpos, lerp):
 	return(new_follow)
 
 def React(mola, molb):
-	mola.velocity = -mola.velocity
-	molb.velocity = -molb.velocity
+	mola.collision = True
+	molb.collision = True
 
-class Molecule(Draggable):
+class Molecule(Entity):
 	#def drag(self):
 	#	self.dragging = True
 	#	for cld in self.children:
@@ -58,14 +59,14 @@ class Molecule(Draggable):
 	def __init__(self, position, velocity, *members):
 		#if (len(members) == 0):
 		#	return None
-		super().__init__(position=position)
+		super().__init__(world_position=position,collider='sphere',)
 		#self.npposition = np.array([position])
 		#self.world_position  = Vec3(position[0],position[1],position[2])
 		#print(position)
 		self.velocity     = velocity
 		#self.dragging     = False
-		self.children     = members
 		self.visible_self = False
+		self.children     = members
 		#self.collider    = 'sphere'
 		self.mass 	      = 0
 		self.temp 		  = 0
@@ -84,6 +85,11 @@ class Molecule(Draggable):
 		#self.prforce  = np.zeros(3)
 
 	def update(self):
+		molcoll = self.intersects()
+		if molcoll.hit:
+			if molcoll.entity in GetMolecules():
+				React(self, molcoll.entity)
+				print(molcoll.entity)
 		self.movement()
 
 	def movement(self):
@@ -99,7 +105,8 @@ class Molecule(Draggable):
 		#print(mol.position)
 		#print(mol.velocity[0])
 		for chi in self.children:
-			self.velocity += chi.velocity
+			self.velocity = SlideTo(chi.velocity, self.velocity, 30)
+			chi.world_position = self.world_position
 		#self.velocity += chi in self.children
 
 		self.world_position += self.velocity * time.dt
@@ -107,7 +114,7 @@ class Molecule(Draggable):
 		#self.rotate(rotationfactor)
 		self.wobblevec = Vec3(uniform(-self.wobble,self.wobble),uniform(-self.wobble,self.wobble),uniform(-self.wobble,self.wobble))
 		#self.position = SlideTo(self.position + self.velocity, self.position, 15)
-		self.position = SlideTo(self.position + self.wobblevec, self.position, 15)
+		self.world_position = SlideTo(self.world_position + self.wobblevec, self.world_position, 15)
 		#print(self.position)
 		#print(self.velocity)
 		#print(self.wobble)

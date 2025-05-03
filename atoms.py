@@ -11,7 +11,7 @@ from random import randint
 
 def CreateAtom(atom, player=0):
 	ion   = 0
-	veloc = Vec3(1,1,1)
+	veloc = Vec3(0.6,0,0.6)
 	if (player == 0):
 		player = 1
 		locat = Vec3(-30,-12,-20)
@@ -89,7 +89,7 @@ class Electron(Entity):
 class Atom(Entity):
 	def __init__(self, position, scale=(1,1,1), ionisation=0, velocity=np.zeros(3), uri="default.png", temp=0.0, electrons=[]):
 		#super().__init__(billboard=True)
-		super().__init__(model='sphere',collider='sphere')
+		super().__init__(model='sphere',visible=True)
 
 		#self.parent     = scene
 		#self.origin     = position

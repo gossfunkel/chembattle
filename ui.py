@@ -27,8 +27,19 @@ def GetUIObjects():
 #def GetAllSprites():
 #	return all_sprites
 
-def cameraFollow():
-	camera.position
+class CameraManager():
+	def __init__(self):
+		self.cameraFollowing = False
+
+	def toggleFollow(self):
+		self.cameraFollowing = not self.cameraFollowing
+		if self.cameraFollowing:
+			print("camera is following atom")
+
+	def isFollowing(self):
+		return self.cameraFollowing
+
+cm = CameraManager()
 
 def toggleMenu():
 	# expand menu if closed, close menu if open
@@ -73,8 +84,8 @@ class CustomButton(Button):
 
 class FollowButton(CustomButton):
 	def __init__(self):
-		super().__init__((-6, 3, 0), "FOLLOW")
-		self.on_click = cameraFollow
+		super().__init__((-6, 4.2, 0), "FOLLOW")
+		self.on_click = cm.toggleFollow
 	
 class MenuButton(CustomButton):
 	def __init__(self):
