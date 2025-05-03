@@ -2,7 +2,9 @@ from ursina import *
 from ursina.prefabs.first_person_controller import *
 import sys
 import numpy as np
+import MoleculePhysics as mp
 import atoms
+import ui
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 1080, 600
 app = Ursina(size=(WINDOW_WIDTH,WINDOW_HEIGHT))
@@ -64,6 +66,15 @@ p2nucleus = Entity(origin=(-4,2.5,-3),
 					collider='sphere',
 					scale=10)
 
+# INITIALISE THE UI
+hydrobutt = ui.HydrogenButton()
+carbobutt = ui.CarbonButton()
+nitrobutt = ui.NitrogenButton()
+oxybutt   = ui.OxygenButton()
+menbutt   = ui.MenuButton()
+quitbutt  = ui.QuitButton()
+#uiobjects.append()
+
 camera.position = (0,150,0)
 camera.rotation_x = 90
 # this means
@@ -90,16 +101,12 @@ def switchCameraPos():
 
 def input(self):
 	if (held_keys['h']):
-		print("adding Hydrogen")
 		atoms.CreateAtom('Hydrogen')
 	if (held_keys['j']):
-		print("adding Carbon")
 		atoms.CreateAtom('Carbon')
 	if (held_keys['k']):
-		print("adding Oxygen")
 		atoms.CreateAtom('Oxygen')
 	if (held_keys['l']):
-		print("adding Nitrogen")
 		atoms.CreateAtom('Nitrogen')
 
 	if (held_keys['tab']):
@@ -115,6 +122,13 @@ def update():
 	#camera.position_y += 20 * (held_keys['c'] - held_keys['v']) * time.dt
 	camera.rotation_x += 20 * (held_keys['q'] - held_keys['e']) * time.dt # x rotation - q & e
 	camera.rotation_y += 20 * (held_keys['v'] - held_keys['c']) * time.dt # y rotation - c & v
+
+	mols = mp.GetMolecules()
+	for mol in mols:
+		molcoll = mol.intersects()
+		if molcoll.hit:
+			if molcoll.entity in mols:
+				mp.React(mol, molcoll.entity)
 
 if __name__ == "__main__":
 	app.run()

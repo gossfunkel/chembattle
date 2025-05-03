@@ -27,6 +27,9 @@ def GetUIObjects():
 #def GetAllSprites():
 #	return all_sprites
 
+def cameraFollow():
+	camera.position
+
 def toggleMenu():
 	# expand menu if closed, close menu if open
 	#self.visible = (menuOpenState or not self.menuItem)
@@ -35,25 +38,29 @@ def toggleMenu():
 	menuOpenState = not menuOpenState
 	for butt in menubuttons:
 		butt.disabled = not menuOpenState
+		butt.visible = menuOpenState
 	#if menuOpenState: menubuttons.draw(screen) #(menuOpenState or not self.menuItem)
 	#else: menubuttons.clear(screen,'#020015')
 
 def quitButt():
 	# close game when clicked, if menu is open
 	global menuOpenState
-	#if menuOpenState: 
-		#quit()
-		#sys.exit()
+	if menuOpenState: 
+		quit()
+		sys.exit()
 
 def createMol(atom):
 	mp.CreateMolecule([0,0,0], atom.velocity, atom)
+
+def createAt():
+	global spawn
+	atoms.CreateAtom(spawn)
 
 class CustomButton(Button):
 	def __init__(self, position, label, disabled=False, menuItem=False):
 		super().__init__(parent=camera.ui,
 						 text=label,
 						 origin=position,
-						 disabled=disabled,
 						 billboard=True,
 						 highlight_color=self.color.tint(.1),
 						 pressed_color=self.color.tint(-.2),
@@ -63,6 +70,11 @@ class CustomButton(Button):
 		#AddUIObj(self)
 		if menuItem: 
 			menubuttons.append(self)
+
+class FollowButton(CustomButton):
+	def __init__(self):
+		super().__init__((-6, 3, 0), "FOLLOW")
+		self.on_click = cameraFollow
 	
 class MenuButton(CustomButton):
 	def __init__(self):
@@ -73,13 +85,15 @@ class MenuButton(CustomButton):
 class QuitButton(CustomButton):
 	def __init__(self):
 		super().__init__((-8, 3, 0), "QUIT", menuItem=True)
+		self.visible = False
+		self.disabled = True
 		self.on_click = quitButt
 		self.tooltip = Tooltip("CAUTION: SAVING NOT IMPLEMENTED. ALL WILL BE LOST")
 
 class AtomButton(CustomButton):
 	def __init__(self):
 		super().__init__((self.xco, self.yco, 0), ("Add\n" + self.nam))
-		self.on_click = Func(atoms.CreateAtom(self.nam))
+		self.on_click = createAt
 
 class HydrogenButton(AtomButton):
 	def __init__(self):
@@ -89,6 +103,8 @@ class HydrogenButton(AtomButton):
 		self.nam = "Hydrogen"
 		super().__init__()
 		self.tooltip = Tooltip("Spawn a Hydrogen atom")
+		global spawn 
+		spawn = 'Hydrogen'
 
 
 class CarbonButton(AtomButton):
@@ -114,12 +130,3 @@ class OxygenButton(AtomButton):
 		self.nam   = "Oxygen"
 		super().__init__()
 		self.tooltip = Tooltip("Spawn an Oxygen atom")
-
-# INITIALISE THE UI
-#hydrobutt = HydrogenButton()
-#carbobutt = CarbonButton()
-#nitrobutt = NitrogenButton()
-#oxybutt   = OxygenButton()
-#menbutt   = MenuButton()
-#quitbutt  = QuitButton()
-#uiobjects.append()

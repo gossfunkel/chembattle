@@ -11,7 +11,7 @@ from random import randint
 
 def CreateAtom(atom, player=0):
 	ion   = 0
-	veloc = Vec3(0,0,0)
+	veloc = Vec3(1,1,1)
 	if (player == 0):
 		player = 1
 		locat = Vec3(-30,-12,-20)
@@ -24,7 +24,7 @@ def CreateAtom(atom, player=0):
 	elif (atom == 'Carbon'):
 		locat += Vec3(0,0,player*2)
 		newat = Carbon(locat, ion, veloc)
-		print(locat)
+		#print(locat)
 	elif (atom == 'Nitrogen'):
 		locat += Vec3(0,0,player*4)
 		newat = Nitrogen(locat, ion, veloc)
@@ -33,19 +33,20 @@ def CreateAtom(atom, player=0):
 		newat = Oxygen(locat, ion, veloc)
 	else: return None
 	
-	#mp.CreateMolecule(locat, veloc, newat, player)
+	newat.parent = mp.CreateMolecule(locat, np.zeros(3), newat, player)
+	print("adding " + atom)
 	return newat
 
 class Electron(Entity):
  	def __init__(self, position, binding, eshell=np.array([1.0,0.0,0.0]), spin=0):
- 		super().__init__(collides=False,model='sphere',scale=(0.1,0.1,0.1))#
+ 		super().__init__(collides=False,model='sphere',scale=(0.1,0.1,0.1))
  		# spin opposite electrons are on the opposite sides for now
  		if spin == 0: self.eshell = eshell
 	 	else: self.eshell = -eshell
  		#join('res',shells[eshell] + '.png')  # pick correct image using dictionary of energy shells
  		self.world_position = position + eshell
- 		print("pos")
- 		print(self.position)
+ 		#print("pos")
+ 		#print(self.position)
  		#print("eshell")
  		#print(eshell)
  		self.binding = binding
@@ -85,11 +86,12 @@ class Electron(Entity):
  			#self.x = np.cos(self.parent.x)*nrg*time.dt
  			#self.z = np.sin(self.parent.z)*nrg*time.dt
 
-class Atom(Draggable):
+class Atom(Entity):
 	def __init__(self, position, scale=(1,1,1), ionisation=0, velocity=np.zeros(3), uri="default.png", temp=0.0, electrons=[]):
-		super().__init__(billboard=True)
+		#super().__init__(billboard=True)
+		super().__init__(model='sphere',collider='sphere')
 
-		self.parent     = scene
+		#self.parent     = scene
 		#self.origin     = position
 		self.world_position   = position
 		self.ionisation = ionisation

@@ -1,0 +1,696 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"e",
+				"eshell"
+			],
+			[
+				"z",
+				"z"
+			],
+			[
+				"pos",
+				"position"
+			],
+			[
+				"rota",
+				"rotation_x"
+			],
+			[
+				"origin",
+				"origin_y"
+			],
+			[
+				"rotation",
+				"rotation_x"
+			],
+			[
+				"ro",
+				"rotationfactor"
+			],
+			[
+				"V",
+				"Vec3"
+			],
+			[
+				"Mol",
+				"MoleculeMovement"
+			],
+			[
+				"dr",
+				"dragstate"
+			],
+			[
+				"mous",
+				"mouseRay"
+			],
+			[
+				"at",
+				"atom"
+			],
+			[
+				"step",
+				"step_vec"
+			],
+			[
+				"self",
+				"self"
+			],
+			[
+				"ch",
+				"children"
+			],
+			[
+				"wor",
+				"world_position"
+			],
+			[
+				"po",
+				"position"
+			],
+			[
+				"Add",
+				"AddUIObj"
+			],
+			[
+				"onl",
+				"on_click"
+			],
+			[
+				"on",
+				"on_click"
+			],
+			[
+				"a",
+				"a"
+			],
+			[
+				"mol",
+				"mol"
+			],
+			[
+				"loc",
+				"location"
+			],
+			[
+				"y",
+				"ycoord"
+			],
+			[
+				"r",
+				"random"
+			],
+			[
+				"ge",
+				"get_frect"
+			],
+			[
+				"s",
+				"sprite"
+			],
+			[
+				"te",
+				"textSurfs"
+			],
+			[
+				"sp",
+				"sprite"
+			],
+			[
+				"men",
+				"menuOpenState"
+			],
+			[
+				"menu",
+				"menuItem"
+			],
+			[
+				"re",
+				"return"
+			],
+			[
+				"all",
+				"all_sprites"
+			],
+			[
+				"ui",
+				"uiobjects"
+			],
+			[
+				"__",
+				"__iter__"
+			],
+			[
+				"ve",
+				"Vector2"
+			],
+			[
+				"new",
+				"newAtom"
+			],
+			[
+				"wid",
+				"width"
+			],
+			[
+				"vec",
+				"vec"
+			],
+			[
+				"drag",
+				"dragstate"
+			],
+			[
+				"check",
+				"checkCollides"
+			],
+			[
+				"cl",
+				"cld"
+			],
+			[
+				"wi",
+				"width"
+			],
+			[
+				"get",
+				"get_pos"
+			],
+			[
+				"mo",
+				"mouse"
+			],
+			[
+				"ran",
+				"randint"
+			],
+			[
+				"dra",
+				"dragging"
+			],
+			[
+				"text",
+				"textSurf"
+			],
+			[
+				"Ji",
+				"JiggleBall"
+			],
+			[
+				"Dir",
+				"LayeredDirty"
+			],
+			[
+				"spr",
+				"sprite"
+			],
+			[
+				"u",
+				"update"
+			],
+			[
+				"rel",
+				"releasedr"
+			],
+			[
+				"atom",
+				"atomNum"
+			],
+			[
+				"mole",
+				"molecules"
+			],
+			[
+				"init",
+				"__init__"
+			],
+			[
+				"el",
+				"ele"
+			],
+			[
+				"lo",
+				"location"
+			],
+			[
+				"ini",
+				"__init__"
+			],
+			[
+				"q",
+				"QuitButton"
+			],
+			[
+				"tr",
+				"True"
+			],
+			[
+				"add",
+				"addHydro"
+			],
+			[
+				"pro",
+				"process"
+			],
+			[
+				"uio",
+				"uiobj"
+			],
+			[
+				"alre",
+				"alreadyPressed"
+			],
+			[
+				"mou",
+				"mousePos"
+			],
+			[
+				"fil",
+				"fill"
+			],
+			[
+				"fill",
+				"fillColours"
+			],
+			[
+				"Hyd",
+				"Hydrogen"
+			],
+			[
+				"Hydro",
+				"HydrogenButton"
+			],
+			[
+				"wo",
+				"wobble"
+			],
+			[
+				"foll",
+				"follow_vector"
+			],
+			[
+				"max",
+				"max_step"
+			],
+			[
+				"width",
+				"width"
+			],
+			[
+				"wob",
+				"wobbley"
+			],
+			[
+				"c",
+				"center"
+			],
+			[
+				"pr",
+				"print"
+			],
+			[
+				"WI",
+				"WINDOW_HEIGHT"
+			],
+			[
+				"TIN",
+				"TINYIB_RESPAGE"
+			],
+			[
+				"b",
+				"break"
+			],
+			[
+				"loca",
+				"locationOffset"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "main.py",
+			"settings":
+			{
+				"buffer_size": 3117,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "MoleculePhysics.py",
+			"settings":
+			{
+				"buffer_size": 4353,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "atoms.py",
+			"settings":
+			{
+				"buffer_size": 6678,
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "Packages/Python/Python.sublime-build",
+	"command_palette":
+	{
+		"height": 58.0,
+		"selected_items":
+		[
+			[
+				"install",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 400.0
+	},
+	"console":
+	{
+		"height": 125.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/COMMIT_EDITMSG",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/ui.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/atoms.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/MoleculePhysics.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/main.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/config",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/COMMIT_EDITMSG",
+		"/C/Users/gossfunkel/Documents/bookmarks_2_22_19.html",
+		"/C/Users/gossfunkel/Documents/1earth strike/info/meetings/international-NOmeeting-3feb2019.txt",
+		"/C/Users/gossfunkel/Documents/1earth strike/info/outreach/ES outreach lines.txt",
+		"/C/Users/gossfunkel/Documents/uni/uoe/access humanities/feedbackessayplan-DoesSandybetray.md",
+		"/C/Users/gossfunkel/Documents/uni/uoe/access social sciences/feedbackessayplan-politicalpowerconstituted.md",
+		"/G/crates-mixes/recordings/Katelate/-/01 festival applications 1hr v1.cue",
+		"/C/Users/gossfunkel/Documents/books/essays/feminism/sdb1975notallmen.md",
+		"/C/Users/gossfunkel/Downloads/Propellerhead Reason 5 Cracked Version/Reason 5/Read Me.rtf",
+		"/C/Users/gossfunkel/Downloads/dexed-0.6.1-win/dexed-0.6.1/README.md",
+		"/C/Users/gossfunkel/Desktop/gpg4usb-0.3.3/gpg4usb/bin/README.txt",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/psy/settings.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/ph/settings.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/ph/index.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/settings.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/inc/functions.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/ph/inc/functions.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/psy/inc/functions.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/psy/inc/html.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/ph/inc/html.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/inc/html.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/scraps/TinyIB-master/inc/html.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/scraps/TinyIB-master/imgboard.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/scraps/TinyIB-master/inc/database_mysql.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/scraps/TinyIB-master/inc/flatfile/flatfile.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/index.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/imgboard.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/res/0.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/psy/index.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/inc/defines.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/mu/inc/database_mysql.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/scraps/mu.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/thinkTank/index.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/settings-mu.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/settings-ph.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/imgboard-ph.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/psy.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/mu.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/ph.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/css/global.css",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/imgboard-psy.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/imgboard-mu.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/settings-psy.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/imgboard.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/index.html",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/settings.php",
+		"/C/Bitnami/wampstack-5.4.29-0/apache2/htdocs/chan/README.md",
+		"/C/Users/gossfunkel/code/relevant new music/wireframes/album.html",
+		"/C/Users/gossfunkel/code/relevant new music/wireframes/index.html",
+		"/C/Users/gossfunkel/Desktop/The Cure - 1982 - Pornography - V0.zip",
+		"/C/Users/gossfunkel/code/relevant new music/index.html",
+		"/C/Users/gossfunkel/Downloads/notification-menu/notification_menu/js/ttw-notification-menu.js",
+		"/C/Users/gossfunkel/workspace/tumblrPostPreview/background.js",
+		"/C/Users/gossfunkel/Downloads/KeepFitClub/KeepFitClub/src/keepfitclub/gui/MainWindow.java",
+		"/C/Users/gossfunkel/workspace/tumblrPostPreview/core.css",
+		"/C/Users/gossfunkel/workspace/tumblrPostPreview/manifest.json",
+		"/C/Users/gossfunkel/git/citadel3d/Citadel3D/res/shaders/basicFragment.fs",
+		"/E/citadel/Citadel/src/uk/co/gossfunkel/citadel/Game.java",
+		"/C/Users/gossfunkel/Downloads/Carousel-Files-COMPLETE/index.html",
+		"/C/Users/gossfunkel/Downloads/Carousel-Files-COMPLETE/carousel-markup-sample.html",
+		"/C/Users/gossfunkel/AppData/Roaming/Adobe/After Effects/11.0/Adobe After Effects 11.0 MC Prefs",
+		"/C/Users/gossfunkel/Documents/fyeah9847393959@gmail.com",
+		"/C/Users/gossfunkel/git/citadel3d/Citadel3D/res/shaders/basicVertex.vs",
+		"/C/Users/gossfunkel/Downloads/Carousel-Files-BEGIN/carousel-markup-sample.html",
+		"/C/Users/gossfunkel/code/gossfunkel.co.uk/html/index.html",
+		"/C/Users/gossfunkel/git/citadelserver/RubyCitadelServer/Launcher.rb",
+		"/C/Users/gossfunkel/code/gossfunkel.co.uk/html/game.html",
+		"/C/Users/gossfunkel/Downloads/tumbo/tumblr_feeds.html",
+		"/C/Users/gossfunkel/Downloads/tumbo/tumbo.min.js",
+		"/C/Users/gossfunkel/code/snippets/Lwjgl3dCamera.java",
+		"/C/Users/gossfunkel/code/snippets/3dCamera.java",
+		"/C/Users/gossfunkel/code/snippets/DiamondSquare.java",
+		"/C/Users/gossfunkel/AppData/Roaming/Sublime Text 2/Packages/Default/Preferences.sublime-settings",
+		"/C/Users/gossfunkel/Documents/uni/1013_collaborative/notes/mds/26marlecture9am.md",
+		"/C/Users/gossfunkel/Downloads/Ableton Live 9 Suite 9.0.1 (64 bit-R2R) [ChingLiu]/ChingLiu.Install.Notes.nfo",
+		"/C/Users/gossfunkel/code/!.3rdParty/otherPeople/shell/cshell.h",
+		"/C/Users/gossfunkel/code/fray/java/fray/client/Client0_1.java",
+		"/C/Users/gossfunkel/Documents/uni/1016_internet/coursework/stony site/www/res/design.css",
+		"/C/Users/gossfunkel/Documents/uni/1016_internet/coursework/stony site/www/index.html",
+		"/C/Users/gossfunkel/code/web/carnoustiechurch/res/design.css",
+		"/C/Users/gossfunkel/code/web/carnoustiechurch/index.html",
+		"/C/Users/gossfunkel/code/web/carnoustiechurch/design.css",
+		"/C/Users/gossfunkel/code/java/virtualPet/src/uk/co/gossfunkel/virtualpet/graphics/Sprite.java",
+		"/C/Users/gossfunkel/code/java/virtualPet/src/uk/co/gossfunkel/virtualpet/graphics/SpriteSheet.java",
+		"/C/Users/gossfunkel/code/java/virtualPet/src/uk/co/gossfunkel/virtualpet/VirtualPet.java",
+		"/C/Users/gossfunkel/code/java/virtualPet/src/uk/co/gossfunkel/virtualpet/graphics/Screen.java",
+		"/C/Users/gossfunkel/Music/!1AMusic/paternals/thefuck.txt",
+		"/C/Users/gossfunkel/Music/!1AMusic/paternals/gtr.txt",
+		"/C/Users/gossfunkel/Documents/uni/1016_internet/coursework/stony site/www/gallery.html",
+		"/C/Users/gossfunkel/Documents/uni/1016_internet/coursework/stony site/www/res/gallery.css"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"d",
+			"2",
+			"uniform",
+			"textSurf",
+			"1",
+			"Molecule",
+			"fix",
+			"href=\"#",
+			"fixLinksInRes",
+			"buildPage",
+			"body",
+			"res",
+			"pageHeader",
+			"managepage",
+			"buildPost",
+			"$res",
+			"TINYIB_RESPAGE",
+			"res",
+			"inc/html",
+			"inc",
+			"body",
+			"db",
+			"mysql",
+			"index",
+			"settings",
+			"imgboard",
+			"settings",
+			"ticker",
+			"\">\n",
+			"    ",
+			"   "
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 2,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "main.py",
+					"settings":
+					{
+						"buffer_size": 3117,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								354,
+								354
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "MoleculePhysics.py",
+					"settings":
+					{
+						"buffer_size": 4353,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4150,
+								4150
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1170.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "atoms.py",
+					"settings":
+					{
+						"buffer_size": 6678,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3120,
+								3120
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 100.0
+	},
+	"replace":
+	{
+		"height": 62.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true
+}

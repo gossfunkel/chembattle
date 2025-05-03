@@ -11,6 +11,7 @@ def AddMolecule(Molecule, player=0):
 	# add to correct axis of array for which player is adding the molecule
 	# default to player 1 (local) 
 	molecules.append(Molecule)
+	print(Molecule.children)
 
 def GetMolecules(player=0):
 	return molecules
@@ -44,6 +45,10 @@ def SlideTo(pops, fpos, lerp):
 	else: return(fpos)
 	return(new_follow)
 
+def React(mola, molb):
+	mola.velocity = -mola.velocity
+	molb.velocity = -molb.velocity
+
 class Molecule(Draggable):
 	#def drag(self):
 	#	self.dragging = True
@@ -67,6 +72,7 @@ class Molecule(Draggable):
 		self.rad 		  = 0
 		for mem in members:
 			# mass of molecule is the sum of the mass of its' constituent atoms' masses
+			self.velocity += mem.velocity
 			self.mass    += mem.mass
 			# temporary radius of molecule is the sum of its' constituent atoms' radii
 			self.rad     += mem.rad
@@ -92,8 +98,10 @@ class Molecule(Draggable):
 		#mol.velocity *= mol.accel
 		#print(mol.position)
 		#print(mol.velocity[0])
-		#for chi in children:
-		#	self.velocity += chi.velocity
+		for chi in self.children:
+			self.velocity += chi.velocity
+		#self.velocity += chi in self.children
+
 		self.world_position += self.velocity * time.dt
 		#rotationfactor = Vec3((np.pi * time.dt),(np.pi * time.dt),(np.pi * time.dt))
 		#self.rotate(rotationfactor)
