@@ -4,6 +4,22 @@
 		"selected_items":
 		[
 			[
+				"__",
+				"__init__"
+			],
+			[
+				"s",
+				"self"
+			],
+			[
+				"chi",
+				"children"
+			],
+			[
+				"hyd",
+				"Hydrogen"
+			],
+			[
 				"e",
 				"eshell"
 			],
@@ -108,10 +124,6 @@
 				"get_frect"
 			],
 			[
-				"s",
-				"sprite"
-			],
-			[
 				"te",
 				"textSurfs"
 			],
@@ -138,10 +150,6 @@
 			[
 				"ui",
 				"uiobjects"
-			],
-			[
-				"__",
-				"__iter__"
 			],
 			[
 				"ve",
@@ -335,7 +343,7 @@
 			"file": "main.py",
 			"settings":
 			{
-				"buffer_size": 3117,
+				"buffer_size": 3429,
 				"line_ending": "Windows"
 			}
 		},
@@ -343,7 +351,7 @@
 			"file": "MoleculePhysics.py",
 			"settings":
 			{
-				"buffer_size": 4353,
+				"buffer_size": 4545,
 				"line_ending": "Windows"
 			}
 		},
@@ -351,15 +359,40 @@
 			"file": "atoms.py",
 			"settings":
 			{
-				"buffer_size": 6678,
+				"buffer_size": 6723,
 				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "cards.py",
+			"settings":
+			{
+				"buffer_size": 35,
+				"line_ending": "Windows",
+				"name": "import atoms"
+			}
+		},
+		{
+			"file": "ui.py",
+			"settings":
+			{
+				"buffer_size": 3220,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": ".git/COMMIT_EDITMSG",
+			"settings":
+			{
+				"buffer_size": 540,
+				"line_ending": "Unix"
 			}
 		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
 	"command_palette":
 	{
-		"height": 58.0,
+		"height": 392.0,
 		"selected_items":
 		[
 			[
@@ -384,11 +417,14 @@
 	},
 	"file_history":
 	[
+		"/C/Users/gossfunkel/Documents/My Games/Kate/ursina-shaders-example.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/ursina-shaders-example",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/main.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/chembattle.sublime-project",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/COMMIT_EDITMSG",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/ui.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/atoms.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/MoleculePhysics.py",
-		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/main.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/config",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/COMMIT_EDITMSG",
 		"/C/Users/gossfunkel/Documents/bookmarks_2_22_19.html",
@@ -545,7 +581,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 5,
 			"sheets":
 			[
 				{
@@ -553,15 +589,15 @@
 					"file": "main.py",
 					"settings":
 					{
-						"buffer_size": 3117,
+						"buffer_size": 3429,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								354,
-								354
+								2499,
+								2499
 							]
 						],
 						"settings":
@@ -569,7 +605,7 @@
 							"syntax": "Packages/Python/Python.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1125.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -579,15 +615,15 @@
 					"file": "MoleculePhysics.py",
 					"settings":
 					{
-						"buffer_size": 4353,
+						"buffer_size": 4545,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4150,
-								4150
+								0,
+								4545
 							]
 						],
 						"settings":
@@ -596,7 +632,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 1170.0,
+						"translation.y": 195.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -606,21 +642,101 @@
 					"file": "atoms.py",
 					"settings":
 					{
-						"buffer_size": 6678,
+						"buffer_size": 6723,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3120,
-								3120
+								897,
+								897
 							]
 						],
 						"settings":
 						{
 							"syntax": "Packages/Python/Python.tmLanguage",
 							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 45.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "cards.py",
+					"settings":
+					{
+						"buffer_size": 35,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								35,
+								35
+							]
+						],
+						"settings":
+						{
+							"auto_name": "import atoms",
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "ui.py",
+					"settings":
+					{
+						"buffer_size": 3220,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								693,
+								693
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 135.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": ".git/COMMIT_EDITMSG",
+					"settings":
+					{
+						"buffer_size": 540,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
