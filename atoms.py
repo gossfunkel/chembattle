@@ -187,3 +187,6 @@ class Chlorine(Atom):
 		self.size    = (5.5,5.5,5.5)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffff00'
+
+#class Silicon(Atom):
+#	def __init__(self, position, )
