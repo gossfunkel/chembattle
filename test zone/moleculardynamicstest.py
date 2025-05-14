@@ -39,7 +39,9 @@ Temp0 						= 200 # temperature in Kelvin
 #Xin Bo Zhang et al. Fluid Phase Equilibria 262 (2007) 210–216 doi:10.1016/j.fluid.2007.09.005 
 #note that 1kJ/mol = 100 Dal A^2 ps^-2 (for energy conversions from table 1 in that paper)
 eps = [[3.24,14.2723],[14.2723,62.87]] # rough parameters for H
-sig = [[0.98,2.04845],[2.04845,3.1169]]
+sig = [[0.98,2.04845],[2.04845,3.1169]] 
+# not sure how these sigma relate to values for van der waals radii i found online - H 1.2, O 1.5 (in Angstroms)
+#  could be related to van der waals constant b values in cm^3/mol; H 26.61 O 31.83?
 #other constants
 Kr  = 148000.0  #spring potential is usually defined as U = (k/2)(r-r_0)^2. I included the /2 here
 bl  = 0.9611
