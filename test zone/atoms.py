@@ -94,9 +94,9 @@ class Atom(Entity):
 		self.temp       = temp
 		#self.model 		= 'atoms' blender is being stroppy so not yet
 		self.texture    = join('textures',uri)
- 		self.sig = 
- 		self.eps = 
- 		self.bl = 
+ 		self.sig 		= 1 # TODO Van der Waals radius
+ 		self.eps 		= 1 # TODO Energy well depth
+ 		self.bl 		= 1 # TODO Spring potential equilibrium radius
 		
 		# may have to switch this out and calculate based on exact charge of proton in eV
 		self.charge = self.atomNum + self.ionisation
@@ -121,6 +121,7 @@ class Hydrogen(Atom):
 		self.size    = (2.5,2.5,2.5)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#028cad'
+		self.sig	= 1.2
 
 class Lithium(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
@@ -130,6 +131,7 @@ class Lithium(Atom):
 		self.size    = (2.8,2.8,2.8)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffbbb0'
+		self.sig	= []
 
 class Carbon(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
