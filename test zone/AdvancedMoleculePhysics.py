@@ -80,12 +80,12 @@ def SlideTo(pops, fpos, lerp):
 # CAUTION : OBJECT CAN BE INDEXED AS AN ARRAY-LIKE DATA TYPE THROUGH THE __array__() FUNCTION, SO BE CAREFUL HOW YOU CALL IT!
 class Molecule(Entity):
 	def __init__(self, name, position, index, sig, eps, bl=[1], velocity=np.zeros(D), *chldatoms):
-		if (len(members) == 0):
+		self.n 			  = len(chldatoms)
+		if (self.n == 0):
 			return None
 		super().__init__(world_position=position)
 		self.name 		  = name
 		self.visible_self = False # molecule isn't visible; atoms are visible
-		self.n 			  = len(chldatoms)
 		if self.n > 0:
 			self.children = chldatoms
 		self.index 		  = index
@@ -146,33 +146,43 @@ class Molecule(Entity):
 			self.children[i].world_position = atomPositions[self.index, i, :]
 			self.children[i].velocity 		= atomVelocities[self.index, i, :]
 
+	def positions(self):
+		return [self.children[i].world_position for i in range(self.n)]
 
-def CreateMolecule(name, location, sig, eps, bl=[1], velocity=[np.zeros(D)], *atoms, player=0):
-	# initiate a molecule with parameters passed
-	index = len(molecules)+1
-	newIon = Molecule(name, *location, index, *sig, *eps, *velocity, *atoms)
-	#print(newIon.world_position)
+	def velocities(self):
+		return [self.children[i].velocity for i in range(self.n)]
 
-	# add to arrays and lists:
 
-	# 	molecules list
-	molecules.append(molec)
-
-	# 	rescale positions array
+def RescalePosArray(posits):
+	global atomPositions
+	# 	rescale atomPositions array
 	if len(atomPositions) > 0:
 		atmPos = atomPositions.tolist()
 	else: atmPos = []
-	for pos in location:
+	for pos in posits:
 		atmPos.append(pos)
 	atomPositions = np.array(atmPos)
 
+def RescaleVelArray(velocs):
+	global atomVelocities
 	# 	rescale velocities array
 	if len(atomVelocities) > 0:
 		atmVel = atomVelocities.tolist()
 	else: atmVel = []
-	for i in newIon.n:
-		atmVel.append(velocity)
+	for vel in velocs:
+		atmVel.append(vel)
 	atomVelocities = np.array(atmVel)
+
+def CreateMolecule(name, location, sig, eps, bl=[1], velocity=[np.zeros(D)], *atoms, player=0):
+	# initiate a molecule with parameters passed
+	index = len(molecules)+1
+	newIon = Molecule(name, location, index, sig, eps, velocity, *atoms)
+	#print(newIon.world_position)
+
+	# add to arrays and lists:
+	molecules.append(newIon)
+	RescalePosArray(newIon.positions())
+	RescaleVelArray(newIon.velocities())
 
 	# 	type, bond length & angle, sigma and epsilon value, mass, and charge arrays initialised in the molecule class
 	

@@ -94,9 +94,9 @@ class Atom(Entity):
 		self.temp       = temp
 		#self.model 		= 'atoms' blender is being stroppy so not yet
 		self.texture    = join('textures',uri)
- 		self.sig 		= 1 # TODO Van der Waals radius
- 		self.eps 		= 1 # TODO Energy well depth
- 		self.bl 		= 1 # TODO Spring potential equilibrium radius
+		self.sig		= 1 # TODO Van der Waals radius
+		self.eps		= 1 # TODO Energy well depth
+		self.bl			= 1 # TODO Spring potential equilibrium radius
 		
 		# may have to switch this out and calculate based on exact charge of proton in eV
 		self.charge = self.atomNum + self.ionisation
