@@ -4,7 +4,10 @@
 	React one of your molecules with a molecule in your opponent's cell.
 
 ### Fireman Sam
-	Intentionally extinguish a fire.
+	Manually extinguish a fire.
+
+### Firestarter
+	Manually cause combustion.
 
 ### Northern Lights
 	Emit a photon

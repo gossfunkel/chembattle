@@ -34,7 +34,7 @@ def CreateAtom(atom, player=0):
 		newat = Oxygen(locat, ion, veloc)
 	else: return None
 	
-	newat.parent = amp.CreateMolecule(newat.name, locat, newat.sig, newat.eps, newat.bl, newat, player)
+	#newat.parent = amp.CreateMolecule(newat.name, locat, newat.sig, newat.eps, newat.bl, newat, player) done in Molecule construction
 	print("adding " + atom)
 	return newat
 
