@@ -10,10 +10,11 @@
 - space station 
 - northern cave
 - deep sea sulfur vent
+- Venusian clouds
 
 ### hardcore
 - mars
-- deep space
+- deep space comet fragment 
 
 ## factors:
 - ambient temp 
