@@ -13,7 +13,8 @@
 - Venusian clouds
 
 ### hardcore
-- mars
+- Martian soil
+- Jovian storm
 - deep space comet fragment 
 
 ## factors:
