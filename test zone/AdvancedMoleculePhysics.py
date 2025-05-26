@@ -17,6 +17,19 @@ import numpy as np
 # e2 = Entity(x=1.5)
 # e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))
 # '''
+# ''' TODO : REWRITE ALL THE FUNCTIONS BELOW TO FIT THE NEW STRUCTURE OF THE ARRAYS
+#
+# This is the game's physics engine.
+# 
+# I am in the process of rewriting a basic Lennard-Jones, Spring Bonding and Electric molecular dynamics sim- notably, by 
+# setting a variable value to delta time, voiding any simulation usage of this code. I've integrated Ursina, and am bugfixing 
+# an issue that causes atoms to drift towards the origin when the coul() function is implemented/in use. 
+# 
+# In short, don't expect this code to run reliably. The rest of the game isn't built up to keep up with these changes yet; hence 
+# splitting this off into a new physics file to keep the original sandbox going in parallel. This physics engine and the multiplayer
+#  are the main core of the game engine for this project, and if I can get a working prototype without wasting the whole summer on 
+# it, I think it might be worth keeping up. 
+# '''
 
 # global values for simulation - can be modified in action
 n 			= 0 	# number of particles in sim
@@ -41,6 +54,8 @@ atomVelocities 	= [] 	# will be later initialised into a fast numpy array of vec
 molecules 		= []	# list storing molecule objects
 tp 				= [] 	# list tracking species of atom (element/isotope)
 a 				= [] 	# array for use by update function to index arrays of molecules' components' accelerations
+sigm 			= []	# array for population with sigma (balanced potential) LJP values for loaded atoms
+epsi 			= []	# array for population with epsilon (potential well) LJP values for loaded atoms
 #chrgs 			= [] 	# array for use by coul function to index all charges
 
 def GetMolecules(player=0):
@@ -101,11 +116,17 @@ class Molecule(Entity):
 			if i > 0:
 				# increment temporary position variable by bond length to give smoother load-in
 				position = position + np.array([1.0/bl**3,1.0/bl**3,0]) 
-			# initialise constants, absolute and relative positions, velocities, masses, charges, bonds, and angles
+				# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
+
+			# initialise atom type, constants, absolute and relative positions, velocities, masses, charges, bonds, and angles
 			childIndex 						= i + self.index 
 			self.children[i].index 			= childIndex
-			self.sig[childIndex] 			= sig[i] # constants must be passed to the constructor for every child
-			self.eps[childIndex] 		  	= eps[i] # 	they should be repeated in the appropriate order for array addresses
+			self.children[i].tpindex = AddType(atm.nam)
+			# TODO Sigma and Epsilon must be calculated for every combination of atom types
+			# either create a function to take a particle's atom data (dipole moment, formal charge, valence shell state) and calculate,
+			# 	or switch out LJP for another potential
+			sigm[self.children[i].tpindex], self.sig[childIndex] = sig[i] # constants must be passed to the constructor for every child
+			epsi[self.children[i].tpindex], self.eps[childIndex] = eps[i] # 	they should be repeated in the appropriate order for array addresses
 			# the set of atoms in the arrays start at the molecule index; the molecule indexes the first atom in the array
 			self.children[i].world_position = position
 			self.children[i].velocity 		= velocity
@@ -113,8 +134,6 @@ class Molecule(Entity):
 			chrg.append(self.children[i].charge)
 			# assign the atom's parentMol variable to the new molecule
 			self.children[i].parentMol = self
-			# load atom type
-			atm.tpindex = AddType(atm.nam)
 			#self.tp[].append(atm.tpindex)
 			#self.children[i].tpindex 	    = 0 # set in addmolecule
 			if i > 0:
@@ -185,25 +204,9 @@ def CreateMolecule(name, location, sig, eps, bl=[1], velocity=[np.zeros(D)], *at
 	RescaleVelArray(newIon.velocities())
 
 	# 	type, bond length & angle, sigma and epsilon value, mass, and charge arrays initialised in the molecule class
-	
 	# TODO: add to correct axis of arrays for which player is adding the molecule, default to player 1 (local) 
 	# return the molecule object for any further assignments etc
 	return newIon
-
-# TODO : REWRITE ALL THE FUNCTIONS BELOW TO FIT THE NEW STRUCTURE OF THE ARRAYS
-# 
-# I am in the process of changing the position and velocity arrays to have an extra dimension to index atoms by molecules,
-# and potentially an extra dimension to notate which player created the molecule for the purpose of gameplay effects.
-# All the below code is basically ripped off of @PolymerTheory on github and youtube, who did an amazing tutorial I followed.
-# However, as this was an 'introduction to programming molecular dynamics' video, the functions are not adapted for my 
-# purposes. I've adapted them a little already- notably, by setting a variable value to delta time, voiding any simulation
-# usage of this code. I've also integrated Ursina, and am bugfixing an issue that causes atoms to drift towards the origin
-# when the coul() function is implemented/in use. 
-# 
-# In short, don't expect this code to run with less than a few hours of work. The rest of the game isn't built up to keep
-# up with these changes yet; hence splitting this off into a new physics file to keep the original sandbox going in 
-# parallel. This physics engine and the multiplayer are the main core of the game engine for this project, and if I can
-# get a working prototype without wasting the whole summer on it, I think it might be worth keeping up. 
 
 #Gradient of Lennard-Jones potential
 def dLJp(r,i,sigl,epsl,bdln):
@@ -338,7 +341,7 @@ def UpdateMP():
 	j = 0
 	for mol in molecules:
 		# TODO calculate values in parallel
-		lj = -np.array([dLJp(r,i,mol.sig[i],mol.eps[i],mol.bl[i]) for i in range(mol.n)])
+		lj = -np.array([dLJp(r,i,sigm[mol.children[i].tpindex],epsi[mol.children[i].tpindex],mol.bl[i]) for i in range(mol.n)])
 		bep= -dBEpot(r,mol.covbonds) #Bonds
 		ba = -dBA(r,mol.covbonds) #Bond angles
 		ch = -np.array([coul(r,mol.children[i].index,mol.chrgs[i],molecules) for i in range(mol.n)]) #Coulomb
@@ -350,7 +353,8 @@ def UpdateMP():
 	# update velocity !!!					!!! POSSIBLE BUG
 	atomVelocities = v + time.dt * a # I'm not sure if using this new 2D accelleration array will work in this equation as-is
 	atomVelocities = rescaleT(atomVelocities,Temp0) # scale to temperature
-	atomPositions = atomPositions + atomVelocities * time.dt/50
+	atomPositions = atomPositions + atomVelocities * time.dt/50  # should be average of atomVelocities over time.dt
+	# split up calculation if dt gets too large to prevent accumulating errors
 
 	# boundaries
 	if BC == True:

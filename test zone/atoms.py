@@ -20,6 +20,8 @@ def CreateAtom(atom, player=0):
 		player = -1
 		locat = Vec3(30,-12,20)
 
+	print(str(atom))
+
 	if (atom == 'Hydrogen'):
 		newat = Hydrogen(locat, ion, veloc)
 	elif (atom == 'Carbon'):
@@ -87,11 +89,11 @@ class Atom(Entity):
 	def __init__(self, position, scale=(1,1,1), ionisation=0, velocity=np.zeros(3), uri="default.png", temp=0.0, electrons=[]):
 		#super().__init__(billboard=True)
 		super().__init__(model='sphere',visible=True)
-		self.world_position   = position
-		self.ionisation = ionisation
-		self.velocity   = velocity
-		self.rad        = self.scale[0]
-		self.temp       = temp
+		self.world_position = position
+		self.ionisation 	= ionisation
+		self.velocity   	= velocity
+		self.rad        	= self.scale[0]
+		self.temp       	= temp
 		#self.model 		= 'atoms' blender is being stroppy so not yet
 		self.texture    = join('textures',uri)
 		self.sig		= 1 # TODO Van der Waals radius

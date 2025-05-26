@@ -63,12 +63,12 @@ def quitButt():
 def createMol(atom):
 	amp.CreateMolecule([0,0,0], atom.velocity, atom)
 
-def createAt():
-	global spawn
-	atoms.CreateAtom(spawn)
+def createAt(*args):
+	print ("creating " + str(args))
+	createMol(atoms.CreateAtom(args))
 
 class CustomButton(Button):
-	def __init__(self, position, label, disabled=False, menuItem=False):
+	def __init__(self, position, label, arg=None, disabled=False, menuItem=False):
 		super().__init__(parent=camera.ui,
 						 text=label,
 						 origin=position,
@@ -103,41 +103,43 @@ class QuitButton(CustomButton):
 
 class AtomButton(CustomButton):
 	def __init__(self):
-		super().__init__((self.xco, self.yco, 0), ("Add\n" + self.nam))
+		super().__init__((self.xco, self.yco, 0), ("Add\n" + self.nam), self.nam)
 		self.on_click = createAt
+		#self.args = (self.nam,)
 
 class HydrogenButton(AtomButton):
 	def __init__(self):
 		#print("hydrobutt initialising")
 		self.xco = 7.8
 		self.yco = 4.2
-		self.nam = "Hydrogen"
+		self.nam = 'Hydrogen'
 		super().__init__()
 		self.tooltip = Tooltip("Spawn a Hydrogen atom")
-		global spawn 
-		spawn = 'Hydrogen'
-
+		#self.args = ('Hydrogen',)
 
 class CarbonButton(AtomButton):
 	def __init__(self):
 		self.xco = 6.5
 		self.yco = 4.2
-		self.nam   = "Carbon"
+		self.nam   = 'H20'
 		super().__init__()
-		self.tooltip = Tooltip("Spawn a Carbon atom")
+		self.tooltip = Tooltip("Spawn a water molecule")
+		#self.args = "H20"
 
 class NitrogenButton(AtomButton):
 	def __init__(self):
 		self.xco = 5.2
 		self.yco = 4.2
-		self.nam   = "Nitrogen"
+		self.nam   = 'Nitrogen'
 		super().__init__()
 		self.tooltip = Tooltip("Spawn a Nitrogen atom")
+		#self.args = "Nitrogen"
 
 class OxygenButton(AtomButton):
 	def __init__(self):
 		self.xco = 3.9
 		self.yco = 4.2
-		self.nam   = "Oxygen"
+		self.nam   = 'Oxygen'
 		super().__init__()
 		self.tooltip = Tooltip("Spawn an Oxygen atom")
+		#self.args = "Oxygen"

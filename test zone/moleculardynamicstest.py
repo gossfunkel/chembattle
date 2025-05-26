@@ -126,6 +126,14 @@ for i in range(int(n/3)):
 	angs.append([3*i,3*i+1,3*i+2,th0,Kth])
 angs=np.array(angs)
 
+atoms = []
+for x in range(n):
+	#if tp[n]:
+	#	col = color.red
+	#else:
+	#	col = color.blue
+	atoms.append(Atom(atomPositions[x, :],atomVelocities[x, :],x,color.random_color()))
+
 #Types in groups of three
 tp=[0]*n
 for i in range(int(n/3)):
@@ -146,14 +154,6 @@ for i in range(int(n/3)):
 #mass and charge arrays
 mm=np.array([mass[tp[j]] for j in range(n)])
 chrg=np.array([qs[tp[j]] for j in range(n)])
-
-atoms = []
-for x in range(n):
-	#if tp[n]:
-	#	col = color.red
-	#else:
-	#	col = color.blue
-	atoms.append(Atom(atomPositions[x, :],atomVelocities[x, :],x,color.random_color()))
 
 def reflectBC(r,v):
 	newv = 1.0 * v
