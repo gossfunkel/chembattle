@@ -1,6 +1,7 @@
 from ursina import *
 from chempy import Substance
 from random import uniform
+from random import randint
 import numpy as np
 import atoms as ats
 
@@ -35,6 +36,7 @@ import atoms as ats
 # global values for simulation - can be modified in action
 n 			= 0 	# number of particles in sim
 D 			= 3 # number of spacial dimensions
+setdt 		= 0.002
 LL 			= 20 	# scale of the simulation space
 L 			= np.zeros([D])+LL
 Temp0 		= 200 	# maintained temperature - TODO: CHANGE FOR PRESSURE (walls)
@@ -54,6 +56,7 @@ atomPositions 	= [] 	# will be later initialised into a fast numpy array of vect
 atomVelocities 	= [] 	# will be later initialised into a fast numpy array of vectors
 molecules 		= []	# list storing molecule objects
 tp 				= [] 	# list tracking species of atom (element/isotope)
+masses 			= [] 	# list tracking masses
 a 				= [] 	# array for use by update function to index arrays of molecules' components' accelerations
 sigm 			= []	# array for population with sigma (balanced potential) LJP values for loaded atoms
 epsi 			= []	# array for population with epsilon (potential well) LJP values for loaded atoms
@@ -95,55 +98,68 @@ def SlideTo(pops, fpos, lerp):
 
 # CAUTION : OBJECT CAN BE INDEXED AS AN ARRAY-LIKE DATA TYPE THROUGH THE __array__() FUNCTION, SO BE CAREFUL HOW YOU CALL IT!
 class Molecule(Entity):
-	def __init__(self, name, position, index, sig, eps, bl=[1], velocity=np.zeros(D), *chldatoms):
-		self.n 			  = len(chldatoms)
+	def __init__(self, nam, position, indx, sig, eps, *chldatoms, velocity=np.zeros(D), bl=[1], th0=109.47*np.pi/180.0):
+		self.n 			  = len(chldatoms[0])
 		if (self.n == 0):
 			return None
 		super().__init__(world_position=position)
-		self.name 		  = name
+		self.nam 		  = nam
 		self.visible_self = False # molecule isn't visible; atoms are visible
-		if self.n > 0:
-			self.children = chldatoms
-		self.index 		  = index
+		#if self.n > 0:
+		self.children = chldatoms[0]
+		print(self.children)
+		self.indx 		  = indx
 		# self.bl 		  = *bl 	# 0.9611 for water -- bond lengths stored in the arrays stored in covbonds
 		mm 				  = [] 	# array storing masses
 		chrg			  = [] 	# array storing charges
 		covbonds		  = {}	# dict tracking covalent bonds between atoms; indexed by particle index
 			# structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
 		angles 			  = {}	# dict tracking bond angles; indexed by particle index
-		self.sig 		  = {}
-		self.eps 		  = {}
+		self.sig 		  = sig
+		self.eps 		  = eps
+		positions 		  = []
+		velocities 		  = []
 		for i in range(self.n):
+			if i > len(bl)-1:
+				bl.append(bl[i-1])
 			if i > 0:
 				# increment temporary position variable by bond length to give smoother load-in
-				position = position + np.array([1.0/bl**3,1.0/bl**3,0]) 
+				position = position + np.array([1.0/bl[i]**3,1.0/bl[i]**3,0]) 
 				# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
-
+			positions.append(position)
+			print(position)
 			# initialise atom type, constants, absolute and relative positions, velocities, masses, charges, bonds, and angles
-			childIndex 						= i + self.index 
-			self.children[i].index 			= childIndex
-			self.children[i].tpindex = AddType(atm.nam)
+			childIndex 						= i + self.indx 
+			child = self.children[i]
+			print(child)
+			child.setIndx(childIndex)
+			child.setTpindex(AddType(child.nam))
 			# TODO Sigma and Epsilon must be calculated for every combination of atom types
 			# either create a function to take a particle's atom data (dipole moment, formal charge, valence shell state) and calculate,
 			# 	or switch out LJP for another potential
-			sigm[self.children[i].tpindex], self.sig[childIndex] = sig[i] # constants must be passed to the constructor for every child
-			epsi[self.children[i].tpindex], self.eps[childIndex] = eps[i] # 	they should be repeated in the appropriate order for array addresses
+			#self.sig.append(sig[i]) # constants must be passed to the constructor for every child
+			#self.eps.append(eps[i]) # 	they should be repeated in the appropriate order for array addresses
 			# the set of atoms in the arrays start at the molecule index; the molecule indexes the first atom in the array
-			self.children[i].world_position = position
-			self.children[i].velocity 		= velocity
-			mm.append(self.children[i].mass)
-			chrg.append(self.children[i].charge)
+			child.world_position = position
+			child.velocity 		 = velocity
+			velocities.append(velocity)
+			mm.append(child.mass)
+			chrg.append(child.charge)
 			# assign the atom's parentMol variable to the new molecule
-			self.children[i].parentMol = self
+			child.parentMol = self
 			#self.tp[].append(atm.tpindex)
 			#self.children[i].tpindex 	    = 0 # set in addmolecule
 			if i > 0:
-				covbonds[childIndex] = [i-1,i,self.bl,Kr]
+				covbonds[childIndex] = [i-1,i,bl[i],Kr]
 				if i < self.n:
-					angles.append([i-1,i,i+1,th0,Kth])
+					angles[child.tpindex] = [i-1,i,i+1,th0,Kth]
+		self.angles 		= angles
 		# now take these initial python lists and turn them into more efficient numpy arrays
-		self.mm 			= np.array(mm)
+		RescalePosArray(positions)
+		RescaleVelArray(velocities)
+		RescaleMassArray(mm)
 		self.charges 		= np.array(chrg)
+		self.bl 			= np.array(bl)
 		# bonds only required for molecules with more than 1 member
 		if self.n > 1:
 			self.covbonds 	= np.array(covbonds)
@@ -163,8 +179,8 @@ class Molecule(Entity):
 		#global atomVelocities
 		#global atomAccel
 		for i in range(self.n):
-			self.children[i].world_position = atomPositions[self.index, :]
-			self.children[i].velocity 		= atomVelocities[self.index, :]
+			self.children[i].world_position = atomPositions[self.indx, i, :]
+			self.children[i].velocity 		= atomVelocities[self.indx, i, :]
 
 	def positions(self):
 		return [self.children[i].world_position for i in range(self.n)]
@@ -173,7 +189,7 @@ class Molecule(Entity):
 		return [self.children[i].velocity for i in range(self.n)]
 
 
-def RescalePosArray(posits):
+def RescalePosArray(*posits):
 	global atomPositions
 	# 	rescale atomPositions array
 	if len(atomPositions) > 0:
@@ -182,8 +198,10 @@ def RescalePosArray(posits):
 	for pos in posits:
 		atmPos.append(pos)
 	atomPositions = np.array(atmPos)
+	n = len(atomPositions)
+	print(atomPositions)
 
-def RescaleVelArray(velocs):
+def RescaleVelArray(*velocs):
 	global atomVelocities
 	# 	rescale velocities array
 	if len(atomVelocities) > 0:
@@ -193,10 +211,27 @@ def RescaleVelArray(velocs):
 		atmVel.append(vel)
 	atomVelocities = np.array(atmVel)
 
-def CreateMolecule(name, location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
+def RescaleMassArray(*newmas):
+	global masses
+	# 	rescale velocities array
+	if len(masses) > 0:
+		masss = masses.tolist()
+	else: masss = []
+	for mas in newmas:
+		masss.append(mas)
+	masses = np.array(masss)
+
+def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
+	global n
 	#TODO: remake to receive atom data and generate appropriate values
 	newatts = []
 	atfact = ats.AtomFactory()
+	if (player == 0 and location == None):
+		player = 1
+		location = Vec3(-30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5))
+	elif (player == 1 and location == None):
+		player = -1
+		location = Vec3(30+randint(-5,5),-12+randint(-1,1),20+randint(-5,5))
 	for mol in mols:
 		newmol = Substance.from_formula(mol)
 		#print("newmol = " + newmol.)
@@ -207,28 +242,35 @@ def CreateMolecule(name, location, *mols, player=0, bl=[1], velocity=[np.zeros(D
 				newt = atfact.createAtom(elementindex,player)
 				newatts.append(newt)
 				print("created " + newt.nam)
-	sig 	= []
-	eps 	= []
-	for at in newatts:
-		for si in sigm:
-			sig.append(at.sig+si/2)
-		for ep in epsi:
-			eps.append((at.eps * ep)**.5)
-
+		sig 	= []
+		eps 	= []
+	if n > 0:
+		for at in newatts:
+			for si in sigm:
+				sig.append(at.sig+si/2)
+			for ep in epsi:
+				eps.append((at.eps * ep)**.5)
+	else:
+		for at in newatts:
+			sig.append(at.sig)
+			eps.append(at.eps)
 	# initiate a molecule with parameters passed
-	index = len(molecules)+1
-	newIon = Molecule(name, location, index, sig, eps, velocity, newatts)
-	#print(newIon.world_position)
-
-	# add to arrays and lists:
-	molecules.append(newIon)
-	RescalePosArray(newIon.positions())
-	RescaleVelArray(newIon.velocities())
-
+	for at in newatts:
+		index = len(molecules)+1
+		newIon = Molecule(at, location, index, sig, eps, newatts, velocity)
+		at = newIon
+		#print(newIon.world_position)
+		# add to arrays and lists:
+		molecules.append(newIon)
+		RescalePosArray(newIon.positions())
+		RescaleVelArray(newIon.velocities())
+		sigm = np.array(sig)
+		epsi = np.array(eps)
+		n += newIon.n
 	# 	type, bond length & angle, sigma and epsilon value, mass, and charge arrays initialised in the molecule class
 	# TODO: add to correct axis of arrays for which player is adding the molecule, default to player 1 (local) 
 	# return the molecule object for any further assignments etc
-	return newIon
+	return newatts
 
 #Gradient of Lennard-Jones potential
 def dLJp(r,i,sigl,epsl,bdln):
@@ -350,7 +392,7 @@ def coul(r,i,q0,mols):
 	#return np.zeros(D) disable charge force
 
 def rescaleT(v,T):
-	KE = 0.5 * sum(sum(mm*np.transpose(v*v)))
+	KE = 0.5 * sum(sum(masses*np.transpose(v*v)))
 	avKE = KE/n
 	Tnow = (2.0/3)*avKE/kb
 	lam=np.sqrt(T/Tnow)
@@ -359,31 +401,35 @@ def rescaleT(v,T):
 	return vnew
 
 def UpdateMP():
+	global atomPositions
+	global atomVelocities
 	#calculate acceleration from forces:
 	j = 0
-	for mol in molecules:
-		# TODO calculate values in parallel
-		lj = -np.array([dLJp(r,i,sigm[mol.children[i].tpindex],epsi[mol.children[i].tpindex],mol.bl[i]) for i in range(mol.n)])
-		bep= -dBEpot(r,mol.covbonds) #Bonds
-		ba = -dBA(r,mol.covbonds) #Bond angles
-		ch = -np.array([coul(r,mol.children[i].index,mol.chrgs[i],molecules) for i in range(mol.n)]) #Coulomb
-		F= ((lj + bep) + ba) + ch
-		a[j]=np.transpose(np.transpose(F)/mol.mm) #Force->acceleration
-		j += 1
-	a = np.array(a)
+	a = []
+	if n > 0:
+		for mol in molecules:
+			# TODO calculate values in parallel
+			lj = -np.array([dLJp(atomPositions,i,sigm[mol.children[i].tpindex],epsi[mol.children[i].tpindex],mol.bl[i]) for i in range(mol.n)])
+			bep= -dBEpot(atomPositions,mol.covbonds) #Bonds
+			ba = -dBA(atomPositions,mol.covbonds) #Bond angles
+			ch = -np.array([coul(atomPositions,mol.children[i].indx,mol.chrgs[i],molecules) for i in range(mol.n)]) #Coulomb
+			F= ((lj + bep) + ba) + ch
+			a[j]=np.transpose(np.transpose(F)/mol.mm) #Force->acceleration
+			j += 1
+		a = np.array(a)
 
-	# update velocity !!!					!!! POSSIBLE BUG
-	atomVelocities = v + time.dt * a # I'm not sure if using this new 2D accelleration array will work in this equation as-is
-	atomVelocities = rescaleT(atomVelocities,Temp0) # scale to temperature
-	atomPositions = atomPositions + atomVelocities * time.dt/50  # should be average of atomVelocities over time.dt
-	# split up calculation if dt gets too large to prevent accumulating errors
+		# update velocity !!!					!!! POSSIBLE BUG
+		atomVelocities = atomVelocities + time.dt * a # I'm not sure if using this new 2D accelleration array will work in this equation as-is
+		atomVelocities = rescaleT(atomVelocities,Temp0) # scale to temperature
+		atomPositions = atomPositions + atomVelocities * time.dt  # should be average of atomVelocities over time.dt
+		# split up calculation if dt gets too large to prevent accumulating errors
 
-	# boundaries
-	if BC == True:
-		atomPositions = atomPositions%L
-		atomVelocities = 1.0 * atomVelocities
-	else:		
-		atomPositions, atomVelocities = reflectBC(atomPositions,atomVelocities)
-	#total_T_display.text = calculateTemperature(atomVelocities,n)
-	#collisions_display.text = str(collisions_count)
-	#mouseloc_display.text = str(mouse.collisions)
+		# boundaries
+		if BC == True:
+			atomPositions = atomPositions%L
+			atomVelocities = 1.0 * atomVelocities
+		else:		
+			atomPositions, atomVelocities = reflectBC(atomPositions,atomVelocities)
+		#total_T_display.text = calculateTemperature(atomVelocities,n)
+		#collisions_display.text = str(collisions_count)
+		#mouseloc_display.text = str(mouse.collisions)

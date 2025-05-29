@@ -52,12 +52,7 @@ class AtomFactory:
 	def createAtom(self, elindex, player=0):
 		ion   = 0
 		veloc = Vec3(0.6,0,0.6)
-		if (player == 0):
-			player = 1
-			locat = Vec3(-30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5))
-		elif (player == 1):
-			player = -1
-			locat = Vec3(30+randint(-5,5),-12+randint(-1,1),20+randint(-5,5))
+		locat = np.zeros(3)
 		#print(str(atom))
 		atom = self.elements[elindex](locat,ion,veloc)
 		#newat.parent = amp.CreateMolecule(newat.name, locat, newat.sig, newat.eps, newat.bl, newat, player) done in Molecule construction
@@ -79,7 +74,10 @@ class Atom(Entity):
 		self.sig		= 1 # TODO Van der Waals radius
 		self.eps		= 1 # TODO Energy well depth
 		self.bl			= 1 # TODO Spring potential equilibrium radius
+
 		self.nam 		= "UNDEFINED ATOM!"
+		self.indx 		= -1
+		self.tpindex 	= -1
 		#self.nam 		= self.getName() # overloaded in specific element classes
     
     	#@abstractmethod
@@ -100,6 +98,12 @@ class Atom(Entity):
 			e.parent = self
 		#self.mass = mass
 		#self.hybridisation = hybridisation
+
+	def setIndx(self, ind):
+		self.indx = ind
+
+	def setTpindex(self, ind):
+		self.tpindex = ind
 
 # values from Elliot Akerson et al (2015) accessed at https://openkim.org/files/MO_959249795837_003/LennardJones612_UniversalShifted.params on 28/May/2025
 

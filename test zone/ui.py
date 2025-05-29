@@ -65,7 +65,7 @@ def createMol(*mols):
 	# TODO: UPDATE TO PASS NECESSARY ARGS
 	if len(mols) == 1:
 		print ("creating " + str(mols[0]) + " molecule.")
-		amp.CreateMolecule([0,0,0], np.zeros(3), mols[0])
+		amp.CreateMolecule(None, mols[0])
 	else:
 		print("ui.createMol requires 1 argument passed! Tell it what molecule you want to create")
 		return False
