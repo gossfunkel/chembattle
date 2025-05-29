@@ -70,18 +70,6 @@ def GetMolecules(player=0):
 	#	return molecules[player, :]
 	#else: return None
 
-def AddType(name):
-	# 1 initialise new index
-	tpindex  = len(tp) + 1 
-	# 2 load type to array if needed
-	for typ in range(len(tp)):
-		if tp[typ] == name:
-			tpindex = typ
-	# 3 add type to array if/when loaded
-	if tpindex > len(tp):
-		tp.append(name)
-	return tpindex
-
 # smoothly transition a vector via linear interpolation
 def SlideTo(pops, fpos, lerp):
 	#target = Vec3([pops])
@@ -98,15 +86,15 @@ def SlideTo(pops, fpos, lerp):
 
 # CAUTION : OBJECT CAN BE INDEXED AS AN ARRAY-LIKE DATA TYPE THROUGH THE __array__() FUNCTION, SO BE CAREFUL HOW YOU CALL IT!
 class Molecule(Entity):
-	def __init__(self, nam, position, indx, sig, eps, *chldatoms, velocity=np.zeros(D), bl=[1], th0=109.47*np.pi/180.0):
-		self.n 			  = len(chldatoms[0])
+	def __init__(self, nam, position, indx, chldatoms, tpis, velocity=np.zeros(D), bl=[1], th0=109.47*np.pi/180.0):
+		self.n 			  = len(chldatoms)
 		if (self.n == 0):
 			return None
 		super().__init__(world_position=position)
 		self.nam 		  = nam
 		self.visible_self = False # molecule isn't visible; atoms are visible
 		#if self.n > 0:
-		self.children = chldatoms[0]
+		self.children = chldatoms
 		print(self.children)
 		self.indx 		  = indx
 		# self.bl 		  = *bl 	# 0.9611 for water -- bond lengths stored in the arrays stored in covbonds
@@ -115,8 +103,8 @@ class Molecule(Entity):
 		covbonds		  = {}	# dict tracking covalent bonds between atoms; indexed by particle index
 			# structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
 		angles 			  = {}	# dict tracking bond angles; indexed by particle index
-		self.sig 		  = sig
-		self.eps 		  = eps
+		self.sig 		  = [sigm[i] for i in tpis]
+		self.eps 		  = [eps[i] for i in tpis]
 		positions 		  = []
 		velocities 		  = []
 		for i in range(self.n):
@@ -127,13 +115,13 @@ class Molecule(Entity):
 				position = position + np.array([1.0/bl[i]**3,1.0/bl[i]**3,0]) 
 				# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
 			positions.append(position)
-			print(position)
+			#print(position)
 			# initialise atom type, constants, absolute and relative positions, velocities, masses, charges, bonds, and angles
 			childIndex 						= i + self.indx 
 			child = self.children[i]
-			print(child)
+			#print(child)
 			child.setIndx(childIndex)
-			child.setTpindex(AddType(child.nam))
+			child.setTpindex(tpis[i])
 			# TODO Sigma and Epsilon must be calculated for every combination of atom types
 			# either create a function to take a particle's atom data (dipole moment, formal charge, valence shell state) and calculate,
 			# 	or switch out LJP for another potential
@@ -244,29 +232,44 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 				print("created " + newt.nam)
 		sig 	= []
 		eps 	= []
-	if n > 0:
+		tpis 	= []
+		
 		for at in newatts:
-			for si in sigm:
-				sig.append(at.sig+si/2)
-			for ep in epsi:
-				eps.append((at.eps * ep)**.5)
-	else:
-		for at in newatts:
-			sig.append(at.sig)
-			eps.append(at.eps)
-	# initiate a molecule with parameters passed
-	for at in newatts:
-		index = len(molecules)+1
-		newIon = Molecule(at, location, index, sig, eps, newatts, velocity)
-		at = newIon
-		#print(newIon.world_position)
+			if n > 0:
+				newsig = at.sig+si/2
+				neweps = (at.eps * ep)**.5
+			else:
+				sigm = at.sig
+				neweps = at.eps
+			# 1 initialise new index
+			tpindex  = len(tp)
+			# 2 load type to array if needed
+			for typ in range(len(tp)):
+				if tp[typ] == name:
+					tpindex = typ
+			# 3 add type to array if/when loaded
+			if tpindex > len(tp)-1:
+				tp.append(name)
+				for si in sigm:
+					sig.append(newsig) # CURRENTLY BROKEN
+				for ep in epsi:
+					eps.append() # WORKING HERE RN
+				tpis.append(tpindex)
+		else:
+			for at in newatts:
+				sig.append(at.sig)
+				eps.append(at.eps)
+		# initiate a molecule with parameters passed
+		mol = Molecule(mol, location, len(molecules)+1, newatts, tpis, velocity)
+		#print(at.world_position)
 		# add to arrays and lists:
-		molecules.append(newIon)
-		RescalePosArray(newIon.positions())
-		RescaleVelArray(newIon.velocities())
+		molecules.append(at)
+		RescalePosArray(at.positions())
+		RescaleVelArray(at.velocities())
+
 		sigm = np.array(sig)
 		epsi = np.array(eps)
-		n += newIon.n
+		n += at.n
 	# 	type, bond length & angle, sigma and epsilon value, mass, and charge arrays initialised in the molecule class
 	# TODO: add to correct axis of arrays for which player is adding the molecule, default to player 1 (local) 
 	# return the molecule object for any further assignments etc
