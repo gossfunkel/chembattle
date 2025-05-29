@@ -1,7 +1,8 @@
 from ursina import *
-#from random import uniform
+from chempy import Substance
 from random import uniform
 import numpy as np
+import atoms as ats
 
 # ''' --NOTES: 
 # Coulomb's law: f = k*q1*q2/r**
@@ -158,12 +159,12 @@ class Molecule(Entity):
 		sumarray = np.array([self.children,self.mm,self.charges])
 
 	def update(self):
-		global atomPositions
-		global atomVelocities
+		#global atomPositions
+		#global atomVelocities
 		#global atomAccel
 		for i in range(self.n):
-			self.children[i].world_position = atomPositions[self.index, i, :]
-			self.children[i].velocity 		= atomVelocities[self.index, i, :]
+			self.children[i].world_position = atomPositions[self.index, :]
+			self.children[i].velocity 		= atomVelocities[self.index, :]
 
 	def positions(self):
 		return [self.children[i].world_position for i in range(self.n)]
@@ -192,10 +193,31 @@ def RescaleVelArray(velocs):
 		atmVel.append(vel)
 	atomVelocities = np.array(atmVel)
 
-def CreateMolecule(name, location, sig, eps, bl=[1], velocity=[np.zeros(D)], *atoms, player=0):
+def CreateMolecule(name, location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
+	#TODO: remake to receive atom data and generate appropriate values
+	newatts = []
+	atfact = ats.AtomFactory()
+	for mol in mols:
+		newmol = Substance.from_formula(mol)
+		#print("newmol = " + newmol.)
+		comp = newmol.composition
+		for elementindex,quant in comp.items():
+			print("key: " + str(elementindex) + ", value: " + str(quant))
+			for i in range(quant):
+				newt = atfact.createAtom(elementindex,player)
+				newatts.append(newt)
+				print("created " + newt.nam)
+	sig 	= []
+	eps 	= []
+	for at in newatts:
+		for si in sigm:
+			sig.append(at.sig+si/2)
+		for ep in epsi:
+			eps.append((at.eps * ep)**.5)
+
 	# initiate a molecule with parameters passed
 	index = len(molecules)+1
-	newIon = Molecule(name, location, index, sig, eps, velocity, *atoms)
+	newIon = Molecule(name, location, index, sig, eps, velocity, newatts)
 	#print(newIon.world_position)
 
 	# add to arrays and lists:

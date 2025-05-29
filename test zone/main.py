@@ -69,9 +69,9 @@ p2nucleus = Entity(origin=(-4,2.5,-3),
 					scale=10)
 
 # INITIALISE THE UI
-hydrobutt = ui.HydrogenButton()
-carbobutt = ui.CarbonButton()
-nitrobutt = ui.NitrogenButton()
+hydrobutt = ui.HydroButton()
+carbobutt = ui.CarbondioxButton()
+ammobutt  = ui.AmmoniaButton()
 oxybutt   = ui.OxygenButton()
 menbutt   = ui.MenuButton()
 quitbutt  = ui.QuitButton()
@@ -135,10 +135,10 @@ def update():
 		if dist > 10:
 			amp.SlideTo(camera.world_position, mols[0].world_position, 15)
 
-	p1memcoll = p1membrane.intersects()
-	if p1memcoll.hit:
-		if p1memcoll.entity in mols:
-			p1memcoll.entity.velocity = -p1memcoll.entity.velocity
+	#p1memcoll = p1membrane.intersects()
+	#if p1memcoll.hit:
+	#	if p1memcoll.entity in mols:
+	#		p1memcoll.entity.velocity = -p1memcoll.entity.velocity
 
 if __name__ == "__main__":
 	app.run()
