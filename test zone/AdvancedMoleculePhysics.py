@@ -103,8 +103,6 @@ class Molecule(Entity):
 		covbonds		  = {}	# dict tracking covalent bonds between atoms; indexed by particle index
 			# structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
 		angles 			  = {}	# dict tracking bond angles; indexed by particle index
-		self.sig 		  = [sigm[i] for i in tpis]
-		self.eps 		  = [eps[i] for i in tpis]
 		positions 		  = []
 		velocities 		  = []
 		for i in range(self.n):
@@ -209,84 +207,142 @@ def RescaleMassArray(*newmas):
 		masss.append(mas)
 	masses = np.array(masss)
 
+def RescaleSigmArray(*newsig):
+	global sigm
+	# 	rescale velocities array
+	if len(sigm) > 0:
+		si = sigm.tolist()
+	else: si = []
+	for sii in newsig:
+		si.append(sii)
+	sigm = np.array(si)
+
+def RescaleEpsiArray(*neweps):
+	global epsi
+	# 	rescale velocities array
+	if len(epsi) > 0:
+		ep = epsi.tolist()
+	else: ep = []
+	for epp in neweps:
+		ep.append(epp)
+	epsi = np.array(ep)
+
 def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 	global n
-	#TODO: remake to receive atom data and generate appropriate values
-	newatts = []
-	atfact = ats.AtomFactory()
-	if (player == 0 and location == None):
-		player = 1
-		location = Vec3(-30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5))
-	elif (player == 1 and location == None):
-		player = -1
-		location = Vec3(30+randint(-5,5),-12+randint(-1,1),20+randint(-5,5))
+
+	atfact = ats.AtomFactory() # factory method for generating atoms
+
+	# update location based on player info
+	if (player == 0 and location == None): location = Vec3(-30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5))
+	elif (player == 1 and location == None): location = Vec3(30+randint(-5,5),-12+randint(-1,1),20+randint(-5,5))
+
+	# run the creation procedure for every molecule passed in *mols tuple
 	for mol in mols:
-		newmol = Substance.from_formula(mol)
+		newatts = [] # instantiate list for new atoms in molecule
+		newmol = Substance.from_formula(mol) # get a new chempy Substance object from the name
 		#print("newmol = " + newmol.)
 		comp = newmol.composition
-		for elementindex,quant in comp.items():
-			print("key: " + str(elementindex) + ", value: " + str(quant))
-			for i in range(quant):
+		for elementindex,quant in comp.items(): # iterate through the members of the composition dictionary
+			# print("key: " + str(elementindex) + ", value: " + str(quant))
+			for i in range(quant): # loop for quantity
+				# generate atoms of given type
 				newt = atfact.createAtom(elementindex,player)
-				newatts.append(newt)
+				newatts.append(newt) # add new atom to list
 				print("created " + newt.nam)
-		sig 	= []
-		eps 	= []
+		# initialise arrays for sigma, epsilon, and type index values for the new atoms in the molecule
+		newsig 	= []
+		neweps 	= []
 		tpis 	= []
 		
-		for at in newatts:
-			if n > 0:
-				newsig = at.sig+si/2
-				neweps = (at.eps * ep)**.5
-			else:
-				sigm = at.sig
-				neweps = at.eps
-			# 1 initialise new index
-			tpindex  = len(tp)
-			# 2 load type to array if needed
-			for typ in range(len(tp)):
-				if tp[typ] == name:
-					tpindex = typ
-			# 3 add type to array if/when loaded
-			if tpindex > len(tp)-1:
+		if n > 0:
+			# if the simulation contains molecules, generate new LJ parameters using the Lorentz-Berthelot combining rules
+			for i in range(len(newatts)):
+				# 0 generate type name
+				name = mol + "_" + str(newatts[i].nam)
+				# 1 initialise new index
+				tpindex  = len(tp) + i
+				# 2 search typearray for atom type
+				for typ in range(len(tp)):
+					if tp[typ] == name:
+						tpindex = typ
+				# type not found loaded: load new type
+				if tpindex > len(tp):
+					# 3 add type to array when loaded
+					tp.append(name)
+					tpis.append(tpindex)
+					# 4 load simulation constants to arrays
+					newsig.append(newatts[i].sig)
+					neweps.append(newatts[i].eps)
+					atsig = [newatts[i].sig]
+					ateps = [newatts[i].eps]
+					# si[0] and ep[0] should countain sigma and epsilon ii - the atom's LJ constants
+					atsig.append((newsig[i]+si[0])/2   for si in sigm) # Lorentz combining rule: sigma combines using mean average. Analytically correct for hard spheres only
+					ateps.append((neweps[i]*ep[0])**.5 for ep in epsi) # Berthelot combining rule: dipole interactions averaged with root-product
+					# load newly calculated arrays for atom i as a dimension of the new arrays
+					newsig[i] = atsig
+					neweps[i] = ateps
+					# update values of other mols in sim
+					for si in sigm:
+						sgi = si.tolist()
+						sgi.append((si[0]+newatts[i].sig)/2)
+						si = np.array(sgi)
+					for ep in epsi:
+						esp = ep.tolist()
+						esp.append((ep[0]*newatts[i].eps)**.5)
+						ep = np.array(esp)
+				else: # type found in tp array: save type index to atom object for easy lookup
+					newatts[i].tpindex = tpindex
+		else: # if this is the first molecule added to the sim, initialise arrays to molecule values
+			for i in range(len(newatts)):
+				# 0 generate type name
+				name = mol + "_" + str(newatts[i].nam)
+				# 1 save indices
+				newatts[i].tpindex = i
 				tp.append(name)
-				for si in sigm:
-					sig.append(newsig) # CURRENTLY BROKEN
-				for ep in epsi:
-					eps.append() # WORKING HERE RN
-				tpis.append(tpindex)
-		else:
-			for at in newatts:
-				sig.append(at.sig)
-				eps.append(at.eps)
-		# initiate a molecule with parameters passed
-		mol = Molecule(mol, location, len(molecules)+1, newatts, tpis, velocity)
-		#print(at.world_position)
-		# add to arrays and lists:
-		molecules.append(at)
-		RescalePosArray(at.positions())
-		RescaleVelArray(at.velocities())
+				tpis.append(i)
+				# 2 load values
+				newsig.append([newatts[i].sig])
+				neweps.append([newatts[i].eps])
+		# > load any new values into AMP arrays
+		RescaleSigmArray(newsig)
+		RescaleEpsiArray(neweps)
 
-		sigm = np.array(sig)
-		epsi = np.array(eps)
-		n += at.n
+		# initiate a molecule with parameters passed
+		mol = Molecule(mol, location, len(molecules), newatts, tpis, velocity)
+		#print(at.world_position)
+
+		# add remaining values to AMP arrays and lists:
+		molecules.append(mol)
+		RescalePosArray(mol.positions())
+		RescaleVelArray(mol.velocities())
+		# update number of atoms in simulation
+		n += mol.n
+
 	# 	type, bond length & angle, sigma and epsilon value, mass, and charge arrays initialised in the molecule class
 	# TODO: add to correct axis of arrays for which player is adding the molecule, default to player 1 (local) 
+
 	# return the molecule object for any further assignments etc
 	return newatts
 
 #Gradient of Lennard-Jones potential
-def dLJp(r,i,sigl,epsl,bdln):
-	sg=np.delete(np.array([sigl[tp[j]] for j in range(n)]),i)
-	ep=np.array([epsl[tp[j]] for j in range(n)])
-	for ii in range(n): #ignore atoms in the same molecule
-		if mols[i]==mols[ii]:
-			ep[ii]=0
-	ep=np.delete(ep,i)
+def dLJp(r,mol,i,sigl,epsl,bdln):
+	sg=np.delete(np.array([sigl[i]]),i)
+	ep=np.array([epsl[i]])
+	# current problem: this is designed around having a value of epsilon (and sigma) for every atom, indexed by tp
+	# i have changed it over so that the atoms' tpindex variable indexes the epsilon and sigma values, and tp now has type identifiers
+	# to allow the engine to minimise the need to load and unload redundant data
+	# however, i need to figure out how to fix the following loop which removes irrelevant values
+	# for now, atoms will jones about on others in their molecule
+	#for ii in range(len(molecules)): #ignore atoms in the same molecule
+	#	if mol==molecules[ii]:
+	#		ep[ii]=0
+	#ep=np.delete(ep,i)
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
 	if ((dr[i] < 4) for i in dr):
+		# evidently i've also reshaped these arrays such that the current operations aren't working;
+		# i'll need to modify this to correctly work with the data structures I've implemented
 		r8 = ep*(sg**6)*(1.0/np.array(dr))**8
 		r14=2.0*ep*(sg**12)*(1.0/np.array(dr))**14
 		r8v =np.transpose(np.transpose(drv)*r8)
@@ -412,7 +468,7 @@ def UpdateMP():
 	if n > 0:
 		for mol in molecules:
 			# TODO calculate values in parallel
-			lj = -np.array([dLJp(atomPositions,i,sigm[mol.children[i].tpindex],epsi[mol.children[i].tpindex],mol.bl[i]) for i in range(mol.n)])
+			lj = -np.array([dLJp(atomPositions,mol,mol.children[i].tpindex,sigm[mol.children[i].tpindex],epsi[mol.children[i].tpindex],mol.bl[i]) for i in range(mol.n)])
 			bep= -dBEpot(atomPositions,mol.covbonds) #Bonds
 			ba = -dBA(atomPositions,mol.covbonds) #Bond angles
 			ch = -np.array([coul(atomPositions,mol.children[i].indx,mol.chrgs[i],molecules) for i in range(mol.n)]) #Coulomb
