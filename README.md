@@ -26,7 +26,7 @@ It's still very very early days, so there aren't any previews, renders, models, 
 
 For now, I can say that there are plans for different biomes based on different environments for microscopic life, a system to unlock cards and for collectibility and rare card art, and for the board to reflect environmental context and changes to the board state. 
 
-If you can lend a hand, let me know, but for now, I'm having fun figuring out this insane project!
+If you can lend a hand, let me know, but for now, I'm having fun figuring out this insane project! I'm teaching myself everything I need to know (with some help and advice from anyone who's actually educated and studied in the relevant fields), so you won't need a degree to make sense of it.
 
 ## How does it work? Why is it such a mad project?
 
@@ -34,6 +34,16 @@ I'm effectively blending simulation software that's used for research purposes i
 
 I'm currently working on a model of spring-potential bonds, Lennard-Jones non-bonding interactions, and EM forces calculated with Coulomb's law for the simulation. I want this thing to feel as real as possible, with the molecules giving that distinctive haptic feel, the bumps and wobbles of dipole interactions, the sparking migration of electrons, the flow of balance between stochiometric companions, the exciting bubbling of quantity into quality as phases change. If this is all foreign to you, that's okay! Most games are when you start out. Once you learn who the main characters are, what the moves you can make are, what boardstates can look like, all the jargon just becomes another set of names for gameplay elements. I don't think this one will be strictly for the chemistry nerds- though it is definitely one for the nerds. 
 
-I'm not sure if I'll want to sophisticate/modify my physics engine by integrating new/other potentials, or changing the way that they work. There's the option of truncating and splining Lennard-Jones, using other potentials that might better model different states of matter, using logic to select from appropriate potential models, integrating spacial partitioning, and so much more. 
+I'm not sure if I'll want to sophisticate/modify my physics engine by integrating new/other potentials, or changing the way that they work. There's the option of truncating and splining Lennard-Jones, using other potentials that might better model different states of matter, using logic to select from appropriate potential models, integrating spacial partitioning, and so much more. Let me just say, though, that no wavefunctions or quantum effects will be found here; I'm keeping it fairly classical to make this even slightly feasible, and sticking to the simplest and most widely-used tools wherever possible. I'm not at all sure about including any transition metals, but if I do, it'll probably be Iron and one or two others from the first row of d-block. I've heard this should save me some hair...
+
+## What's it made of?
+- game engine: __Ursina__
+- __numpy__ for smart, fast arrays
+- __chempy__ for stochiometry and data
+- considering some __OpenGL__ integration for GPU utilisation. Not sure whether to try doing this through Ursina yet, I'll need to research how easy it'll be to use it for the physical chemistry calculations.
+
+## So what's the goal?
 
 Bugfixing and streamlining this thing is gonna be hell. And then, if it all works out, I'll have a lifetime of angry emails from frustrated chemistry nerds whose favourite reaction doesn't work the way it should in my card game. I'd actually be pretty happy with that, honestly:)
+
+I'm really just looking to see if I can make something that satisfies the craving I have to play with acids and ATP and electrons doing their zappy little things. Not like people do in labs, with vials and stoppers and stirrers and so, so much patience, but like a child with a toy, feeling out the way it works. If there will be any educational value to this game, it'll be that it gets some people more familiar with the exciting world of small-molecule chemical interactions, and excited to dig deeper into the world beyond the game. The goal isn't to be educational, though; it's to play!
