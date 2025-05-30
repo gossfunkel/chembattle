@@ -7,7 +7,10 @@
 	Open a Gene Card Pack.
 
 ### Survival of the Fittest
-	Win a game with a custom deck.
+	Win a single player game.
+
+### A Factor in Evolution
+	Win a coop game.
 
 ### Fireman Sam
 	Manually extinguish a fire.
