@@ -325,11 +325,14 @@ def dLJp(r,mol,i,sigl,epsl,bdln):
 	ep=np.array([epsl[i]])
 	# current problem: update indexing. This is currently written where i is the index of the atom among all molecules, whereas I've 
 	# 	changed the indexing system to work molecule-by-molecule now. 
-	# so the self-ref value should only be removed if it's the only atom of its type !!
 	for ii in range(len(molecules)): #ignore atoms in the same molecule
 		if mol==molecules[ii]:
-			ep[ii]=0
-	ep=np.delete(ep,i)
+			# so the self-ref value should only be removed if it's the only atom of its type !!
+			if IsUnique(i):
+				for j in mol.children:
+					if i == j.tpindex:
+						ep[i] = 0
+	ep=np.delete(ep,i) # i is now tpindex
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
