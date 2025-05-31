@@ -40,7 +40,7 @@ AdvancedMoleculePhysics(AMP) docs
 	(_float_) *8.9875517923E9*NA*1E30*ech*ech/1E24* The electrostatic constant in Daltons/electron charges/picosecond/angstrom units.
 
 ### CLASS Molecule (inherits from _Entity_)
-#### 	__init___(name(String), position(np.ndarray), index(int), *sig(float[]), *eps(float[]), *bl=1.0(float[]), velocity=np.zeros(D)(np.ndarray), *chldatoms(Atom[])
+#### 	__init___(self, nam, position, indx, chldatoms, tpis, velocity=np.zeros(D), bl=[1], th0=109.47*np.pi/180.0)
 			Initialises the arrays of all qualities of component atoms, and all collective information.
 
 			The entity visible_self value is initialised to False, making the Molecule itself have no visible form. Instead, the atoms are invisibly packaged by this molecular wrapper, which can be used to handle collisions(/reactions), organise particle data, intelligently look up data with ChemPy, and minimise redundancy. Similarly, the Molecule is not given a model. 
@@ -69,8 +69,12 @@ AdvancedMoleculePhysics(AMP) docs
 			This procedure is automatically called by Ursina in the game loop. Sets the position and velocity variables of the "Atom" objects in the "children[]" object in this class, taking values from the "atomPositions" and "atomVelocities" np.ndarrays in which calculations are made. This is a likely place for articulation between the render loop and the simulation loop if they are separated for online sync purposes later. 
 
 ### AMP procedures:
-#### CreateMolecule(name, location=np.array([-2,-1,0]), *sig, *eps, bl=1, *velocity=np.zeros(D), *atoms, player=0)
-		Initiates a Molecule(name, *location, index, *sig, *eps, *velocity, *atoms), and adds the contents of this molecules to the AMP arrays
+#### CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)])
+		Initiates a Molecule(name, *location, index, *sig, *eps, *velocity, *atoms), and adds the contents of this molecules to the AMP arrays.
+
+		I will reconstruct this method at some point, because the construction of new molecules is kind of split between this and the actual __init__() function of the Molecule class. Logically, and in terms of cycle efficiency, this seems messy and poorly considered.
+
+		This function is responsible for keeping the numpy arrays properly populated as atoms are added to the simulation. Values are added for Sigma and Epsilon constants per atom, and in order to be utilised for the dLJP function, an average must be calculated between each and the value of every other atom using the 'Lorentz-Bethelot Combining rules'. Each type of atom has its own constants, so for every atom, the of its values in the sigm and epsi arrays
 			
 #### UpdateMP():
 		Called in the game loop. Loops through molecules, and for each, loops through its atoms and calculates the forces on each atom from the "dLJP()", "dBEpot()", "dBA()", and "coul()" procedures. Accelerations of each atom are calculated from these forces, and the "atomVelocities" array is updated using v += a * time.dt/50. "atomPositions" is then updated using r += v * time.dt/50. The game dt value is used for consistent movement across machines, and divided by 50 to scale down movement scale.

@@ -94,7 +94,7 @@ class Atom(Entity):
 # initialise arrays
 atomPositions   = (LL*(np.random.rand(n,D))) 		 # initialise all positions randomly
 #atomPositions   = LL*(np.empty((n,D))) 		 # initialise all positions randomly
-print(atomPositions)
+#print(atomPositions)
 #atomVelocities  = 10.00*(np.random.rand(n,D)-0.5) # initialise all velocities randomly
 atomAccel 		= np.empty((n,D)) # initialise all acceleration to nil
 atomVelocities = np.zeros((n,D))				 # initialise all velocities as 0
@@ -194,6 +194,8 @@ def dLJp(r,i,sigl,epsl,bdln):
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
 	if ((dr[i] < 4) for i in dr):
+		print("ep: " + str(ep))
+		print("dr: " + str(dr))
 		r8 = ep*(sg**6)*(1.0/np.array(dr))**8
 		r14=2.0*ep*(sg**12)*(1.0/np.array(dr))**14
 		r8v =np.transpose(np.transpose(drv)*r8)
@@ -297,7 +299,7 @@ def coul(r,i,chrgs):
 	r3=q0*qs*kc*((1.0/np.array(dr))**3.0) # Coulomb's law
 	FF =np.transpose(np.transpose(drv)*r3) # transpose the distance array, multiply by force, transpose back
 	Fs=np.sum(FF,axis=0) # sum the value of axis 0 of the transposed & multiplied array
-	print(Fs)
+	#print(Fs)
 	return Fs
 	#global D
 	#return np.zeros(D) disable charge force

@@ -23,9 +23,8 @@ import atoms as ats
 #
 # This is the game's physics engine.
 # 
-# I am in the process of rewriting a basic Lennard-Jones, Spring Bonding and Electric molecular dynamics sim- notably, by 
-# setting a variable value to delta time, voiding any simulation usage of this code. I've integrated Ursina, and am bugfixing 
-# an issue that causes atoms to drift towards the origin when the coul() function is implemented/in use. 
+# I am in the process of rewriting a basic Lennard-Jones, Spring Bonding and Electric molecular dynamics sim. I've integrated Ursina, but not yet
+# finished creating the core atom loading and processing algorithms.
 # 
 # In short, don't expect this code to run reliably. The rest of the game isn't built up to keep up with these changes yet; hence 
 # splitting this off into a new physics file to keep the original sandbox going in parallel. This physics engine and the multiplayer
@@ -87,9 +86,8 @@ def SlideTo(pops, fpos, lerp):
 # CAUTION : OBJECT CAN BE INDEXED AS AN ARRAY-LIKE DATA TYPE THROUGH THE __array__() FUNCTION, SO BE CAREFUL HOW YOU CALL IT!
 class Molecule(Entity):
 	def __init__(self, nam, position, indx, chldatoms, tpis, velocity=np.zeros(D), bl=[1], th0=109.47*np.pi/180.0):
+		if (len(chldatoms) == 0): return None # don't construct an empty molecule; what is that??? how would it even work?!
 		self.n 			  = len(chldatoms)
-		if (self.n == 0):
-			return None
 		super().__init__(world_position=position)
 		self.nam 		  = nam
 		self.visible_self = False # molecule isn't visible; atoms are visible
@@ -276,20 +274,14 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 					atsig = [newatts[i].sig]
 					ateps = [newatts[i].eps]
 					# si[0] and ep[0] should countain sigma and epsilon ii - the atom's LJ constants
-					atsig.append((newsig[i]+si[0])/2   for si in sigm) # Lorentz combining rule: sigma combines using mean average. Analytically correct for hard spheres only
-					ateps.append((neweps[i]*ep[0])**.5 for ep in epsi) # Berthelot combining rule: dipole interactions averaged with root-product
+					atsig.append([(newsig[i]+si[0])/2   for si in sigm]) # Lorentz combining rule: sigma combines using mean average. Analytically correct for hard spheres only
+					ateps.append([(neweps[i]*ep[0])**.5 for ep in epsi]) # Berthelot combining rule: dipole interactions averaged with root-product
 					# load newly calculated arrays for atom i as a dimension of the new arrays
 					newsig[i] = atsig
 					neweps[i] = ateps
-					# update values of other mols in sim
-					for si in sigm:
-						sgi = si.tolist()
-						sgi.append((si[0]+newatts[i].sig)/2)
-						si = np.array(sgi)
-					for ep in epsi:
-						esp = ep.tolist()
-						esp.append((ep[0]*newatts[i].eps)**.5)
-						ep = np.array(esp)
+					# update values of other mols in sim. The first member of every list in the sigm array contains the constant for each atom
+					for si in sigm: si.tolist().append((si[0]+newatts[i].sig)/2) # Lorentz: (sig_ii+sig_jj)/2 
+					for ep in epsi: ep.tolist().append((ep[0]*newatts[i].eps)**.5) # Berthelot: sqrt(eps_ii*eps_jj) 
 				else: # type found in tp array: save type index to atom object for easy lookup
 					newatts[i].tpindex = tpindex
 		else: # if this is the first molecule added to the sim, initialise arrays to molecule values
@@ -300,7 +292,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 				newatts[i].tpindex = i
 				tp.append(name)
 				tpis.append(i)
-				# 2 load values
+				# 2 load values - ARE THESE LOADED CORRECTLY?
 				newsig.append([newatts[i].sig])
 				neweps.append([newatts[i].eps])
 		# > load any new values into AMP arrays
@@ -324,26 +316,27 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 	# return the molecule object for any further assignments etc
 	return newatts
 
+#def ReactMols():
+#	pass
+
 #Gradient of Lennard-Jones potential
 def dLJp(r,mol,i,sigl,epsl,bdln):
 	sg=np.delete(np.array([sigl[i]]),i)
 	ep=np.array([epsl[i]])
-	# current problem: this is designed around having a value of epsilon (and sigma) for every atom, indexed by tp
-	# i have changed it over so that the atoms' tpindex variable indexes the epsilon and sigma values, and tp now has type identifiers
-	# to allow the engine to minimise the need to load and unload redundant data
-	# however, i need to figure out how to fix the following loop which removes irrelevant values
-	# for now, atoms will jones about on others in their molecule
-	#for ii in range(len(molecules)): #ignore atoms in the same molecule
-	#	if mol==molecules[ii]:
-	#		ep[ii]=0
-	#ep=np.delete(ep,i)
+	# current problem: update indexing. This is currently written where i is the index of the atom among all molecules, whereas I've 
+	# 	changed the indexing system to work molecule-by-molecule now. 
+	# so the self-ref value should only be removed if it's the only atom of its type !!
+	for ii in range(len(molecules)): #ignore atoms in the same molecule
+		if mol==molecules[ii]:
+			ep[ii]=0
+	ep=np.delete(ep,i)
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
 	if ((dr[i] < 4) for i in dr):
-		# evidently i've also reshaped these arrays such that the current operations aren't working;
-		# i'll need to modify this to correctly work with the data structures I've implemented
-		r8 = ep*(sg**6)*(1.0/np.array(dr))**8
+		print("ep: " + str(ep))
+		print("dr: " + str(dr))
+		r8 = ep*(sg**6)*(1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
 		r14=2.0*ep*(sg**12)*(1.0/np.array(dr))**14
 		r8v =np.transpose(np.transpose(drv)*r8)
 		r14v=np.transpose(np.transpose(drv)*r14)
