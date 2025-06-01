@@ -28,7 +28,7 @@ mouseloc_display			= Text('x',origin=(-1,-16))
 BC 							= False # periodic boundaries = true; reflective boundaries = false
 mass 						= [1.0,16.0]
 qs							= [0.41,-0.82] #charges of particles
-Temp0 						= 200 # temperature in Kelvin
+Temp0 						= 220 # temperature in Kelvin
 
 #min_distance = 0.1
 #max_distance = 10
@@ -193,9 +193,11 @@ def dLJp(r,i,sigl,epsl,bdln):
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
-	if ((dr[i] < 4) for i in dr):
-		print("ep: " + str(ep))
-		print("dr: " + str(dr))
+	if ((dr[j] < 4) for j in dr):
+		#print ("round " + str(j))
+		print(drv)
+		#print("ep: " + str(ep))
+		#print("dr: " + str(dr))
 		r8 = ep*(sg**6)*(1.0/np.array(dr))**8
 		r14=2.0*ep*(sg**12)*(1.0/np.array(dr))**14
 		r8v =np.transpose(np.transpose(drv)*r8)
@@ -340,7 +342,7 @@ def update():
 	#global time_roller
 	#while(time_roller<time.dt):
 	atomVelocities, atomAccel = updatev(atomPositions,atomVelocities,sig,eps, atomAccel)
-	atomVelocities = rescaleT(atomVelocities,Temp0) #scale to temperature
+	#atomVelocities = rescaleT(atomVelocities,Temp0) #scale to temperature
 	atomPositions = atomPositions + atomVelocities * time.dt/50
 	# boundaries
 	if BC == True:

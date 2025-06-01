@@ -4,8 +4,148 @@
 		"selected_items":
 		[
 			[
+				"F_",
+				"F_Lypogenesis"
+			],
+			[
+				"mol",
+				"molecules"
+			],
+			[
+				"atm",
+				"atmPos"
+			],
+			[
+				"ato",
+				"atomVelocities"
+			],
+			[
+				"pos",
+				"pos"
+			],
+			[
+				"new",
+				"newpos"
+			],
+			[
+				"ch",
+				"chldatoms"
+			],
+			[
+				"parT",
+				"partType"
+			],
+			[
+				"atoms",
+				"atoms"
+			],
+			[
+				"atom",
+				"atomPositions"
+			],
+			[
+				"rt",
+				"return"
+			],
+			[
+				"LL",
+				"LL"
+			],
+			[
+				"at",
+				"atomAccel"
+			],
+			[
+				"vel",
+				"velocity"
+			],
+			[
+				"li",
+				"lit_with_shadows_shader"
+			],
+			[
+				"time",
+				"time_roller"
+			],
+			[
+				"coll",
+				"collisions_count"
+			],
+			[
+				"col",
+				"collisions_count"
+			],
+			[
+				"co",
+				"collisions_count"
+			],
+			[
+				"tot",
+				"total_T_display"
+			],
+			[
+				"w",
+				"WINDOW_HEIGHT"
+			],
+			[
+				"Win",
+				"WINDOW_WIDTH"
+			],
+			[
+				"ma",
+				"max_distance"
+			],
+			[
+				"up",
+				"updatev"
+			],
+			[
+				"LJP",
+				"LJP"
+			],
+			[
+				"e",
+				"eps"
+			],
+			[
+				"r",
+				"r"
+			],
+			[
 				"__",
 				"__init__"
+			],
+			[
+				"pla",
+				"player"
+			],
+			[
+				"p1me",
+				"p1memcoll"
+			],
+			[
+				"p1m",
+				"p1memcoll"
+			],
+			[
+				"p1mem",
+				"p1membrane"
+			],
+			[
+				"toggle",
+				"toggleFollow"
+			],
+			[
+				"camer",
+				"cameraFollowing"
+			],
+			[
+				"came",
+				"cameraFollowing"
+			],
+			[
+				"ca",
+				"cameraFollowing"
 			],
 			[
 				"s",
@@ -20,16 +160,8 @@
 				"Hydrogen"
 			],
 			[
-				"e",
-				"eshell"
-			],
-			[
 				"z",
 				"z"
-			],
-			[
-				"pos",
-				"position"
 			],
 			[
 				"rota",
@@ -64,20 +196,12 @@
 				"mouseRay"
 			],
 			[
-				"at",
-				"atom"
-			],
-			[
 				"step",
 				"step_vec"
 			],
 			[
 				"self",
 				"self"
-			],
-			[
-				"ch",
-				"children"
 			],
 			[
 				"wor",
@@ -104,20 +228,12 @@
 				"a"
 			],
 			[
-				"mol",
-				"mol"
-			],
-			[
 				"loc",
 				"location"
 			],
 			[
 				"y",
 				"ycoord"
-			],
-			[
-				"r",
-				"random"
 			],
 			[
 				"ge",
@@ -154,10 +270,6 @@
 			[
 				"ve",
 				"Vector2"
-			],
-			[
-				"new",
-				"newAtom"
 			],
 			[
 				"wid",
@@ -222,10 +334,6 @@
 			[
 				"rel",
 				"releasedr"
-			],
-			[
-				"atom",
-				"atomNum"
 			],
 			[
 				"mole",
@@ -343,15 +451,15 @@
 			"file": "main.py",
 			"settings":
 			{
-				"buffer_size": 3429,
+				"buffer_size": 3853,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "MoleculePhysics.py",
+			"file": "AdvancedMoleculePhysics.py",
 			"settings":
 			{
-				"buffer_size": 4545,
+				"buffer_size": 20712,
 				"line_ending": "Windows"
 			}
 		},
@@ -359,7 +467,15 @@
 			"file": "atoms.py",
 			"settings":
 			{
-				"buffer_size": 6723,
+				"buffer_size": 9443,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "ui.py",
+			"settings":
+			{
+				"buffer_size": 3924,
 				"line_ending": "Windows"
 			}
 		},
@@ -367,25 +483,25 @@
 			"file": "cards.py",
 			"settings":
 			{
-				"buffer_size": 35,
+				"buffer_size": 3741,
 				"line_ending": "Windows",
 				"name": "import atoms"
 			}
 		},
 		{
-			"file": "ui.py",
+			"file": "achievements.md",
 			"settings":
 			{
-				"buffer_size": 3220,
+				"buffer_size": 1101,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": ".git/COMMIT_EDITMSG",
+			"file": "docs/AdvancedMoleculePhysics_docs.md",
 			"settings":
 			{
-				"buffer_size": 540,
-				"line_ending": "Unix"
+				"buffer_size": 10128,
+				"line_ending": "Windows"
 			}
 		}
 	],
@@ -417,16 +533,25 @@
 	},
 	"file_history":
 	[
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/cards.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/ui.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/atoms.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/MoleculePhysics.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/main.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/achievements.md",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/formain.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/COMMIT_EDITMSG",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test.py",
+		"/C/Users/gossfunkel/Downloads/MDFromScratch-main/MDFromScratch-main/MDFS.ipynb",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/COMMIT_EDITMSG",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/ursina-shaders-example.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/ursina-shaders-example",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/main.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/chembattle.sublime-project",
-		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/COMMIT_EDITMSG",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/ui.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/atoms.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/MoleculePhysics.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/config",
-		"/C/Users/gossfunkel/Documents/My Games/Kate/chem/.git/COMMIT_EDITMSG",
 		"/C/Users/gossfunkel/Documents/bookmarks_2_22_19.html",
 		"/C/Users/gossfunkel/Documents/1earth strike/info/meetings/international-NOmeeting-3feb2019.txt",
 		"/C/Users/gossfunkel/Documents/1earth strike/info/outreach/ES outreach lines.txt",
@@ -533,6 +658,12 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"mp",
+			"CAN",
+			"walls",
+			"dt",
+			"8314459920816467",
+			"1",
 			"d",
 			"2",
 			"uniform",
@@ -581,7 +712,7 @@
 	"groups":
 	[
 		{
-			"selected": 5,
+			"selected": 0,
 			"sheets":
 			[
 				{
@@ -589,141 +720,7 @@
 					"file": "main.py",
 					"settings":
 					{
-						"buffer_size": 3429,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2499,
-								2499
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 1125.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "MoleculePhysics.py",
-					"settings":
-					{
-						"buffer_size": 4545,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								4545
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 195.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "atoms.py",
-					"settings":
-					{
-						"buffer_size": 6723,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								897,
-								897
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 45.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "cards.py",
-					"settings":
-					{
-						"buffer_size": 35,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								35,
-								35
-							]
-						],
-						"settings":
-						{
-							"auto_name": "import atoms",
-							"syntax": "Packages/Python/Python.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "ui.py",
-					"settings":
-					{
-						"buffer_size": 3220,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								693,
-								693
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 135.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": ".git/COMMIT_EDITMSG",
-					"settings":
-					{
-						"buffer_size": 540,
+						"buffer_size": 3853,
 						"regions":
 						{
 						},
@@ -736,7 +733,171 @@
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "AdvancedMoleculePhysics.py",
+					"settings":
+					{
+						"buffer_size": 20712,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "atoms.py",
+					"settings":
+					{
+						"buffer_size": 9443,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "ui.py",
+					"settings":
+					{
+						"buffer_size": 3924,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "cards.py",
+					"settings":
+					{
+						"buffer_size": 3741,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3044,
+								3044
+							]
+						],
+						"settings":
+						{
+							"auto_name": "import atoms",
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 681.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "achievements.md",
+					"settings":
+					{
+						"buffer_size": 1101,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								239,
+								239
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "docs/AdvancedMoleculePhysics_docs.md",
+					"settings":
+					{
+						"buffer_size": 10128,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -749,7 +910,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 0.0
+		"height": 34.0
 	},
 	"input":
 	{
@@ -780,7 +941,7 @@
 	"menu_visible": true,
 	"output.exec":
 	{
-		"height": 100.0
+		"height": 189.0
 	},
 	"replace":
 	{

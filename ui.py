@@ -1,8 +1,9 @@
 from ursina import *
 import sys
 import atoms
-import MoleculePhysics as mp
+import AdvancedMoleculePhysics as amp
 import numpy as np
+import functools
 
 #font = pygame.font.SysFont('Arial', 22)
 WINDOW_WIDTH, WINDOW_HEIGHT = 1080, 600
@@ -60,15 +61,21 @@ def quitButt():
 		quit()
 		sys.exit()
 
-def createMol(atom):
-	mp.CreateMolecule([0,0,0], atom.velocity, atom)
+def createMol(*mols):
+	# TODO: UPDATE TO PASS NECESSARY ARGS
+	if len(mols) == 1:
+		print ("creating " + str(mols[0]) + " molecule.")
+		amp.CreateMolecule(None, mols[0])
+	else:
+		print("ui.createMol requires 1 argument passed! Tell it what molecule you want to create")
+		return False
 
-def createAt():
-	global spawn
-	atoms.CreateAtom(spawn)
+def createAt(atom):
+	print ("Creating " + str(atom) + " atom.")
+	createMol(atoms.CreateAtom(atom))
 
 class CustomButton(Button):
-	def __init__(self, position, label, disabled=False, menuItem=False):
+	def __init__(self, position, label, arg=None, disabled=False, menuItem=False):
 		super().__init__(parent=camera.ui,
 						 text=label,
 						 origin=position,
@@ -101,43 +108,45 @@ class QuitButton(CustomButton):
 		self.on_click = quitButt
 		self.tooltip = Tooltip("CAUTION: SAVING NOT IMPLEMENTED. ALL WILL BE LOST")
 
-class AtomButton(CustomButton):
+class SpawnButton(CustomButton):
 	def __init__(self):
-		super().__init__((self.xco, self.yco, 0), ("Add\n" + self.nam))
-		self.on_click = createAt
+		super().__init__((self.xco, self.yco, 0), ("Add\n" + self.nam), self.nam)
+		self.on_click = functools.partial(createMol, self.nam)
+		#self.args = (self.nam,)
 
-class HydrogenButton(AtomButton):
+class HydroButton(SpawnButton):
 	def __init__(self):
 		#print("hydrobutt initialising")
 		self.xco = 7.8
 		self.yco = 4.2
-		self.nam = "Hydrogen"
+		self.nam = 'H2O'
 		super().__init__()
-		self.tooltip = Tooltip("Spawn a Hydrogen atom")
-		global spawn 
-		spawn = 'Hydrogen'
+		self.tooltip = Tooltip("Spawn a water molecule")
+		#self.args = ('Hydrogen',)
 
-
-class CarbonButton(AtomButton):
+class CarbondioxButton(SpawnButton):
 	def __init__(self):
 		self.xco = 6.5
 		self.yco = 4.2
-		self.nam   = "Carbon"
+		self.nam   = 'CO2'
 		super().__init__()
-		self.tooltip = Tooltip("Spawn a Carbon atom")
+		self.tooltip = Tooltip("Spawn a carbon dioxide molecule")
+		#self.args = "H20"
 
-class NitrogenButton(AtomButton):
+class AmmoniaButton(SpawnButton):
 	def __init__(self):
 		self.xco = 5.2
 		self.yco = 4.2
-		self.nam   = "Nitrogen"
+		self.nam   = 'NH3'
 		super().__init__()
-		self.tooltip = Tooltip("Spawn a Nitrogen atom")
+		self.tooltip = Tooltip("Spawn an ammonium molecule")
+		#self.args = "Nitrogen"
 
-class OxygenButton(AtomButton):
+class OxygenButton(SpawnButton):
 	def __init__(self):
 		self.xco = 3.9
 		self.yco = 4.2
-		self.nam   = "Oxygen"
+		self.nam   = 'O2'
 		super().__init__()
-		self.tooltip = Tooltip("Spawn an Oxygen atom")
+		self.tooltip = Tooltip("Spawn a molecule of diatomic Oxygen")
+		#self.args = "Oxygen"

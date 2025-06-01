@@ -2,7 +2,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import *
 import sys
 import numpy as np
-import MoleculePhysics as mp
+import AdvancedMoleculePhysics as amp
 import atoms
 import ui
 
@@ -69,9 +69,9 @@ p2nucleus = Entity(origin=(-4,2.5,-3),
 					scale=10)
 
 # INITIALISE THE UI
-hydrobutt = ui.HydrogenButton()
-carbobutt = ui.CarbonButton()
-nitrobutt = ui.NitrogenButton()
+hydrobutt = ui.HydroButton()
+carbobutt = ui.CarbondioxButton()
+ammobutt  = ui.AmmoniaButton()
 oxybutt   = ui.OxygenButton()
 menbutt   = ui.MenuButton()
 quitbutt  = ui.QuitButton()
@@ -103,21 +103,22 @@ def switchCameraPos():
 		camera.rotation_y = 0
 
 def input(self):
-	if (held_keys['h']):
-		atoms.CreateAtom('Hydrogen')
-	if (held_keys['j']):
-		atoms.CreateAtom('Carbon')
-	if (held_keys['k']):
-		atoms.CreateAtom('Oxygen')
-	if (held_keys['l']):
-		atoms.CreateAtom('Nitrogen')
+	#if (held_keys['h']):
+	#	atoms.CreateAtom('Hydrogen')
+	#if (held_keys['j']):
+	#	atoms.CreateAtom('Carbon')
+	#if (held_keys['k']):
+	#	atoms.CreateAtom('Oxygen')
+	#if (held_keys['l']):
+	#	atoms.CreateAtom('Nitrogen')
 
 	if (held_keys['tab'] and not ui.cm.isFollowing()):
 		print("Switching views")
 		switchCameraPos()
 
 def update():
-	mols = mp.GetMolecules()
+	mols = amp.GetMolecules()
+	amp.UpdateMP()
 
 	if not ui.cm.isFollowing():
 		camera.position += (5 * (held_keys['up_arrow'] - held_keys['down_arrow']) * time.dt, 0, 
@@ -129,16 +130,16 @@ def update():
 		camera.rotation_x += 20 * (held_keys['q'] - held_keys['e']) * time.dt # x rotation - q & e
 		camera.rotation_y += 20 * (held_keys['v'] - held_keys['c']) * time.dt # y rotation - c & v
 	else: 
-		camera.look_at(mols[0])
 		#print(mols[0].world_position)
+		camera.look_at(mols[0].world_position)
 		dist = np.linalg.norm(camera.world_position-mols[0].world_position)
 		if dist > 10:
-			mp.SlideTo(camera.world_position, mols[0].world_position, 15)
+			amp.SlideTo(camera.world_position, mols[0].world_position, 15)
 
-	p1memcoll = p1membrane.intersects()
-	if p1memcoll.hit:
-		if p1memcoll.entity in mols:
-			p1memcoll.entity.velocity = -p1memcoll.entity.velocity
+	#p1memcoll = p1membrane.intersects()
+	#if p1memcoll.hit:
+	#	if p1memcoll.entity in mols:
+	#		p1memcoll.entity.velocity = -p1memcoll.entity.velocity
 
 if __name__ == "__main__":
 	app.run()
