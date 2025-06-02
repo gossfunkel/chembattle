@@ -179,11 +179,9 @@ class Molecule(Entity):
 			self.children[i].world_position = atomPositions[self.indx+i, :]
 			self.children[i].velocity 		= atomVelocities[self.indx+i, :]
 
-	def positions(self):
-		return [self.children[i].world_position for i in range(self.n)]
+	def positions(self):	return [self.children[i].world_position for i in range(self.n)]
 
-	def velocities(self):
-		return [self.children[i].velocity for i in range(self.n)]
+	def velocities(self):	return [self.children[i].velocity for i in range(self.n)]
 
 def reflectBC(r,v):
 	newv = 1.0 * v
@@ -317,8 +315,8 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 					newsig[i] = atsig
 					neweps[i] = ateps
 					# update values of other mols in sim. The first member of every list in the sigm array contains the constant for each atom
-					for si in sigm: si.tolist().append((si[0]+newatts[i].sig)/2) # Lorentz: (sig_ii+sig_jj)/2 
-					for ep in epsi: ep.tolist().append((ep[0]*newatts[i].eps)**.5) # Berthelot: sqrt(eps_ii*eps_jj) 
+					for si in sigm: si.tolist().append((si[0]+newatts[i].sig)/2) 	# Lorentz: (sig_ii+sig_jj)/2  		- mean
+					for ep in epsi: ep.tolist().append((ep[0]*newatts[i].eps)**.5) 	# Berthelot: sqrt(eps_ii*eps_jj) 	- 3D pythagoras
 				else: # type found in tp array: save type index to atom object for easy lookup and log that atom is only one of its type
 					newatts[i].tpindex = tpindex
 					tpis.append(tpindex)
@@ -383,17 +381,18 @@ def dLJp(r,mol,atid,i,sigl,epsl,bdln):
 	#print(mol.children[atid].velocity)
 	#print(mol.children[atid].sig)
 	#print(mol.children[atid].tpindex)
-	sg = np.array([sigl[i]])
+	sg = np.array([sigl])
 	# if this is the only atom of its type, remove its sigma value to create the temporary array
-	if mol.children[atid].isUnique():
-		#print(sigl)
-		#print("sigl[i]")
-		#print(sigl[i])
-		sg=np.delete(sigl,0)
-	
-	ep = np.array([epsl[i]])
+	if mol.children[atid].isUnique(): sg=np.delete(sigl,0)
+	# otherwise index 0 is used for interactions w/ others of its type
+
+	ep = np.array([epsl])
 	# remove epsilon value for self if it is unique
 	if mol.children[atid].isUnique(): ep=np.delete(ep,0) 
+
+	# format arrays to construct one with a value for every atom
+	sixConst = ep*(sg**6)
+	twelveConst = 2.0*ep*(sg**12)
 	
 	# calculate distance vector then absolute distance in each dimension
 	drv=r-r[pvi] # distance vector for every point
@@ -401,7 +400,7 @@ def dLJp(r,mol,atid,i,sigl,epsl,bdln):
 	for j in range(mol.n): # remove position vectors of all atoms in the molecule from drv
 		drv= np.delete(drv,mol.indx,0) # n.b. tge index of the removed value doesn't change between iterations due to the resizing of the array
 	#print ("DRV after molecule removal:")print(drv)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
+	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distances of that lad
 
 	# truncate to only calculate only for nearby (less than 4 fm away) atoms. May be replaced by partitioning
 	if ((dr[i] > 4) for i in dr):
@@ -411,12 +410,14 @@ def dLJp(r,mol,atid,i,sigl,epsl,bdln):
 		#print("dr: " + str(dr))
 		# TODO
 		# 	figure out how the hell to look up the correct sigma and epsilon values for the target interactions
-		r8 = ep*(sg**6)*(1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
-		r14=2.0*ep*(sg**12)*(1.0/np.array(dr))**14
-		r8v =np.transpose(np.transpose(drv)*r8)
-		r14v=np.transpose(np.transpose(drv)*r14)
-		r8vs =np.sum(r8v,axis=0)
-		r14vs=np.sum(r14v,axis=0)
+		for tpi in mol.tpis:
+			# go through each type index in the simulation and run the calculations for atoms of this type
+			r8   = sixConst[tpi] * (1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
+			r14  = twelveConst[tpi] * (1.0/np.array(dr))**14
+		r8v  = np.transpose(np.transpose(drv)*r8)
+		r14v = np.transpose(np.transpose(drv)*r14)
+		r8vs = np.sum(r8v,axis=0)
+		r14vs= np.sum(r14v,axis=0)
 		dLJP=24.0*(r14vs-r8vs)
 
 	return dLJP
@@ -516,7 +517,7 @@ def UpdateMP():
 			#print(atomPositions)
 			# TODO calculate values in parallel
 			# force fields; truncated Lennard-Jones potential, and EM force via Coulomb's law
-			lj = -np.array([dLJp(atomPositions,mol,atm,mol.children[atm].tpindex,sigm,epsi,mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
+			lj = -np.array([dLJp(atomPositions,mol,atm,mol.children[atm].tpindex,sigm[atm],epsi[atm],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
 			ch = -np.array([coul(atomPositions,mol.children[atm].indx,mol.charges[atm],mol,molecules) for atm in range(mol.n)]) # Coulomb
 			# bond angles and forces
 			bep= -dBEpot(atomPositions,mol.covbonds) # Spring potential. returns array for molecule

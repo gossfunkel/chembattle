@@ -37,7 +37,7 @@ Note that where mathematical notation is used, the terms are not identical to th
 
 	Multiple different atoms may share the same values for their Lennard-Jones constants, due to being of the same elemental species. To reduce redundancy, the sigma and epsilon values are logged only once for each element loaded into the simulation. To keep track of which is which, each atom has an Atom.tpindex variable, which holds the index of its appropriate epsilon and sigma values.
 ##### epsi[]
-	(_np.ndarray_) This is exactly the same as the sigma array, in every way, except it's for the Epsilon constant. Note that epsilon mixes through a root-square method, not by taking the mean of the values as we do with sigma (this is the Berthelot mixing rule, and sigma uses the Lorentz mixing rule). Epsilon is also indexed with the Atom.tpindex value.
+	(_np.ndarray_) This is exactly the same as the sigma array, in every way, except it's for the Epsilon constant. Note that epsilon mixes through a pythagorean method (rooting the sum of the squares), not by taking the mean of the values as we do with sigma (this is the Berthelot mixing rule, and sigma uses the Lorentz mixing rule). Epsilon is also indexed with the Atom.tpindex value.
 ##### tp[]
 	(_list_) A list of all the _Atom_ type objects loaded into the simulation. These are our elements/isotopes/ions from which we build our molecules. 
 ##### a[]
