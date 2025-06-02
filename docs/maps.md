@@ -2,6 +2,8 @@
 ## All (by difficulty):
 ### Beginner/tutorial
 - primordial soup
+- ruminant stomach
+- rotting carcass
 
 ### Normal
 - rich earth
@@ -13,6 +15,7 @@
 - northern cave
 - deep sea sulfur vent
 - Venusian clouds
+- fridge
 
 ### Hardcore
 - Martian soil

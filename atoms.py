@@ -76,7 +76,7 @@ class Atom(Entity):
 		self.bl			= 1 # TODO Spring potential equilibrium radius
 
 		self.unique 	= True # all atoms start unique and are made non-unique by AMP at load
-		self.nam 		= "UNDEFINED ATOM!"
+		self.name 		= "UNDEFINED ATOM!"
 		self.indx 		= -1
 		self.tpindex 	= -1
 		#self.nam 		= self.getName() # overloaded in specific element classes
@@ -128,7 +128,7 @@ class Hydrogen(Atom):
 		self.sig	= 0.5523570
 		self.eps 	= 4.4778900
 		self.cutoff = 2.2094300
-		self.nam 	= 'hydrogen'
+		self.name 	= 'hydrogen'
     	#def get_name(self): -> str: return 'hydrogen'
 
 class Helium(Atom):
@@ -139,7 +139,7 @@ class Helium(Atom):
 		self.size    = (2.67,2.67,2.67)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#028cad'
-		self.nam 	= 'helium'
+		self.name 	= 'helium'
 		self.sig	= 0.4989030
 		self.eps 	= 0.0009421
 		self.cutoff = 1.9956100
@@ -152,7 +152,7 @@ class Lithium(Atom):
 		self.size    = (2.8,2.8,2.8)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffbbb0'
-		self.nam 	= 'lithium'
+		self.name 	= 'lithium'
 		self.sig	= 2.2807000
 		self.eps 	= 1.0496900
 		self.cutoff = 9.1228000
@@ -165,7 +165,7 @@ class Carbon(Atom):
 		self.size    = (3.8,3.8,3.8)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#c8f900'
-		self.nam 	= 'carbon'
+		self.name 	= 'carbon'
 		self.sig	= 1.3541700
 		self.eps 	= 6.3695300
 		self.cutoff = 5.4166600
@@ -178,7 +178,7 @@ class Nitrogen(Atom):
 		self.size    = (4.0,4.0,4.0)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#10ff06'
-		self.nam 	= 'nitrogen'
+		self.name 	= 'nitrogen'
 		self.sig	= 1.2650800
 		self.eps 	= 9.7537900
 		self.cutoff = 5.0603000
@@ -191,7 +191,7 @@ class Oxygen(Atom):
 		self.size    = (4.2,4.2,4.2)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ff1005'
-		self.nam 	= 'oxygen'
+		self.name 	= 'oxygen'
 		self.sig	= 1.1759900
 		self.eps 	= 5.1264700
 		self.cutoff = 4.7039500
@@ -204,7 +204,7 @@ class Sodium(Atom):
 		self.size    = (4.55,4.55,4.55)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffb002'
-		self.nam 	= 'sodium'
+		self.name 	= 'sodium'
 		self.sig	= 2.9577800
 		self.eps 	= 0.7367450
 		self.cutoff = 11.8311000
@@ -217,7 +217,7 @@ class Phosphorus(Atom):
 		self.size    = (4.8,4.8,4.8)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ff0000'
-		self.nam 	= 'phosphorus'
+		self.name 	= 'phosphorus'
 		self.sig	= 1.9065200
 		self.eps 	= 5.0305000
 		self.cutoff = 7.6260900
@@ -230,7 +230,7 @@ class Sulfur(Atom):
 		self.size    = (5.2,5.2,5.2)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#00ff00'
-		self.nam 	= 'sulfur'
+		self.name 	= 'sulfur'
 		self.sig	= 1.8708900
 		self.eps 	= 4.3692700
 		self.cutoff = 7.4835500
@@ -243,14 +243,14 @@ class Chlorine(Atom):
 		self.size    = (5.5,5.5,5.5)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffff00'
-		self.nam 	= 'chlorine'
+		self.name 	= 'chlorine'
 		self.sig	= 1.8174300
 		self.eps 	= 4.4832800
 		self.cutoff = 7.2697300
 
 class Electron(Entity):
  	def __init__(self, position, binding, eshell=np.array([1.0,0.0,0.0]), spin=0):
- 		super().__init__(collides=False,model='sphere',scale=(0.1,0.1,0.1))
+ 		super().__init__(collides=False,model='sphere',scale=(0.05,0.05,0.05))
  		# spin opposite electrons are on the opposite sides for now
  		if spin == 0: self.eshell = eshell
 	 	else: self.eshell = -eshell

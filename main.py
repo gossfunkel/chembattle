@@ -118,6 +118,7 @@ def input(self):
 
 def update():
 	mols = amp.GetMolecules()
+	#print(mols)
 	amp.UpdateMP()
 
 	if not ui.cm.isFollowing():

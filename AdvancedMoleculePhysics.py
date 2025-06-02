@@ -36,7 +36,7 @@ import atoms as ats
 n 			= 0 	# number of particles in sim
 D 			= 3 # number of spacial dimensions
 setdt 		= 0.002
-LL 			= 20 	# scale of the simulation space
+LL 			= 100 	# scale of the simulation space
 L 			= np.zeros([D])+LL
 Temp0 		= 200 	# maintained temperature - TODO: CHANGE FOR PRESSURE (walls)
 #dragstate 	= False # bool value to pause the sim while dragging a molecule around
@@ -56,10 +56,13 @@ atomVelocities 	= [] 	# will be later initialised into a fast numpy array of vec
 molecules 		= []	# list storing molecule objects
 tp 				= [] 	# list tracking species of atom (element/isotope)
 masses 			= [] 	# list tracking masses
-a 				= [] 	# array for use by update function to index arrays of molecules' components' accelerations
+#a 				= [] 	# array for use by update function to index arrays of molecules' components' accelerations
 sigm 			= []	# array for population with sigma (balanced potential) LJP values for loaded atoms
 epsi 			= []	# array for population with epsilon (potential well) LJP values for loaded atoms
 #chrgs 			= [] 	# array for use by coul function to index all charges
+
+# todo: properly outline boundaries
+BC = False # True: periodic; False: reflective
 
 def GetMolecules(player=0):
 	return molecules
@@ -88,23 +91,24 @@ class Molecule(Entity):
 	def __init__(self, nam, position, indx, chldatoms, tpis, velocity=np.zeros(D), bl=[1], th0=109.47*np.pi/180.0):
 		if (len(chldatoms) == 0): return None # don't construct an empty molecule; what is that??? how would it even work?!
 		self.n 			  = len(chldatoms)
+		#self.size 		  = 4
 		super().__init__(world_position=position)
-		self.nam 		  = nam
+		self.name 		  = nam
 		self.visible_self = False # molecule isn't visible; atoms are visible
 		#if self.n > 0:
-		self.children = chldatoms # the children of the molecule object are the atoms that constitute the molecule
+		self.children 	  = chldatoms # the children of the molecule object are the atoms that constitute the molecule
 		#print(self.children)
 		self.indx 		  = indx # the index of the first child atom in the position and velocity arrays
 		# self.bl 		  = *bl 	# 0.9611 for water -- bond lengths stored in the arrays stored in covbonds
 		self.mm 		  = [] 	# array storing masses
 		
 		# construction lists
-		covbonds		  = {}	# dict tracking covalent bonds between atoms; indexed by particle index
-			# structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
+		covbonds		  = []	# array tracking covalent bonds between atoms; indexed by particle index
+			# structure: [indx,bonded-to,bond-length,gamma(bond-strength)]
 		chrg			  = [] 
 		positions 		  = []
 		velocities 		  = []
-		angles		 	 = {}	# dict tracking bond angles; indexed by particle index
+		angles		 	  = []	# dict tracking bond angles; indexed by particle index
 
 		# iterate through and initialise values for all children (atoms in molecule)
 		for i in range(self.n):
@@ -113,32 +117,36 @@ class Molecule(Entity):
 				bl.append(bl[i-1])
 			if i > 0:
 				# increment temporary position variable by bond length to give smoother load-in
-				position = position + np.array([1.0/bl[i]**3,1.0/bl[i]**3,0]) 
+				position = np.array(position) + np.array([1.0/bl[i]**3,1.0/bl[i]**3,0]) 
 				# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
+			else:
+				position = np.array(position)
 			positions.append(position)
+			#print("adding atom at pos: ")
 			#print(position)
 			# initialise atom type, constants, absolute and relative positions, velocities, masses, charges, bonds, and angles
-			childIndex 	= i + self.indx 
 			child 		= self.children[i]
 			#print(child)
-			child.setIndx(childIndex)
+			child.setIndx(self.indx+i)
 			# the set of atoms in the arrays start at the molecule index; the molecule indexes the first atom in the array
 			child.world_position = position
-			child.velocity 		 = velocity
-			velocities.append(velocity)
+			child.velocity 		 = velocity[0]
+			#print("velocity:")
+			#print(velocity[0])
+			velocities.append(velocity[0])
 			self.mm.append(child.mass)
 			chrg.append(child.charge)
 			# assign the atom's parentMol variable to the new molecule
 			child.parentMol = self
 			# initialise bonds
 			if i > 0:
-				covbonds[childIndex] = [i-1,i,bl[i],Kr]
-				if i < self.n:
-					angles[child.tpindex] = [i-1,i,i+1,th0,Kth]
+				covbonds.append([i-1,i,bl[i],Kr])
+				if i < (self.n-1):
+					angles.append([i-1,i,i+1,th0,Kth])
 
 		# load lists into arrays
-		RescalePosArray(positions)
-		RescaleVelArray(velocities)
+		RescalePosArray(np.array(positions))
+		RescaleVelArray(np.array(velocities))
 		RescaleMassArray(self.mm)
 		self.charges 		= np.array(chrg)
 		self.bl 			= np.array(bl)
@@ -154,16 +162,22 @@ class Molecule(Entity):
 		else: # if there are no bonds in the molecule
 			self.covbonds = [] # alternatively, np.array() 
 
+		#print("molecule angles: ")
+		#print(self.angles)
+
 	def __array__():
 		sumarray = np.array([self.children,self.mm,self.charges])
+		return sumarray
 
 	def update(self):
 		#global atomPositions
 		#global atomVelocities
 		#global atomAccel
 		for i in range(self.n):
-			self.children[i].world_position = atomPositions[self.indx+i]
-			self.children[i].velocity 		= atomVelocities[self.indx+i]
+			#print("index " + str(self.indx+i))
+			print(atomPositions)
+			self.children[i].world_position = atomPositions[self.indx+i, :]
+			self.children[i].velocity 		= atomVelocities[self.indx+i, :]
 
 	def positions(self):
 		return [self.children[i].world_position for i in range(self.n)]
@@ -171,19 +185,32 @@ class Molecule(Entity):
 	def velocities(self):
 		return [self.children[i].velocity for i in range(self.n)]
 
+def reflectBC(r,v):
+	newv = 1.0 * v
+	newr = 1.0 * r
+	for mol in molecules:
+		for at in mol.children:
+			for j in range(D):
+				if newr[at.indx,j]<0:
+					newr[at.indx,j]= -newr[at.indx,j]
+					newv[at.indx,j]=abs(v[at.indx,j])
+				if newr[at.indx,j]>L[j]:
+					newr[at.indx,j]= 2.0*L[j]-newr[at.indx,j]
+					newv[at.indx,j]=-abs(v[at.indx,j])
+	return newr,newv
 
 def RescalePosArray(*posits):
 	global atomPositions
+	global n
 	# 	rescale atomPositions array
 	if len(atomPositions) > 0:
 		atmPos = atomPositions.tolist()
 	else: atmPos = []
 	# for each position array passed
 	for pos in posits:
-		print(pos)
+		#print(pos)
 		# iterate through the positions in the array passed and append them to the atomPositions array
-		for po in pos:
-			atmPos.append(po)
+		atmPos.extend(pos)
 	atomPositions = np.array(atmPos)
 	n = len(atomPositions)
 	#print(atomPositions)
@@ -197,8 +224,7 @@ def RescaleVelArray(*velocs):
 	# for each velocity array passed
 	for vel in velocs:
 		# iterate through the velocities in the array passed and append them to the atomVelocities array
-		for ve in vel:
-			atmVel.append(ve)
+		atmVel.extend(vel)
 	atomVelocities = np.array(atmVel)
 
 def RescaleMassArray(*newmas):
@@ -208,8 +234,7 @@ def RescaleMassArray(*newmas):
 		masss = masses.tolist()
 	else: masss = []
 	for mas in newmas:
-		for ma in mas:
-			masss.append(ma)
+		masss.extend(mas)
 	masses = np.array(masss)
 
 def RescaleSigmArray(*newsig):
@@ -219,8 +244,7 @@ def RescaleSigmArray(*newsig):
 		si = sigm.tolist()
 	else: si = []
 	for sii in newsig:
-		for sigi in sii:
-			si.append(sigi)
+		si.extend(sii)
 	sigm = np.array(si)
 
 def RescaleEpsiArray(*neweps):
@@ -230,8 +254,7 @@ def RescaleEpsiArray(*neweps):
 		ep = epsi.tolist()
 	else: ep = []
 	for epp in neweps:
-		for eppi in epp:
-			ep.append(eppi)
+		ep.extend(epp)
 	epsi = np.array(ep)
 
 def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
@@ -247,7 +270,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 	# run the creation procedure for every molecule passed in *mols tuple
 	# LOOP PER MOL PASSED TO CONSTRUCT
 	for mol in mols:
-		nam = mol
+		name = mol
 		newatts = [] # instantiate list for new atoms in molecule
 		newmol = Substance.from_formula(mol) # get a new chempy Substance object from the name
 		#print("newmol = " + newmol.)
@@ -258,7 +281,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 				# generate atoms of given type
 				newt = atfact.createAtom(elementindex,player)
 				newatts.append(newt) # add new atom to list
-				print("created " + newt.nam)
+				print("created " + newt.name)
 		# initialise arrays for sigma, epsilon, and type index values for the new atoms in the molecule
 		newsig 	= []
 		neweps 	= []
@@ -269,17 +292,17 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 			# if the simulation contains molecules, generate new LJ parameters using the Lorentz-Berthelot combining rules
 			for i in range(len(newatts)):
 				# 0 generate type name
-				name = mol + "_" + str(newatts[i].nam)
+				nam = mol + "_" + str(newatts[i].name)
 				# 1 initialise new index
 				tpindex  = len(tp)
 				# 2 search typearray for atom type
 				for typ in range(len(tp)):
-					if tp[typ] == name:
+					if tp[typ] == nam:
 						tpindex = typ
 				# type not found loaded: load new type, leave atom.unique = True
 				if tpindex == len(tp):
 					# 3 add type to array when loaded
-					tp.append(name)
+					tp.append(nam)
 					tpis.append(tpindex)
 					newatts.tpindex = tpindex
 					# 4 load simulation constants to arrays
@@ -304,18 +327,18 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 		else: # if this is the first molecule added to the sim, initialise arrays to molecule values and leave atom.unique = True
 			for i in range(len(newatts)):
 				# 0 generate type name
-				name = mol + "_" + str(newatts[i].nam)
+				nam = mol + "_" + str(newatts[i].name)
 				# 1 initialise new index
 				tpindex  = len(tp)
 				# 2 search typearray for atom type
 				for typ in range(len(tp)):
-					if tp[typ] == name:
+					if tp[typ] == nam:
 						tpindex = typ
 				# type not found loaded: load new type, leave atom.unique = True
 				if tpindex == len(tp):
 					# 1 save indices
 					newatts[i].tpindex = tpindex
-					tp.append(name)
+					tp.append(nam)
 					tpis.append(tpindex)
 					# 2 load values - ARE THESE LOADED CORRECTLY?
 					newsig.append([newatts[i].sig])
@@ -330,7 +353,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 		RescaleEpsiArray(neweps)
 
 		# initiate a molecule with parameters passed
-		mol = Molecule(nam, location, len(molecules), newatts, tpis, velocity)
+		mol = Molecule(name, location, len(molecules), newatts, tpis, velocity)
 		#print(at.world_position)
 
 		# add remaining values to AMP arrays and lists:
@@ -350,16 +373,16 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 #def ReactMols():
 #	pass
 
-# Gradient of Lennard-Jones potential on one body
+# Gradient of Lennard-Jones potential on one body (negative force)
 def dLJp(r,mol,atid,i,sigl,epsl,bdln):
 	#atm = mol.children[atid]
 	pvi = mol.children[atid].indx # position and vector array index of atom
 
-	print(mol.children[atid].nam)
-	print(mol.children[atid].world_position)
-	print(mol.children[atid].velocity)
-	print(mol.children[atid].sig)
-	print(mol.children[atid].tpindex)
+	#print(mol.children[atid].name)
+	#print(mol.children[atid].world_position)
+	#print(mol.children[atid].velocity)
+	#print(mol.children[atid].sig)
+	#print(mol.children[atid].tpindex)
 	sg = np.array([sigl[i]])
 	# if this is the only atom of its type, remove its sigma value to create the temporary array
 	if mol.children[atid].isUnique():
@@ -398,28 +421,6 @@ def dLJp(r,mol,atid,i,sigl,epsl,bdln):
 
 	return dLJP
 
-#bond length potential
-def BEpot(r,bnds):
-	bps=np.zeros(n)
-	print(bnds)
-	for i in range(n): #loop over all particles
-		for j in range(len(bnds)): #check all bonds to see if particle i is bonded
-			if bnds[j][0]==i or bnds[j][1]==i:
-				print("")
-				if bnds[j][0]==i: #find particle bonded to i
-					ii=int(bnds[j][1])
-				else:
-					ii=int(bnds[j][0])
-				dr0=bnds[j][2]
-				e0 =bnds[j][3]
-				dr=r[i]-r[ii]
-				dr2=dr*dr
-				adr2=sum(dr2)
-				adr=np.sqrt(adr2)
-				BE=e0*(adr-dr0)**2
-				bps[i]+=BE
-	return bps
-
 #gradient of bond length potential (negative force)
 def dBEpot(r,bnds):
 	bps=np.zeros([n,3])
@@ -441,13 +442,15 @@ def dBEpot(r,bnds):
 	return bps
 
 #gradient of bond angle potential (negative force)
-def dBA(r,angs):
-	aps=np.zeros([n,3])
-	for i in range(n): #loop over all particles
+def dBA(r,mol,angs):
+	aps=np.zeros([mol.n,3])
+	for i in range(mol.n): #loop over all particles in molecule
 		for j in range(len(angs)): #check all bonds to see if particle i is bonded
 			a1=int(angs[j][0])
 			a2=int(angs[j][1])
 			a3=int(angs[j][2])
+			#print(mol.name)
+			#print("a1: " + str(a1) + "a2: " + str(a2) + "a3: " + str(a3))
 			if i==a1 or i==a2 or i==a3:
 				th00=angs[j][3] #equilibrium angle
 				e0 =angs[j][4] #bending modulus
@@ -479,11 +482,8 @@ def dBA(r,angs):
 	return aps
 
 #derivative of coulomb potential (negative force)
-def coul(r,i,q0,mols):
-	qs=1.0*np.array([ml.chrg for ml in molecules])
-	for j in range(n):
-		if qs[i]==mols[j]:
-			qs[j]=0.0
+def coul(r,i,q0,mol,mols):
+	qs=1.0*np.array([ml.charges for ml in mols])
 	qs=np.delete(qs,i)
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
@@ -491,7 +491,7 @@ def coul(r,i,q0,mols):
 	r3=q0*qs*kc*((1.0/np.array(dr))**3.0) # Coulomb's law
 	FF =np.transpose(np.transpose(drv)*r3) # transpose the distance array, multiply by force, transpose back
 	Fs=np.sum(FF,axis=0) # sum the value of axis 0 of the transposed & multiplied array
-	print(Fs)
+	#print(Fs)
 	return Fs
 	#global D
 	#return np.zeros(D) disable charge force
@@ -509,26 +509,44 @@ def UpdateMP():
 	global atomPositions
 	global atomVelocities
 	#calculate acceleration from forces:
-	j = 0
-	a = []
+	#print("pre-update positions:")
 	if n > 0:
+		a = []
 		for mol in molecules:
+			#print(atomPositions)
 			# TODO calculate values in parallel
-			lj = -np.array([dLJp(atomPositions,mol,atm,mol.children[atm].tpindex,sigm,epsi,mol.bl[atm]) for atm in range(mol.n)])
-			bep= -dBEpot(atomPositions,mol.covbonds) #Bonds
-			ba = -dBA(atomPositions,mol.covbonds) #Bond angles
-			ch = -np.array([coul(atomPositions,mol.children[atm].indx,mol.chrgs[atm],molecules) for atm in range(mol.n)]) #Coulomb
-			F= ((lj + bep) + ba) + ch
-			a[j]=np.transpose(np.transpose(F)/mol.mm) #Force->acceleration
-			j += 1
+			# force fields; truncated Lennard-Jones potential, and EM force via Coulomb's law
+			lj = -np.array([dLJp(atomPositions,mol,atm,mol.children[atm].tpindex,sigm,epsi,mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
+			ch = -np.array([coul(atomPositions,mol.children[atm].indx,mol.charges[atm],mol,molecules) for atm in range(mol.n)]) # Coulomb
+			# bond angles and forces
+			bep= -dBEpot(atomPositions,mol.covbonds) # Spring potential. returns array for molecule
+			ba = -dBA(atomPositions,mol,mol.angles) # returns array for molecule
+			# array of forces on atoms in molecule
+			F= ((lj + bep) + ba) + ch # currently only works for molecules of size 3
+			# F=ma     a = F/m     a is extended to include newly calculated accelerations 
+			a.extend(np.transpose(np.transpose(F)/mol.mm)) #Force->acceleration
+		
+		# convert flexible list into numpy array for maths
 		a = np.array(a)
+			#print("a:")
+			#print(a)
 
-		# update velocity !!!					!!! POSSIBLE BUG
-		atomVelocities = atomVelocities + time.dt * a # I'm not sure if using this new 2D accelleration array will work in this equation as-is
-		atomVelocities = rescaleT(atomVelocities,Temp0) # scale to temperature
-		atomPositions = atomPositions + atomVelocities * time.dt  # should be average of atomVelocities over time.dt
-		print("updated " + mol.nam)
+		#print("positions before motion calculations:")
+		#print(atomPositions)
+
+		# calculus also allows us to derive velocities and positions from the acceleration
+		#print("velocities before:")
+		#print(atomVelocities)
+		atomVelocities = atomVelocities + a * time.dt
+		#print("velocities after:")
+		#print(atomVelocities)
+		atomVelocities = rescaleT(atomVelocities,Temp0) # scale velocities to keep temperature consistent
+		atomPositions = atomPositions + atomVelocities * time.dt  # this is going to cause problems. I'll have a fixed-rate simulation loop running soon
+		#print("updated " + mol.name)
 		# split up calculation if dt gets too large to prevent accumulating errors
+			
+		#print("positions at end of UpdateMP():")
+		#print(atomPositions)
 
 		# boundaries
 		if BC == True:
