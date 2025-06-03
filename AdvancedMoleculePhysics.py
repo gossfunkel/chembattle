@@ -140,12 +140,26 @@ class Molecule(Entity):
 				if i < (self.n-1):
 					angles.append([i-1,i,i+1,th0,Kth])
 
-		print(covbonds)
+		chrg = np.array(chrg)
+		sumcharge = 0
+		elnegal = []
+		sumelecneg = 0
+		for i in range(self.n):
+			elnegal.append(self.children[i].electroNegAllen)
+			sumelecneg += elnegal[i]
+			sumcharge += chrg[i]
+		if sumcharge != 0:
+			self.charge = sumcharge
+		for i in range(n):
+			chrg[i] = SOMETHING * (elnegal[i] / sumelecneg) # latter term represents ratio of electronegativity in molecule
+			# can't figure out how to have it share 0 charge about, and by how much
+
+		#print(covbonds)
 		# load lists into arrays
 		RescalePosArray(np.array(positions))
 		RescaleVelArray(np.array(velocities))
 		RescaleMassArray(self.mm)
-		self.charges 		= np.array(chrg)
+		self.charges 		= chrg
 		self.bl 			= np.array(bl)
 
 		self.covbonds 	= np.array(covbonds)
@@ -472,6 +486,8 @@ def dBA(r,mol,angs):
 					numerator=(n1+n2+n3)/(ar1*ar2)
 					dUdr=dUdth*numerator/denominator#
 					aps[i+1]+=dUdr
+					aps[i]+=dUdr
+					aps[i-1]+=dUdr
 	return aps
 
 #derivative of coulomb potential (negative force)

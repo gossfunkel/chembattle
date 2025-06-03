@@ -85,8 +85,8 @@ class Atom(Entity):
     	#def get_name(self) -> str:
         #	pass
 		
-		# may have to switch this out and calculate based on exact charge of proton in eV
-		self.charge = self.atomNum + self.ionisation
+		# have to switch this out and calculate based on charge distribution
+		#self.charge = self.atomNum + self.ionisation
 		nextSpin = False
 		for ele in range(self.charge):
 			if not nextSpin:
@@ -123,12 +123,14 @@ class Hydrogen(Atom):
 		self.uri     = 'atomHTrans.png'
 		self.mass    = 1.008
 		self.size    = (2.5,2.5,2.5)
+		self.charge = 1
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#028cad'
 		self.sig	= 0.5523570
 		self.eps 	= 4.4778900
 		self.cutoff = 2.2094300
 		self.name 	= 'hydrogen'
+		self.electroNegAllen = 2.3
     	#def get_name(self): -> str: return 'hydrogen'
 
 class Helium(Atom):
@@ -136,6 +138,7 @@ class Helium(Atom):
 		self.atomNum = 1
 		self.uri     = 'atomHeTrans.png'
 		self.mass    = 4.002
+		self.charge  = 0
 		self.size    = (2.67,2.67,2.67)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#028cad'
@@ -143,6 +146,7 @@ class Helium(Atom):
 		self.sig	= 0.4989030
 		self.eps 	= 0.0009421
 		self.cutoff = 1.9956100
+		self.electroNegAllen = 4.193
 
 class Lithium(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
@@ -150,18 +154,21 @@ class Lithium(Atom):
 		self.uri     = 'atomLiTrans.png'
 		self.mass    = 6.946
 		self.size    = (2.8,2.8,2.8)
+		self.charge  = 1
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffbbb0'
 		self.name 	= 'lithium'
 		self.sig	= 2.2807000
 		self.eps 	= 1.0496900
 		self.cutoff = 9.1228000
+		self.electroNegAllen = 0.912
 
 class Carbon(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 6
 		self.uri     = 'atomCTrans.png'
 		self.mass    = 12.011
+		self.charge  = 4
 		self.size    = (3.8,3.8,3.8)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#c8f900'
@@ -169,12 +176,14 @@ class Carbon(Atom):
 		self.sig	= 1.3541700
 		self.eps 	= 6.3695300
 		self.cutoff = 5.4166600
+		self.electroNegAllen = 2.544
 
 class Nitrogen(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 7
 		self.uri     = 'atomNTrans.png'
 		self.mass    = 14.007
+		self.charge = -3
 		self.size    = (4.0,4.0,4.0)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#10ff06'
@@ -182,12 +191,14 @@ class Nitrogen(Atom):
 		self.sig	= 1.2650800
 		self.eps 	= 9.7537900
 		self.cutoff = 5.0603000
+		self.electroNegAllen = 3.066
 
 class Oxygen(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 8
 		self.uri     = 'atomOTrans.png'
 		self.mass    = 15.999
+		self.charge = -2
 		self.size    = (4.2,4.2,4.2)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ff1005'
@@ -195,12 +206,14 @@ class Oxygen(Atom):
 		self.sig	= 1.1759900
 		self.eps 	= 5.1264700
 		self.cutoff = 4.7039500
+		self.electroNegAllen = 3.610
 
 class Sodium(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 11
 		self.uri     = 'atomNaTrans.png'
 		self.mass    = 22.990
+		self.charge  = 1
 		self.size    = (4.55,4.55,4.55)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffb002'
@@ -208,12 +221,14 @@ class Sodium(Atom):
 		self.sig	= 2.9577800
 		self.eps 	= 0.7367450
 		self.cutoff = 11.8311000
+		self.electroNegAllen = 0.869
 
 class Phosphorus(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 15
 		self.uri     = 'atomPTrans.png'
 		self.mass    = 30.973
+		self.charge  = -3
 		self.size    = (4.8,4.8,4.8)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ff0000'
@@ -221,12 +236,14 @@ class Phosphorus(Atom):
 		self.sig	= 1.9065200
 		self.eps 	= 5.0305000
 		self.cutoff = 7.6260900
+		self.electroNegAllen = 2.253
 
 class Sulfur(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 16
 		self.uri     = 'atomSTrans.png'
 		self.mass    = 32.062
+		self.charge  = -2
 		self.size    = (5.2,5.2,5.2)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#00ff00'
@@ -234,12 +251,14 @@ class Sulfur(Atom):
 		self.sig	= 1.8708900
 		self.eps 	= 4.3692700
 		self.cutoff = 7.4835500
+		self.electroNegAllen = 2.589
 
 class Chlorine(Atom):
 	def __init__(self, position, ionisation=0, velocity=np.zeros(3), temp=0.04):
 		self.atomNum = 17
 		self.uri     = 'atomClTrans.png'
 		self.mass    = 35.451
+		self.charge  = -1
 		self.size    = (5.5,5.5,5.5)
 		super().__init__(position, self.size, ionisation, velocity, self.uri, temp)
 		self.color  = '#ffff00'
@@ -247,6 +266,7 @@ class Chlorine(Atom):
 		self.sig	= 1.8174300
 		self.eps 	= 4.4832800
 		self.cutoff = 7.2697300
+		self.electroNegAllen = 3.287
 
 class Electron(Entity):
  	def __init__(self, position, binding, eshell=np.array([1.0,0.0,0.0]), spin=0):
