@@ -56,7 +56,7 @@ NA  = 6.0221409e+26 #Avogardos constant x 1000 (g->kg)
 ech = 1.60217662E-19 #electron charge in coulombs
 kc  = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 
-n = 3 # number of atoms
+n = 9 # number of atoms
 D = 3 # number of spacial dimensions
 LL = 15 # max size of system
 L = np.zeros([D])+LL
@@ -326,11 +326,24 @@ def calculateTemperature(v,n):
 
 def updatev(r,v,sigg,epss,a):
 	#calculate acceleration:
-	F=-np.array([dLJp(r,i,sigg[tp[i]],epss[tp[i]],bnd) for i in range(n)]) #LJ
-	F=F-dBEpot(r,bnd) #Bonds
-	F=F-dBA(r,angs) #Bond angles
-	F=F-np.array([coul(r,i,chrg) for i in range(n)]) #Coulomb
+	lj =-np.array([dLJp(r,i,sigg[tp[i]],epss[tp[i]],bnd) for i in range(n)]) #LJ
+	print("LJ:")
+	print(lj)
+	bep=-dBEpot(r,bnd) #Bonds
+	print("bep:")
+	print(bep)
+	ba =-dBA(r,angs) #Bond angles
+	print("ba:")
+	print(ba)
+	ch =-np.array([coul(r,i,chrg) for i in range(n)]) #Coulomb
+	print("ch:")
+	print(ch)
+	F= ((lj + bep) + ba) + ch 
+	print("F:")
+	print(F)
 	a=np.transpose(np.transpose(F)/mm) #Force->acceleration
+	print("acceleration:")
+	print(a)
 	#update velocity
 	#global set_dt
 	#newv=v+set_dt*a
@@ -359,6 +372,7 @@ def update():
 
 	print("positions at end of update():")
 	print(atomPositions)
+	print("======END OF UPDATE LOOP======")
 
 if __name__ == "__main__":
 	app.run()

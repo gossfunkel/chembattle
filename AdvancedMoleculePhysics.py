@@ -140,25 +140,47 @@ class Molecule(Entity):
 				if i < (self.n-1):
 					angles.append([i-1,i,i+1,th0,Kth])
 
-		# calculate partial charges using Allen electronegativity and an AMBER fixed-charged force-field
+		# hacky temporary assigning of partial charge based on electronegativity
+		# calculate partial charges using Allen electronegativity and formal charge contributions
 		chrg = np.array(chrg)
 		sumcharge = 0
 		elnegal = []
 		sumelecneg = 0
 		for i in range(self.n):
+			# count up the electronegativity of the atoms, and the formal charge on the molecule
 			elnegal.append(self.children[i].electroNegAllen)
 			sumelecneg += elnegal[i]
 			sumcharge += chrg[i]
-		if sumcharge != 0:
-			self.charge = sumcharge
+		# might use this? if i don't ditch all of this for a better method
+		#sortedChrg = np.array(chrg)
+		#sortedChrg.sort()
+		#diffChrg = sortedChrg[-1] - sortedChrg[0]
+
+		# find the difference between the largest and smallest electronegativities in the atom
+		sortedElnegal = np.array(elnegal)
+		sortedElnegal.sort()
+		#print("sorted elnegal: ")
+		#print(sortedElnegal)
+		diffNeg = sortedElnegal[-1] - sortedElnegal[0]
+		self.charge = sumcharge
+		# go through children and calculate partial charge as a function of electronegativity
 		for i in range(n):
-			chrg[i] = SOMETHING * (elnegal[i] / sumelecneg) # latter term represents ratio of electronegativity in molecule
-			# can't figure out how to have it share 0 charge about, and by how much
+			if (chrg[i] < 0): 	# assign sign based on charge of free atom
+				diffNeg *= -1
+			if sumcharge == 0:  # this molecule has a formal charge of 0
+				chrg[i] = diffNeg * (elnegal[i] / sumelecneg) # latter term represents ratio of electronegativity in molecule
+			else: # this molecule has an overall charge on it; it's an ion
+				chrg[i] = sumcharge + diffNeg * (elnegal[i] / sumelecneg) # latter term represents ratio of electronegativity in molecule
+			
+			
+
 			# AMBER uses e = sum(qiqj/rij) so could maybe rearrange. distance could define how much electrons can split charge
 			# where at a distance beyond the maximum bonding distance the charge on an atom reaches the formal charge of a free atom
 			# this might have to be saved to see if I can figure out a holistic approach to electrons
 			self.children[i].charge = chrg[i] # set the charge value in the atom object to the partial charge
+			
 
+			
 		#print(covbonds)
 		# load lists into arrays
 		RescalePosArray(np.array(positions))
@@ -433,7 +455,7 @@ def dLJp(r,mol,atid,sigl,epsl,bdln):
 
 #gradient of bond length potential (negative force)
 def dBEpot(r,mol,bnds):
-	bps=np.zeros([n,3])
+	bps=np.zeros([mol.n,3])
 	if mol.n > 1:
 		for i in range(mol.n): #loop over particles in molecule
 			#print("i: " + str(i) + ", n: " + str(mol.n))
@@ -461,8 +483,8 @@ def dBA(r,mol,angs):
 			a1=int(angs[i][0])
 			a2=int(angs[i][1])
 			a3=int(angs[i][2])
-			print("dBA for " + mol.name)
-			print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
+			#print("dBA for " + mol.name)
+			#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
 			if i==a1 or i==a2 or i==a3:
 				th00=angs[i][3] #equilibrium angle
 				e0 =angs[i][4] #bending modulus
@@ -530,6 +552,12 @@ def UpdateMP():
 			#print(atomPositions)
 			# TODO calculate values in parallel
 			# force fields; truncated Lennard-Jones potential, and EM force via Coulomb's law
+			# cumulative method
+			F = -np.array([dLJp(atomPositions,mol,mol.children[atm].indx,sigm[mol.children[atm].tpindex],epsi[mol.children[atm].tpindex],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
+			F = F-dBEpot(atomPositions,mol,mol.covbonds) # Spring potential. returns array for molecule
+			F = F-dBA(atomPositions,mol,mol.angles) # returns array for molecule
+			F = F-np.array([coul(atomPositions,mol.children[atm].indx,mol.charges[atm],mol,molecules) for atm in range(mol.n)]) # Coulomb
+			# rich output:
 			lj = -np.array([dLJp(atomPositions,mol,mol.children[atm].indx,sigm[mol.children[atm].tpindex],epsi[mol.children[atm].tpindex],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
 			print("LJ:")
 			print(lj)
@@ -547,6 +575,7 @@ def UpdateMP():
 			F= ((lj + bep) + ba) + ch # currently only works for molecules of size 3
 			# F=ma     a = F/m     a is extended to include newly calculated accelerations 
 			a.extend(np.transpose(np.transpose(F)/mol.mm)) #Force->acceleration
+			print("acceleration for " + mol.name + ": ")
 			print(a)
 		
 		#print("positions before motion calculations:")
@@ -572,6 +601,8 @@ def UpdateMP():
 			atomVelocities = 1.0 * atomVelocities
 		else:		
 			atomPositions, atomVelocities = reflectBC(atomPositions,atomVelocities)
+
+		print("==========END OF AMP UPDATE LOOP==========")
 		#total_T_display.text = calculateTemperature(atomVelocities,n)
 		#collisions_display.text = str(collisions_count)
 		#mouseloc_display.text = str(mouse.collisions)
