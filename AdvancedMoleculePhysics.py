@@ -19,38 +19,34 @@ import atoms as ats
 # e2 = Entity(x=1.5)
 # e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))
 # '''
-# ''' TODO : REWRITE ALL THE FUNCTIONS BELOW TO FIT THE NEW STRUCTURE OF THE ARRAYS
-#
 # This is the game's physics engine.
 # 
-# I am in the process of rewriting a basic Lennard-Jones, Spring Bonding and Electric molecular dynamics sim. I've integrated Ursina, but not yet
-# finished creating the core atom loading and processing algorithms.
+# I am in the process of rewriting a basic Lennard-Jones, Spring Bonding and Electric molecular dynamics sim. 
 # 
-# In short, don't expect this code to run reliably. The rest of the game isn't built up to keep up with these changes yet; hence 
-# splitting this off into a new physics file to keep the original sandbox going in parallel. This physics engine and the multiplayer
-#  are the main core of the game engine for this project, and if I can get a working prototype without wasting the whole summer on 
-# it, I think it might be worth keeping up. 
+# Don't expect this code to run reliably. The rest of the game isn't built up to keep up with these changes yet. This physics engine 
+# and the networking class will be the main core of the game engine for this project, and if I can get a working prototype without 
+# wasting the whole summer on it, I think it might be worth keeping up. 
 # '''
 
 # global values for simulation - can be modified in action
 n 			= 0 	# number of particles in sim
 D 			= 3 # number of spacial dimensions
 setdt 		= 0.002
-LL 			= 100 	# scale of the simulation space
+LL 			= 15 	# scale of the simulation space in angstroms
 L 			= np.zeros([D])+LL
-Temp0 		= 200 	# maintained temperature - TODO: CHANGE FOR PRESSURE (walls)
+Temp0 		= 200 	# maintained temperature in K - TODO: CHANGE FOR PRESSURE (walls)
 #dragstate 	= False # bool value to pause the sim while dragging a molecule around
 
 # constants
 Kr  = 148000.0  #spring potential is usually defined as U = (k/2)(r-r_0)^2. can include /2
 Kth = 35300.0  #same explanation as Kr but with bending energy
-kb  = 0.8314459920816467 # Boltzmann
+kb  = 0.8314459920816467 # Boltzmann constant in A^2 D ps^-2 K^-1
 NA  = 6.0221409e+26 #Avogadros constant x 1000 (g->kg)
 ech = 1.60217662E-19 #electron charge in coulombs
 kc  = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 
 # arrays of generated particles
-# TODO: Make 3D so that each molecule can have its own array of positions nested, to lookup by mol and child indices
+#particles 		= []
 atomPositions 	= [] 	# will be later initialised into a fast numpy array of vectors
 atomVelocities 	= [] 	# will be later initialised into a fast numpy array of vectors
 molecules 		= []	# list storing molecule objects
@@ -125,7 +121,7 @@ class Molecule(Entity):
 			#print("adding atom at pos: ")
 			#print(position)
 			# initialise atom type, constants, absolute and relative positions, velocities, masses, charges, bonds, and angles
-			child 		= self.children[i]
+			child = self.children[i]
 			#print(child)
 			child.setIndx(self.indx+i)
 			# the set of atoms in the arrays start at the molecule index; the molecule indexes the first atom in the array
@@ -139,11 +135,12 @@ class Molecule(Entity):
 			# assign the atom's parentMol variable to the new molecule
 			child.parentMol = self
 			# initialise bonds
-			if i > 0:
-				covbonds.append([i-1,i,bl[i],Kr])
+			if (self.n > 1):
+				covbonds.append([bl[i],Kr])
 				if i < (self.n-1):
 					angles.append([i-1,i,i+1,th0,Kth])
 
+		print(covbonds)
 		# load lists into arrays
 		RescalePosArray(np.array(positions))
 		RescaleVelArray(np.array(velocities))
@@ -151,17 +148,10 @@ class Molecule(Entity):
 		self.charges 		= np.array(chrg)
 		self.bl 			= np.array(bl)
 
-		# bonds only required for molecules with more than 1 member
-		if self.n > 1:
-			self.covbonds 	= covbonds # alternatively, np.array(covbonds.values())
-			# bond angles form between two bonds, so are not required if there are less than that
-			if self.n > 2:
-				self.angles = angles # alternatively, np.array(angles.values())
-			else: # if there is only one bond in the molecule
-				self.angles = [] # alternatively, np.array() 
-		else: # if there are no bonds in the molecule
-			self.covbonds = [] # alternatively, np.array() 
-
+		self.covbonds 	= np.array(covbonds)
+		# bond angles form between two bonds, so are not required if there are less than that
+		self.angles = angles # alternatively, np.array(angles.values())
+		
 		#print("molecule angles: ")
 		#print(self.angles)
 
@@ -372,7 +362,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 #	pass
 
 # Gradient of Lennard-Jones potential on one body (negative force)
-def dLJp(r,mol,atid,i,sigl,epsl,bdln):
+def dLJp(r,mol,atid,sigl,epsl,bdln):
 	#atm = mol.children[atid]
 	pvi = mol.children[atid].indx # position and vector array index of atom
 
@@ -423,38 +413,40 @@ def dLJp(r,mol,atid,i,sigl,epsl,bdln):
 	return dLJP
 
 #gradient of bond length potential (negative force)
-def dBEpot(r,bnds):
+def dBEpot(r,mol,bnds):
 	bps=np.zeros([n,3])
-	for i in range(n): #loop over all particles
-		for j in range(len(bnds)): #check all bonds to see if particle i is bonded
-			if bnds[j][0]==i or bnds[j][1]==i:
-				if bnds[j][0]==i: #find particle bonded to i
-					ii=int(bnds[j][1])
-				else:
-					ii=int(bnds[j][0])
-				dr0=bnds[j][2]
-				e0 =bnds[j][3]
-				dr=r[i]-r[ii]
-				dr2=dr*dr
-				adr2=sum(dr2)
-				adr=np.sqrt(adr2)
-				dBE=2.0*e0*(adr-dr0)*dr/adr
-				bps[i]+=dBE
+	if mol.n > 1:
+		for i in range(mol.n): #loop over particles in molecule
+			#print("i: " + str(i) + ", n: " + str(mol.n))
+			dr0=bnds[i][0]
+			e0 =bnds[i][1]
+			if (i == mol.n-1):
+				dr=r[mol.children[i].indx]-r[mol.children[i-1].indx] # difference in position
+			else: 
+				dr=r[mol.children[i+1].indx]-r[mol.children[i].indx] # difference in position
+			#print("dr from dbepot:")
+			#print(dr)
+			dr2=dr*dr 			# squared
+			adr2=sum(dr2) 		# summed
+			adr=np.sqrt(adr2) 	# rooted
+			dBE=2.0*e0*(adr-dr0)*dr/adr 
+			bps[i]+=dBE
 	return bps
 
 #gradient of bond angle potential (negative force)
 def dBA(r,mol,angs):
 	aps=np.zeros([mol.n,3])
-	for i in range(mol.n): #loop over all particles in molecule
-		for j in range(len(angs)): #check all bonds to see if particle i is bonded
-			a1=int(angs[j][0])
-			a2=int(angs[j][1])
-			a3=int(angs[j][2])
-			#print(mol.name)
-			#print("a1: " + str(a1) + "a2: " + str(a2) + "a3: " + str(a3))
+	if mol.n > 1:
+		for i in range(1,mol.n-1): #loop over middling particles
+			i -= 1
+			a1=int(angs[i][0])
+			a2=int(angs[i][1])
+			a3=int(angs[i][2])
+			print("dBA for " + mol.name)
+			print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
 			if i==a1 or i==a2 or i==a3:
-				th00=angs[j][3] #equilibrium angle
-				e0 =angs[j][4] #bending modulus
+				th00=angs[i][3] #equilibrium angle
+				e0 =angs[i][4] #bending modulus
 				if i==a1 or i==a2:
 					r1=r[a1]-r[a2] #bond vector 1 (form middle atom to atom 1)
 					r2=r[a3]-r[a2] #bond vector 2 (middle atom to atom 2)
@@ -471,7 +463,7 @@ def dBA(r,mol,angs):
 					numerator=(r2/(ar1*ar2))-(dot/(ar1*ar1*ar1*ar2*2.0))
 					denominator=np.sqrt(1.0-ndot*ndot)
 					dUdr=dUdth*numerator/denominator
-					aps[i]+=dUdr
+					aps[i+1]+=dUdr
 				if i==a2:
 					denominator=np.sqrt(1.0-ndot*ndot)
 					n1=-(r2+r1)
@@ -479,7 +471,7 @@ def dBA(r,mol,angs):
 					n3=dot*r2/(ar2*ar2)
 					numerator=(n1+n2+n3)/(ar1*ar2)
 					dUdr=dUdth*numerator/denominator#
-					aps[i]+=dUdr
+					aps[i+1]+=dUdr
 	return aps
 
 #derivative of coulomb potential (negative force)
@@ -517,28 +509,32 @@ def UpdateMP():
 			#print(atomPositions)
 			# TODO calculate values in parallel
 			# force fields; truncated Lennard-Jones potential, and EM force via Coulomb's law
-			lj = -np.array([dLJp(atomPositions,mol,atm,mol.children[atm].tpindex,sigm[atm],epsi[atm],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
+			lj = -np.array([dLJp(atomPositions,mol,mol.children[atm].indx,sigm[mol.children[atm].tpindex],epsi[mol.children[atm].tpindex],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
+			print("LJ:")
+			print(lj)
 			ch = -np.array([coul(atomPositions,mol.children[atm].indx,mol.charges[atm],mol,molecules) for atm in range(mol.n)]) # Coulomb
+			print("CH:")
+			print(ch)
 			# bond angles and forces
-			bep= -dBEpot(atomPositions,mol.covbonds) # Spring potential. returns array for molecule
+			bep= -dBEpot(atomPositions,mol,mol.covbonds) # Spring potential. returns array for molecule
+			print("bep:")
+			print(bep)
 			ba = -dBA(atomPositions,mol,mol.angles) # returns array for molecule
+			print("ba:")
+			print(ba)
 			# array of forces on atoms in molecule
 			F= ((lj + bep) + ba) + ch # currently only works for molecules of size 3
 			# F=ma     a = F/m     a is extended to include newly calculated accelerations 
 			a.extend(np.transpose(np.transpose(F)/mol.mm)) #Force->acceleration
+			print(a)
 		
-		# convert flexible list into numpy array for maths
-		a = np.array(a)
-			#print("a:")
-			#print(a)
-
 		#print("positions before motion calculations:")
 		#print(atomPositions)
 
 		# calculus also allows us to derive velocities and positions from the acceleration
 		#print("velocities before:")
 		#print(atomVelocities)
-		atomVelocities = atomVelocities + a * time.dt
+		atomVelocities = atomVelocities + np.array(a) * time.dt # convert flexible list into numpy array for maths
 		#print("velocities after:")
 		#print(atomVelocities)
 		atomVelocities = rescaleT(atomVelocities,Temp0) # scale velocities to keep temperature consistent

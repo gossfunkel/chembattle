@@ -56,7 +56,7 @@ NA  = 6.0221409e+26 #Avogardos constant x 1000 (g->kg)
 ech = 1.60217662E-19 #electron charge in coulombs
 kc  = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 
-n = 30 # number of atoms
+n = 3 # number of atoms
 D = 3 # number of spacial dimensions
 LL = 15 # max size of system
 L = np.zeros([D])+LL
@@ -248,6 +248,7 @@ def dBEpot(r,bnds):
 				adr=np.sqrt(adr2)
 				dBE=2.0*e0*(adr-dr0)*dr/adr
 				bps[i]+=dBE
+	print(bps)
 	return bps
 
 #gradient of bond angle potential (negative force)
