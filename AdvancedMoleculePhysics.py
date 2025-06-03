@@ -140,6 +140,7 @@ class Molecule(Entity):
 				if i < (self.n-1):
 					angles.append([i-1,i,i+1,th0,Kth])
 
+		# calculate partial charges using Allen electronegativity and an AMBER fixed-charged force-field
 		chrg = np.array(chrg)
 		sumcharge = 0
 		elnegal = []
@@ -153,6 +154,10 @@ class Molecule(Entity):
 		for i in range(n):
 			chrg[i] = SOMETHING * (elnegal[i] / sumelecneg) # latter term represents ratio of electronegativity in molecule
 			# can't figure out how to have it share 0 charge about, and by how much
+			# AMBER uses e = sum(qiqj/rij) so could maybe rearrange. distance could define how much electrons can split charge
+			# where at a distance beyond the maximum bonding distance the charge on an atom reaches the formal charge of a free atom
+			# this might have to be saved to see if I can figure out a holistic approach to electrons
+			self.children[i].charge = chrg[i] # set the charge value in the atom object to the partial charge
 
 		#print(covbonds)
 		# load lists into arrays
