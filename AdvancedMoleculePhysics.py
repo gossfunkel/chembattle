@@ -584,6 +584,8 @@ def UpdateMP():
 		# calculus also allows us to derive velocities and positions from the acceleration
 		#print("velocities before:")
 		#print(atomVelocities)
+		# verlet integration: atomPositions = 2 * atomPositions - atomPositionsPrev + a
+		# requires previous step is saved alongside current step for next step to use. Removes velocity from equations
 		atomVelocities = atomVelocities + np.array(a) * time.dt # convert flexible list into numpy array for maths
 		#print("velocities after:")
 		#print(atomVelocities)

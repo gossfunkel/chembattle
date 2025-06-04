@@ -1,0 +1,85 @@
+chembattle pseudocode
+
+class PhysicsEngine{
+	// holds data about particle positions, necessary constants, and bonding relationships in a big n-dimensional array
+
+	NDarray simulation	the array holding all details of simulated particles
+	INT 	n 			number of particles in simulation
+	INT 	D = 3		number of spacial dimensions
+	INT 	simSize		size of simulation in Angstroms 		(previously: LL)
+	INT 	simSizeVec	vectorised simulation size 				(previously: L)
+	INT 	fixTemp		fixed temperature to minimise errors 	(previously: Temp0)
+	INT 	fixPress	pressure to maintain to minimise errors 
+	FLOAT 	kB			Boltzmann constant
+	FLOAT 	kA			Avogadro's constant 					(previously: NA)
+	FLOAT 	kR 			Spring potential constant
+	FLOAT 	kTh			Bending energy constant
+	FLOAT 	kEq 		Electron charge constant in Coulombs 	(previously: ech)
+	FLOAT 	kC 			Electrostatic constant in Daltons 
+
+	FLOAT 	set_dt 		constant rate of simulation ticks per second
+
+	function BOOL createMol(VEC location, STR name){
+		//calculate atoms in new molecule
+		//create new subarray and populate with constants
+		//rescale the simulation array
+		if succesful
+			return true
+		if failed
+			return false
+	}
+
+	function BOOL flushMol(INT index){
+		//remove the molecule at position index in the simulation array
+		if succesful
+			return true
+		if failed
+			return false
+	}
+
+	function FLOAT deltaLJPot(ARRAY particle){ 													(previously: dLJP())
+		//calculate the gradient of the Lennard-Jones Potential field for particle
+		return FLOAT ljForceParticlei
+	}
+
+	function FLOAT deltaCoulomb(ARRAY particle){												(previously: Coul())
+		//uses Coulomb's law to calculate the gradient of the Electromagnetic potential 
+		//	field for a particle
+		return FLOAT emForceParticlei
+	}
+
+	function ARRAY bondAngle(ARRAY simulation){
+		//calculates the forces maintaining bond angles on particles with bonds
+		return ARRAY angleForces
+	}
+
+	function ARRAY BondEnergy(ARRAY simulation){
+		//calculates the forces holding bonded atoms together
+		//calls React() when particles' bonding energy is overcome
+		return ARRAY angleForces
+	}
+
+	function ARRAY rescaleTemp(ARRAY velocities){
+		//using constant fixTemp, velocities are scaled to maintain a constant temperature
+		return velocities
+	}
+
+	function ARRAY updateMovement(ARRAY simulation, ARRAY accel){
+		// possibility of doing away with velocities by using verlet integration
+		// velocity could be designed out when I implement  amethod to maintain a constant pressure (instead of temperature)
+		ARRAY velocities 		= array(simulation[velocities] + accel * set_dt)
+		simulation[velocities]	= rescaleTemp(velocities)
+		simulation[positions]	= array(simulation[positions] + simulation[velocities] * set_dt)
+		return simulation
+	}
+
+	function Update(){
+		lj 		 = array(deltaLJPot(particle) for particle in simulation)
+		coul 	 = array(deltaCoulomb(particle) for particle in simulation)
+		ba 		 = bondAngle(simulation)
+		bep 	 = bondEnergy(simulation)
+		sumForce = ((-lj - bep) - ba) - ch
+		accel 	 = sumForce/simulation[masses]
+		simulation = updateMovement(simulation,accel)
+	}
+}

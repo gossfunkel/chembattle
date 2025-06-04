@@ -186,14 +186,16 @@ def LJpot(r,i,sigg,epss):
 def dLJp(r,i,sigl,epsl,bdln):
 	sg=np.delete(np.array([sigl[tp[j]] for j in range(n)]),i)
 	ep=np.array([epsl[tp[j]] for j in range(n)])
-	for ii in range(n): #ignore atoms in the same molecule
+	for ii in range(n): #ignore atoms in the same molecule (multiply all by 0)
 		if mols[i]==mols[ii]:
 			ep[ii]=0
 	ep=np.delete(ep,i)
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
-	if ((dr[j] < 4) for j in dr):
+	print("dr:")
+	print(dr)
+	if ((dr[j] < 3) for j in dr):
 		#print ("round " + str(j))
 		#print("dLJP values")
 		#print("ep: " + str(ep))
