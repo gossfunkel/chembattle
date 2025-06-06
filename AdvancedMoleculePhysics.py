@@ -114,6 +114,9 @@ class Molecule(Entity):
 			if i > 0:
 				# increment temporary position variable by bond length to give smoother load-in
 				position = np.array(position) + np.array([1.0/bl[i]**3,1.0/bl[i]**3,1.0/bl[i]**3]) 
+				if (i%2==0):
+					#self.children[i].rotation_y = 180
+					position[1] += 1
 				# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
 			else:
 				position = np.array(position)
