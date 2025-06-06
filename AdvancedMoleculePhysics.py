@@ -95,6 +95,7 @@ class Molecule(Entity):
 		self.children 	  = chldatoms # the children of the molecule object are the atoms that constitute the molecule
 		#print(self.children)
 		self.indx 		  = indx # the index of the first child atom in the position and velocity arrays
+		self.tpis 		  = tpis
 		self.bl 		  = [bl] 	# 0.9611 for water -- bond lengths stored in the arrays stored in covbonds
 		self.mm 		  = [] 	# array storing masses
 		
@@ -117,6 +118,8 @@ class Molecule(Entity):
 				if (i%2==0):
 					#self.children[i].rotation_y = 180
 					position[1] += 1
+				else:
+					position[2] += 1
 				# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
 			else:
 				position = np.array(position)
@@ -140,8 +143,8 @@ class Molecule(Entity):
 			# initialise bonds
 			if (self.n > 1):
 				covbonds.append([bl[i],Kr])
-				if (i > 0 and i < (self.n-1)):
-					angles.append([self.children[i-1].indx,self.children[i].indx,self.children[i+1].indx,th0,Kth])
+				if (i%3==2):
+					angles.append([self.children[i-2].indx,self.children[i-1].indx,self.children[i].indx,th0,Kth])
 
 		# hacky temporary assigning of partial charge based on electronegativity
 		# calculate partial charges using Allen electronegativity and formal charge contributions
@@ -206,8 +209,9 @@ class Molecule(Entity):
 		#global atomAccel
 		for i in range(self.n):
 			#print("index " + str(self.indx+i))
-			print(atomPositions)
-			self.children[i].world_position = SlideTo(atomPositions[self.indx+i, :],self.children[i].world_position,1)
+			#print(atomPositions)
+			#self.children[i].world_position = SlideTo(atomPositions[self.indx+i, :],self.children[i].world_position,1)
+			self.children[i].world_position = atomPositions[self.indx+i, :]
 			self.children[i].velocity 		= atomVelocities[self.indx+i, :]
 
 	def positions(self):	return [self.children[i].world_position for i in range(self.n)]
@@ -217,8 +221,8 @@ class Molecule(Entity):
 def reflectBC(r,v):
 	newv = 1.0 * v
 	newr = 1.0 * r
-	print("r:")
-	print(newr)
+	#print("r:")
+	#print(newr)
 	for mol in molecules:
 		for at in mol.children:
 			for j in range(D):
@@ -312,6 +316,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 				newt = atfact.createAtom(elementindex,player)
 				newatts.append(newt) # add new atom to list
 				print("created " + newt.name)
+			if quant > 1: newatts[i].setUnique(False)
 		# temporary messy shuffle to put 3-member molecules the right way round
 		if len(newatts) > 2:
 			tempAt = newatts[1]
@@ -328,7 +333,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 			# if the simulation contains molecules, generate new LJ parameters using the Lorentz-Berthelot combining rules
 			for i in range(len(newatts)):
 				# 0 generate type name
-				nam = mol + "_" + str(newatts[i].name)
+				nam = newatts[i].name
 				# 1 initialise new index
 				tpindex  = len(tp)
 				# 2 search typearray for atom type
@@ -340,7 +345,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 					# 3 add type to array when loaded
 					tp.append(nam)
 					tpis.append(tpindex)
-					newatts.tpindex = tpindex
+					newatts[i].tpindex = tpindex
 					# 4 load simulation constants to arrays
 					newsig.append(newatts[i].sig)
 					neweps.append(newatts[i].eps)
@@ -385,6 +390,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 					# tell engine that atom is not unique in the simulation
 					newatts[i].setUnique(False)
 		# > load any new values into AMP arrays
+		print("newsig: " + str(newsig))
 		RescaleSigmArray(newsig)
 		RescaleEpsiArray(neweps)
 
@@ -410,7 +416,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 #	pass
 
 # Gradient of Lennard-Jones potential on one body (negative force)
-def dLJp(r,mol,atid,sigl,epsl,bdln):
+def dLJp(r,mol,atid,sigl,epsl,bdln): # called in loops for every atom in mol, for every mol in molecules 
 	#atm = mol.children[atid]
 	pvi = mol.children[atid].indx # position and vector array index of atom
 
@@ -421,7 +427,9 @@ def dLJp(r,mol,atid,sigl,epsl,bdln):
 	#print(mol.children[atid].tpindex)
 	sg = np.array([sigl])
 	# if this is the only atom of its type, remove its sigma value to create the temporary array
-	if mol.children[atid].isUnique(): sg=np.delete(sigl,0)
+	if mol.children[atid].isUnique(): 
+		sg=np.delete(sigl,0)
+		print("removed unique type " + tp[mol.tpis[atid]])
 	# otherwise index 0 is used for interactions w/ others of its type
 
 	ep = np.array([epsl])
@@ -461,7 +469,7 @@ def dLJp(r,mol,atid,sigl,epsl,bdln):
 	return dLJP
 
 #gradient of bond length potential (negative force)
-def dBEpot(r,mol,bnds):
+def dBEpot(r,mol,bnds): # called once per molecule (for mol in molecules)
 	bps=np.zeros([mol.n,3])
 	if mol.n > 1:
 		for i in range(mol.n): #loop over particles in molecule
@@ -482,58 +490,62 @@ def dBEpot(r,mol,bnds):
 	return bps
 
 #gradient of bond angle potential (negative force)
-def dBA(r,mol,angs):
+def dBA(r,mol,angs): # called once per molecule (for mol in molecules)
+	# THIS METHOD IS BUILT FOR WATER-STYLE 3-ATOM MOLECULES; WILL BE REPLACED IN ENGINE REWRITE
+	#childIndex = mol.children[0].indx
+	# initialise array of zeros the size of the molecule x 3 for forces on each atom
 	aps=np.zeros([mol.n,3])
-	if mol.n > 1:
-		for i in range(mol.n):
-			for i in range(len(angs)): #loop over angles
+	for i in range(len(angs)): #loop over angles
+		for childIndex in range(mol.n):
+			if angs[i][0] == childIndex: # if the bond matches this molecule
 				#i -= 1
+				# load atomPosition indices from angles array
 				a1=int(angs[i][0])
 				a2=int(angs[i][1])
 				a3=int(angs[i][2])
 				#print("dBA for " + mol.name)
 				#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
-				childIndex = mol.children[i].indx
-				if childIndex==a1 or childIndex==a2 or childIndex==a3:
-					th00=angs[i][3] #equilibrium angle
-					e0 =angs[i][4] #bending modulus
-					if childIndex==a1 or childIndex==a2:
-						r1=r[a1]-r[a2] #bond vector 1 (from middle atom to atom 1)
-						r2=r[a3]-r[a2] #bond vector 2 (middle atom to atom 2)
-					else:
-						r1=r[a3]-r[a2] #bond vector 1 (from middle atom to atom 1)
-						r2=r[a1]-r[a2] #bond vector 2 (middle atom to atom 2)
-					print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
-					print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
-					ar1=np.linalg.norm(r1) #lengths of bonds
-					ar2=np.linalg.norm(r2)
-					print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
-					dot=np.dot(r1,r2) #r1 dot r2
-					print("dot product: " + str(dot))
-					ndot=dot/np.linalg.norm(dot) #normalize dot product by vector lengths i.e. get the cos of angle
-					print("normalised dot product in angle calculation: " + str(ndot))
-					th=np.arccos(ndot) #bond angle, theta
-					dUdth=-2.0*e0*(th-th00) #-dU/dtheta
-					if a1==childIndex or a3==childIndex:
-						numerator 	= (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
-						denominator = np.sqrt(1.0 - ndot**2)
-						dUdr 		= dUdth * numerator/denominator
-						aps[i+1] 	+= dUdr
-					if childIndex==a2:
-						denominator	= np.sqrt(1.0 - ndot**2)
-						#print (" denominator in angle calculation: " + str(denominator))
-						n1 			= - (r2 + r1)
-						n2			= dot * r1 / ar1**2
-						n3			= dot * r2 / ar2**2
-						numerator	= (n1+n2+n3)/(ar1*ar2)
-						dUdr		= dUdth * numerator/denominator
-						aps[i+1]	+= dUdr
-						aps[i]		+= dUdr
-						aps[i-1]	+= dUdr
+				#if childIndex==a1 or childIndex==a2 or childIndex==a3:
+				th00=angs[i][3] #equilibrium angle
+				e0 =angs[i][4] #bending modulus
+				# calculate the vectors between the atoms' current positions
+				#if childIndex==a1 or childIndex==a2:
+				r1 = r[a1] - r[a2] #bond vector 1 (from middle atom to atom 1)
+				r2 = r[a3] - r[a2] #bond vector 2 (middle atom to atom 2)
+				#else:
+				#	r1 = r[a3] - r[a2] #bond vector 1 (from middle atom to atom 1)
+				#	r2 = r[a1] - r[a2] #bond vector 2 (middle atom to atom 2)
+				#print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
+				#print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
+				ar1 = abs(np.linalg.norm(r1)) #lengths of bonds
+				ar2 = abs(np.linalg.norm(r2))
+				#print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
+				dot = np.dot(r1,r2) #r1 dot r2
+				#print("dot product: " + str(dot))
+				ndot=dot/(ar1*ar2) #normalize dot product by vector lengths i.e. get the cos of angle
+				#print("normalised dot product in angle calculation: " + str(ndot))
+				th = np.arccos(ndot) #bond angle, theta
+				dUdth=-2.0*e0*(th-th00) #-dU/dtheta
+				if (childIndex==a1 or childIndex==a3):
+					numerator 	= (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
+					denominator = np.sqrt(1.0 - ndot**2)
+					dUdr 		= dUdth * numerator/denominator
+					aps[i+1] 	+= dUdr
+				elif (childIndex==a2):
+					denominator	= np.sqrt(1.0 - ndot**2)
+					#print (" denominator in angle calculation: " + str(denominator))
+					n1 			= - (r2 + r1)
+					n2			= dot * r1 / ar1**2
+					n3			= dot * r2 / ar2**2
+					numerator	= (n1+n2+n3)/(ar1*ar2)
+					dUdr		= dUdth * numerator/denominator
+					aps[i+1]	+= dUdr
+					aps[i]		+= dUdr
+					aps[i-1]	+= dUdr
 	return aps
 
 #derivative of coulomb potential (negative force)
-def coul(r,molindex,i,q0,mol,mols):
+def coul(r,molindex,i,q0,mol,mols): # called in loops for every atom in mol, for every mol in molecules 
 	qs = []
 	for ml in mols:
 		if ml != mol:
@@ -586,7 +598,7 @@ def UpdateMP():
 			#F = F-dBA(atomPositions,mol,mol.angles) # returns array for molecule
 			#F = F-np.array([coul(atomPositions,mol.children[atm].indx,mol.charges[atm],mol,molecules) for atm in range(mol.n)]) # Coulomb
 			# rich output:
-			lj = -np.array([dLJp(atomPositions,mol,mol.children[atm].indx,sigm[mol.children[atm].tpindex],epsi[mol.children[atm].tpindex],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
+			lj = -np.array([dLJp(atomPositions,mol,atm,sigm[mol.children[atm].tpindex],epsi[mol.children[atm].tpindex],mol.bl[atm]) for atm in range(mol.n)]) # Lennard-Jones
 			print("LJ:")
 			print(lj)
 			ch = -np.array([coul(atomPositions,atm,mol.children[atm].indx,mol.charges[atm],mol,molecules) for atm in range(mol.n)]) # Coulomb

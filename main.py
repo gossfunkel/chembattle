@@ -79,7 +79,7 @@ quitbutt  = ui.QuitButton()
 follbutt  = ui.FollowButton()
 #uiobjects.append()
 
-camera.position = (25,75,-80)
+camera.position = (25,65,-70)
 camera.rotation_x = 30
 #camera.rotation_y = -90
 # this means
@@ -100,7 +100,7 @@ def switchCameraPos():
 		camera.rotation_x = 90
 		camera.rotation_y = 0
 	else: 
-		camera.position = (0,1.5,-175)
+		camera.position = (25,50,-65)
 		camera.rotation_x = 0
 		camera.rotation_y = 0
 
