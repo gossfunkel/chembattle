@@ -111,6 +111,7 @@ class Atom(Entity):
 			raise TypeError("atom.unique can only be true or false!")
 		else: 
 			self.unique = val
+			return self.unique
 
 	def isUnique(self):
 		return self.unique

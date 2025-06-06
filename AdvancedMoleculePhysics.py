@@ -31,7 +31,7 @@ import atoms as ats
 # global values for simulation - can be modified in action
 n 			= 0 	# number of particles in sim
 D 			= 3 # number of spacial dimensions
-setdt 		= 2.0E-5
+setdt 		= 2.0E-4
 LL 			= 25 	# scale of the simulation space in angstroms
 L 			= np.zeros([D])+LL
 Temp0 		= 200 	# maintained temperature in K - TODO: CHANGE FOR PRESSURE (walls)
@@ -170,7 +170,7 @@ class Molecule(Entity):
 		diffNeg = sortedElnegal[-1] - sortedElnegal[0]
 		self.charge = sumcharge
 		# go through children and calculate partial charge as a function of electronegativity
-		for i in range(n):
+		for i in range(self.n):
 			if (chrg[i] < 0): 	# assign sign based on charge of free atom
 				diffNeg *= -1
 			if sumcharge == 0:  # this molecule has a formal charge of 0
@@ -271,7 +271,7 @@ def RescaleMassArray(*newmas):
 		masss.extend(mas)
 	masses = np.array(masss)
 
-def RescaleSigmArray(*newsig):
+def RescaleSigmArray(newsig):
 	global sigm
 	# 	rescale velocities array
 	if len(sigm) > 0:
@@ -281,7 +281,7 @@ def RescaleSigmArray(*newsig):
 		si.extend(sii)
 	sigm = np.array(si)
 
-def RescaleEpsiArray(*neweps):
+def RescaleEpsiArray(neweps):
 	global epsi
 	# 	rescale velocities array
 	if len(epsi) > 0:
@@ -316,7 +316,9 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 				newt = atfact.createAtom(elementindex,player)
 				newatts.append(newt) # add new atom to list
 				print("created " + newt.name)
-			if quant > 1: newatts[i].setUnique(False)
+			if quant > 1: 
+				newatts[i].setUnique(False)
+				print("producing multiple, setting unique flag to false")
 		# temporary messy shuffle to put 3-member molecules the right way round
 		if len(newatts) > 2:
 			tempAt = newatts[1]
@@ -334,12 +336,14 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 			for i in range(len(newatts)):
 				# 0 generate type name
 				nam = newatts[i].name
+				print("atom name : " + nam)
 				# 1 initialise new index
 				tpindex  = len(tp)
 				# 2 search typearray for atom type
 				for typ in range(len(tp)):
 					if tp[typ] == nam:
 						tpindex = typ
+						print("type index match! New index: " + str(tpindex))
 				# type not found loaded: load new type, leave atom.unique = True
 				if tpindex == len(tp):
 					# 3 add type to array when loaded
@@ -347,13 +351,16 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 					tpis.append(tpindex)
 					newatts[i].tpindex = tpindex
 					# 4 load simulation constants to arrays
-					newsig.append(newatts[i].sig)
-					neweps.append(newatts[i].eps)
-					atsig = [newatts[i].sig]
-					ateps = [newatts[i].eps]
+					newsig.append(np.float64(newatts[i].sig))
+					neweps.append(np.float64(newatts[i].eps))
+					atsig = [np.float64(newatts[i].sig)]
+					ateps = [np.float64(newatts[i].eps)]
 					# si[0] and ep[0] should countain sigma and epsilon ii - the atom's LJ constants
-					atsig.append([(newsig[i]+si[0])/2   for si in sigm]) # Lorentz combining rule: sigma combines using mean average. Analytically correct for hard spheres only
-					ateps.append([(neweps[i]*ep[0])**.5 for ep in epsi]) # Berthelot combining rule: dipole interactions averaged with root-product
+					for si in sigm:
+						print("si: " + str(si))
+						atsig.append((newsig[i]+si[0])/2) # Lorentz combining rule: sigma combines using mean average. Analytically correct for hard spheres only
+					for ep in epsi:
+						ateps.append((neweps[i]*ep[0])**.5) # Berthelot combining rule: dipole interactions averaged with root-product
 					# load newly calculated arrays for atom i as a dimension of the new arrays
 					newsig[i] = atsig
 					neweps[i] = ateps
@@ -368,7 +375,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 		else: # if this is the first molecule added to the sim, initialise arrays to molecule values and leave atom.unique = True
 			for i in range(len(newatts)):
 				# 0 generate type name
-				nam = mol + "_" + str(newatts[i].name)
+				nam = str(newatts[i].name)
 				# 1 initialise new index
 				tpindex  = len(tp)
 				# 2 search typearray for atom type
@@ -382,9 +389,11 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 					tp.append(nam)
 					tpis.append(tpindex)
 					# 2 load values - ARE THESE LOADED CORRECTLY?
-					newsig.append([newatts[i].sig])
-					neweps.append([newatts[i].eps])
-				else: # type already loaded, copy index value
+					newsig.append([[newatts[i].sig]])
+					neweps.append([[newatts[i].eps]])
+				else: # type already loaded before simulation emptied, copy index value
+					# in future, this will raise exception that triggers clearing of simulation, 
+							# as type data should be removed from the array automatically
 					newatts[i].tpindex = tpindex
 					tpis.append(tpindex)
 					# tell engine that atom is not unique in the simulation
@@ -437,6 +446,10 @@ def dLJp(r,mol,atid,sigl,epsl,bdln): # called in loops for every atom in mol, fo
 	if mol.children[atid].isUnique(): ep=np.delete(ep,0) 
 
 	# format arrays to construct one with a value for every atom
+	sigmo = np.zeros(n)
+	for i in range(n):
+		# might need the new array structure to fix this 
+		sigmo[] = 
 	sixConst = ep*(sg**6)
 	twelveConst = 2.0*ep*(sg**12)
 	
@@ -576,7 +589,7 @@ def rescaleT(v,T):
 	avKE = KE/n
 	Tnow = (2.0/3)*avKE/kb
 	lam=np.sqrt(T/Tnow)
-	lam=(lam-1.0)*0.5 + 1.0 # uncomment to update temp slowly
+	#lam=(lam-1.0)*0.5 + 1.0 # uncomment to update temp slowly
 	vnew = lam*v
 	return vnew
 
@@ -627,9 +640,9 @@ def UpdateMP():
 		# verlet integration: atomPositions = 2 * atomPositions - atomPositionsPrev + a
 		# requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
 		atomVelocities = atomVelocities + np.array(a) * setdt # convert flexible list into numpy array for maths
+		#atomVelocities = rescaleT(atomVelocities,Temp0) # scale velocities to keep temperature consistent
 		print("velocities after:")
 		print(atomVelocities)
-		atomVelocities = rescaleT(atomVelocities,Temp0) # scale velocities to keep temperature consistent
 		atomPositions = atomPositions + atomVelocities * setdt  # this is going to cause problems. I'll have a fixed-rate simulation loop running soon
 		#print("updated " + mol.name)
 		# split up calculation if dt gets too large to prevent accumulating errors
