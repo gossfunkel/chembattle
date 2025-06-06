@@ -80,21 +80,24 @@ def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
 	# remove epsilon value for self if it is unique
 	#if mol.children[atid].isUnique(): ep=np.delete(ep,0) 
 	
+	#  removal method to keep indices matching commented out
 	# create arrays for constants, initially of all type indices
-	sg = [atom[0] for atom in molSim]
-	ep = sg
-	rm = [] # array to remove
+	#sg = [atom[0] for atom in molSim]
+	#ep = sg
+	#rm = [] # array to remove
+	sg = []
+	ep = []
 	for i in nParticles:
 		# populate the array with the values of sigma for each combination of particles
 		# n.b. this function is called once for every atom in the sim
-		
-			sg[i] = atTypes[tpi[i],1,molSim[atID,0]]
-			ep[i] = atTypes[tpi[i],2,molSim[atID,0]]
-			if (molSim[i,5] == molSim[atID,5]): 
-				rm.append(i)
-	for i in rm:
-		sg = np.delete(sg,i)
-		ep = np.delete(ep,i)
+		if (molSim[i,5] != molSim[atID,5]): 
+			sg.append(atTypes[tpi[i],1,molSim[atID,0]])
+			ep.append(atTypes[tpi[i],2, molSim[atID,0]])
+			#if (molSim[i,5] == molSim[atID,5]): 
+				#rm.append(i)
+	#for i in rm:
+		#sg = np.delete(sg,i)
+		#ep = np.delete(ep,i)
 	sixConst = ep*(sg**6)
 	twelveConst = 2.0*ep*(sg**12)
 	
@@ -104,7 +107,7 @@ def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
 
 	# truncate to only calculate only for nearby (less than 4 fm away) atoms. May be replaced by partitioning
 	if ((dr[i] > 4) for i in dr):
-		dLJP=0.0
+		return 0.0
 	else: # calculate dLJP (8-14 from 6-12)
 		#print("ep: " + str(ep))
 		#print("dr: " + str(dr))
@@ -117,9 +120,29 @@ def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
 		r14v = np.transpose(np.transpose(drv)*r14)
 		r8vs = np.sum(r8v,axis=0)
 		r14vs= np.sum(r14v,axis=0)
-		dLJP=24.0*(r14vs-r8vs)
+		return 24.0*(r14vs-r8vs)
 
-	return dLJP
+	#return dLJP
+	
+# derivative of coulomb potential (negative force)
+def coul(molSim, atTypes, atID): # called in loops for every atom in mol, for every mol in molecules 
+	#qs = [molSim[i,4] for i in nParticles]
+	qs = []
+	for i in nParticles:
+		if (molSim[i,5] != molSim[atID,5]): 
+				qs.append(molSim[i,4])
+			# no charge interactions with own molecule
+			
+	#qs=1.0*np.array([ml.charges for ml in mols])
+	qs = 1.0*np.array(qs)
+	r = np.delete(molSim[1,axis=1],atID)    # TODO check this is how 2D array indexing works
+	drv=r-r[atID] #distance in each dimension
+	drv=np.delete(drv,atID,0) #remove ith element (no self-interactions)
+	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance
+	r3=q0*qs*kc*((1.0/np.array(dr))**3.0) # Coulomb's law      TODO Update constants
+	FF =np.transpose(np.transpose(drv)*r3) # transpose the distance array, multiply by force, transpose back
+	return np.sum(FF,axis=0) # sum the value of axis 0 of the transposed & multiplied array
+	#return np.zeros(D) disable charge force
 
 def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, location=None):
 
