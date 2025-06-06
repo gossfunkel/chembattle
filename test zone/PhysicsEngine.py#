@@ -26,16 +26,17 @@ from chempy import Substance
 # holds the simulation data
 # initialised as a list for loading. Later converted to numpy ndarray
 # each array on the top level contains the data for a given particle (atom) in the molecular simulation
-# [[ typeID ],[ bonds ],[ position [x,y,z] ],[ velocity [x,y,z] ],[ charge ],[ mass ]]
+# [0[ typeID ],1[ bonds ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID]
 molecularSim = []
 # stores values for lookup
-# [ name ,[ sigma ],[ epsilon ],[ mass ]]
+# [0 name ,1[ sigma ],2[ epsilon ],3[ mass ]]
 atomTypes 	 = []
 # list of models to draw
 drawAtts 	 = []
 
 # global values for simulation - can be modified in action
 nParticles	= 0 	# number of particles in sim
+nMolecules = 0
 dimens		= 3 	# number of spacial dimensions
 setdt 		= 0.002
 simSize		= 15 	# scale of the simulation space in angstroms
@@ -82,21 +83,23 @@ def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
 	# create arrays for constants, initially of all type indices
 	sg = [atom[0] for atom in molSim]
 	ep = sg
+	rm = [] # array to remove
 	for i in nParticles:
 		# populate the array with the values of sigma for each combination of particles
 		# n.b. this function is called once for every atom in the sim
-		if (#i and atID are in same molecule): TODO HOW DO I TRACK MOLECULES
-		sg[i] = atTypes[tpi[i],1,molSim[atID,0]]
-		ep[i] = atTypes[tpi[i],2,molSim[atID,0]]
+		
+			sg[i] = atTypes[tpi[i],1,molSim[atID,0]]
+			ep[i] = atTypes[tpi[i],2,molSim[atID,0]]
+			if (molSim[i,5] == molSim[atID,5]): 
+				rm.append(i)
+	for i in rm:
+		sg = np.delete(sg,i)
+		ep = np.delete(ep,i)
 	sixConst = ep*(sg**6)
 	twelveConst = 2.0*ep*(sg**12)
 	
 	# calculate distance vector then absolute distance in each dimension TODO check this is how array indexing works
-	drv=molSim[1,axis=1]-molSim[atID,1] # distance vector for every point
-	#print ("DRV:")print(drv)
-	for j in range(mol.n): # remove position vectors of all atoms in the molecule from drv
-		drv= np.delete(drv,mol.indx,0) # n.b. tge index of the removed value doesn't change between iterations due to the resizing of the array
-	#print ("DRV after molecule removal:")print(drv)
+	drv=molSim[2,axis=1] - molSim[atID,2] # distance vector for every point
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distances of that lad
 
 	# truncate to only calculate only for nearby (less than 4 fm away) atoms. May be replaced by partitioning
@@ -107,10 +110,9 @@ def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
 		#print("dr: " + str(dr))
 		# TODO
 		# 	figure out how the hell to look up the correct sigma and epsilon values for the target interactions
-		for tpi in mol.tpis:
-			# go through each type index in the simulation and run the calculations for atoms of this type
-			r8   = sixConst[tpi] * (1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
-			r14  = twelveConst[tpi] * (1.0/np.array(dr))**14
+		for i in range(len(sg)):
+			r8   = sixConst[i] * (1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
+			r14  = twelveConst[i] * (1.0/np.array(dr))**14
 		r8v  = np.transpose(np.transpose(drv)*r8)
 		r14v = np.transpose(np.transpose(drv)*r14)
 		r8vs = np.sum(r8v,axis=0)
