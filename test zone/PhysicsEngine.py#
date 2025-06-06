@@ -63,6 +63,62 @@ def reflectBC(r,v): 											# update to pass the whole simulation for boundar
 					newv[at.indx,j] = -abs(v[at.indx,j])
 	return newr,newv 											# TODO update to directly modify positions in simulation array
 
+
+# Gradient of Lennard-Jones potential on one body (negative force)
+def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
+	#atm = mol.children[atid]
+	#pvi = mol.children[atid].indx # position and vector array index of atom
+
+	# if this is the only atom of its type, remove its sigma value to create the temporary array
+	#if (atTypes[molSim[atID],3] == 1): 
+		#sg=np.delete(sigl,0)
+		#eps=
+		#print("removed unique type " + tp[mol.tpis[atid]])
+	# otherwise index 0 is used for interactions w/ others of its type
+	#ep = np.array([epsl])
+	# remove epsilon value for self if it is unique
+	#if mol.children[atid].isUnique(): ep=np.delete(ep,0) 
+	
+	# create arrays for constants, initially of all type indices
+	sg = [atom[0] for atom in molSim]
+	ep = sg
+	for i in nParticles:
+		# populate the array with the values of sigma for each combination of particles
+		# n.b. this function is called once for every atom in the sim
+		if (#i and atID are in same molecule): TODO HOW DO I TRACK MOLECULES
+		sg[i] = atTypes[tpi[i],1,molSim[atID,0]]
+		ep[i] = atTypes[tpi[i],2,molSim[atID,0]]
+	sixConst = ep*(sg**6)
+	twelveConst = 2.0*ep*(sg**12)
+	
+	# calculate distance vector then absolute distance in each dimension TODO check this is how array indexing works
+	drv=molSim[1,axis=1]-molSim[atID,1] # distance vector for every point
+	#print ("DRV:")print(drv)
+	for j in range(mol.n): # remove position vectors of all atoms in the molecule from drv
+		drv= np.delete(drv,mol.indx,0) # n.b. tge index of the removed value doesn't change between iterations due to the resizing of the array
+	#print ("DRV after molecule removal:")print(drv)
+	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distances of that lad
+
+	# truncate to only calculate only for nearby (less than 4 fm away) atoms. May be replaced by partitioning
+	if ((dr[i] > 4) for i in dr):
+		dLJP=0.0
+	else: # calculate dLJP (8-14 from 6-12)
+		#print("ep: " + str(ep))
+		#print("dr: " + str(dr))
+		# TODO
+		# 	figure out how the hell to look up the correct sigma and epsilon values for the target interactions
+		for tpi in mol.tpis:
+			# go through each type index in the simulation and run the calculations for atoms of this type
+			r8   = sixConst[tpi] * (1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
+			r14  = twelveConst[tpi] * (1.0/np.array(dr))**14
+		r8v  = np.transpose(np.transpose(drv)*r8)
+		r14v = np.transpose(np.transpose(drv)*r14)
+		r8vs = np.sum(r8v,axis=0)
+		r14vs= np.sum(r14v,axis=0)
+		dLJP=24.0*(r14vs-r8vs)
+
+	return dLJP
+
 def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, location=None):
 
 	atfact  = ats.AtomFactory() # factory method for generating atoms
@@ -178,10 +234,10 @@ def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, locatio
 
 def Update():
 	for atom in nParticles:
-		lj = -np.array([dLJp(molecularSim, atomTypes)]) # Lennard-Jones
+		lj = -np.array([dLJp(molecularSim, atomTypes, atom)]) # Lennard-Jones
 		#print("LJ:")
 		#print(lj)
-		ch = -np.array([coul(molecularSim, atomTypes)]) # Coulomb
+		ch = -np.array([coul(molecularSim, atomTypes, atom)]) # Coulomb
 		#print("CH:")
 		#print(ch)
 		# bond angles and forces
