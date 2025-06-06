@@ -16,53 +16,54 @@ window.exit_button.enabled = False
 window.color = color.black
 
 p1ground = Entity(model='plane',
-				scale=50,
-				scale_z=100,
-				origin_x=.5,
-				origin_y=.5,
+				world_position=(25,0,25),
+				scale_x=50,
+				scale_z=50,
 				texture='white_cube',
-				texture_scale=(20,40),
+				texture_scale=(50,40),
 				collider='mesh')
 p2ground = Entity(model='plane',
-				scale=50,
-				scale_z=100,
-				origin_x=-.5,
-				origin_y=.5,
+				world_position=(25,0,75),
+				scale_x=50,
+				scale_z=50,
 				texture='white_cube',
-				texture_scale=(20,40),
+				texture_scale=(50,40),
 				collider='mesh')
 
 p1membrane = Entity(model='plane',
+				world_position=(25,5,20),
 				scale=50,
-				scale_z=100,
-				rotation_z=-90,
-				rotation_y=180,
-				origin_y=.5,
+				scale_y=10,
+				scale_z=50,
+				rotation_z=90,
+				rotation_y=90,
 				texture='white_cube',
 				color=color.pink,
-				alpha=0.2,
+				alpha=0.15,
 				double_sided=True,
 				collider='box',
 				texture_scale=(20,10))
 p2membrane = Entity(model='plane',
+				world_position=(25,5,80),
 				scale=50,
-				scale_z=100,
-				origin_y=.5,
+				scale_y=10,
+				scale_z=50,
+				#origin_y=7.5,
 				rotation_z=90,
-				rotation_y=180,
+				rotation_y=90,
 				texture='white_cube',
 				color=color.yellow,
-				alpha=0.2,
+				alpha=0.15,
 				double_sided=True,
 				collider='box',
 				texture_scale=(20,10))
 
-p1nucleus = Entity(origin=(4,2.5,3), 
+p1nucleus = Entity(world_position=(10,0,8), 
 					model='sphere',
 					color=color.pink,
 					collider='sphere',
 					scale=10)
-p2nucleus = Entity(origin=(-4,2.5,-3), 
+p2nucleus = Entity(world_position=(40,0,92), 
 					model='sphere',
 					color=color.yellow,
 					collider='sphere',
@@ -78,19 +79,20 @@ quitbutt  = ui.QuitButton()
 follbutt  = ui.FollowButton()
 #uiobjects.append()
 
-camera.position = (0,150,0)
-camera.rotation_x = 90
+camera.position = (25,75,-80)
+camera.rotation_x = 30
+#camera.rotation_y = -90
 # this means
-#           	 up = y-
+#           	 up = y+
 # 				 /|\			   
 # left - - - - - - - - - - - - - - right
-# = x+			\|/					= x-
-#           down = y+
+# = x-			\|/					= x+
+#           down = y-
 # 
-#	       _  front = z-
+#	       _  back = z+
 #  		   /| 	
-#  back   /
-#  = z+ |/_
+#  front  /
+#  = z- |/_
 
 def switchCameraPos():
 	if camera.position != (0,150,0):

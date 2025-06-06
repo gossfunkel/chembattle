@@ -193,8 +193,8 @@ def dLJp(r,i,sigl,epsl,bdln):
 	drv=r-r[i] #distance in each dimension
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
-	print("dr:")
-	print(dr)
+	#print("dr:")
+	#print(dr)
 	if ((dr[j] < 3) for j in dr):
 		#print ("round " + str(j))
 		#print("dLJP values")
@@ -250,7 +250,7 @@ def dBEpot(r,bnds):
 				adr=np.sqrt(adr2)
 				dBE=2.0*e0*(adr-dr0)*dr/adr
 				bps[i]+=dBE
-	print(bps)
+	#print(bps)
 	return bps
 
 #gradient of bond angle potential (negative force)
@@ -328,16 +328,16 @@ def calculateTemperature(v,n):
 
 def updatev(r,v,sigg,epss,a):
 	#calculate acceleration:
-	lj =-np.array([dLJp(r,i,sigg[tp[i]],epss[tp[i]],bnd) for i in range(n)]) #LJ
+	lj = -np.array([dLJp(r,i,sigg[tp[i]],epss[tp[i]],bnd) for i in range(n)]) #LJ
 	print("LJ:")
 	print(lj)
-	bep=-dBEpot(r,bnd) #Bonds
+	bep= -dBEpot(r,bnd) #Bonds
 	print("bep:")
 	print(bep)
-	ba =-dBA(r,angs) #Bond angles
+	ba = -dBA(r,angs) #Bond angles
 	print("ba:")
 	print(ba)
-	ch =-np.array([coul(r,i,chrg) for i in range(n)]) #Coulomb
+	ch = -np.array([coul(r,i,chrg) for i in range(n)]) #Coulomb
 	print("ch:")
 	print(ch)
 	F= ((lj + bep) + ba) + ch 

@@ -1,11 +1,30 @@
 chembattle pseudocode
 
+class AtomData{
+	// loads and manages data from the game's inbuilt database
+
+	function ARRAY loadAtom(STRING name){
+		// parse the name and lookup element data
+		// generate array object from 
+	}
+}
+
+class UI{
+	// generates the user interface - menus, buttons, cursors, views etc
+	// potentially will also be used to control the player camera
+}
+
 class PhysicsEngine{
 	// holds data about particle positions, necessary constants, and bonding relationships in a big n-dimensional array
 
-	NDarray simulation	the array holding all details of simulated particles
-	INT 	n 			number of particles in simulation
-	INT 	D = 3		number of spacial dimensions
+	NDarray molecularSim 	the array holding all details of simulated atoms
+			[ nParticles * [ INT typeID , [ ARRAY bonds ] , [ ARRAY angles ] , VEC3 [pos x,y,z] , VEC3 [vel x,y,z] , FLOAT charge] ]
+	
+	NDarray atomTypes 	 	holds sigma, epsilon, mass, and formal charge constants for each ion
+			[ nTypes * [ STRING name , [ FLOAT sigma ] , [ FLOAT epsilon ] , FLOAT mass , INT population]]
+
+	INT 	nParticles	number of particles in simulation
+	INT 	dimens = 3	number of spacial dimensions
 	INT 	simSize		size of simulation in Angstroms 		(previously: LL)
 	INT 	simSizeVec	vectorised simulation size 				(previously: L)
 	INT 	fixTemp		fixed temperature to minimise errors 	(previously: Temp0)
@@ -15,7 +34,7 @@ class PhysicsEngine{
 	FLOAT 	kR 			Spring potential constant
 	FLOAT 	kTh			Bending energy constant
 	FLOAT 	kEq 		Electron charge constant in Coulombs 	(previously: ech)
-	FLOAT 	kC 			Electrostatic constant in Daltons 
+	FLOAT 	kQc			Electrostatic constant in Daltons 
 
 	FLOAT 	set_dt 		constant rate of simulation ticks per second
 
