@@ -446,10 +446,10 @@ def dLJp(r,mol,atid,sigl,epsl,bdln): # called in loops for every atom in mol, fo
 	if mol.children[atid].isUnique(): ep=np.delete(ep,0) 
 
 	# format arrays to construct one with a value for every atom
-	sigmo = np.zeros(n)
-	for i in range(n):
+	#sigmo = np.zeros(n)
+	#for i in range(n):
 		# might need the new array structure to fix this 
-		sigmo[] = 
+		#sigmo[] = 
 	sixConst = ep*(sg**6)
 	twelveConst = 2.0*ep*(sg**12)
 	
