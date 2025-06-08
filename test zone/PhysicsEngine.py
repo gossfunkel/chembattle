@@ -142,87 +142,91 @@ def coul(molSim, atTypes, atID): # called in loops for every atom in mol, for ev
 
 #gradient of bond length potential (negative force)
 def dBEpot(molSim): # called once per update
-	bps=np.zeros([nParticles,dimens])
-									# TODO DECIDE WHETHER TO KEEP BONDING INFO IN MOLECULE LIST OR IN molecularSim[i,1,x]
-									# 	previous bond data structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
-		for molID in range(nMolecules): #loop over molecule indices
-			#print("calculating bonds for molecule: " + str(mol)
+	# 0 initialise a force of 0 on all particles, then fill in those which feel a force
+	bps = np.zeros([nParticles,dimens])
+	aps = np.zeros([nParticles,dimens])
+
+	# 1 loop through all particle indices in the simulation
+	for atID in range(nParticles): 
+		#print("calculating bonds for molecule: " + str(mol)
+		# position vector of current atom
+		rAtom = molSim[atID,2]
+
+		# 2 loop over any bonds in that data entry
+		for bond in molSim[atID,1]:
 			# load bond length and strength
-			dr0=molecules[mol,0] # bl
-			e0 =molecules[mol,1] # be
-			for atom in range(len(molecules[mol])): # iterate through particle indices saved to molecule 
-				rAtom = molSim[molecules[mol,atom],2]
-				for bonded in molSim[atom,1]: # iterate through particles bonded to each particle
+			# 	bond data structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
+			dr0= bond[0] 					# bl
+			e0 = molSim[atID,1,1] 			# be
+
+													# TODO DOES THIS NEED TO BE DONE ONE LEVEL UP?
+													#	 HOW MANY TIMES ARE BOND ANGLE FORCES BEING CALCULATED?
+			aps = dBA(aps,atID,bond[2]) 	# calculate bond angle force around this atom
+
+			# 3 loop over all bonded atoms and calculate forces
+			for bondedTo in range(len(bond[3, :])): # iterate through particles bonded to atom
 				# print("bonding particle: " + str(atom))
-				dr=r[mol.children[i].indx]-r[mol.children[i-1].indx] # difference in position
-			else: 
-				dr=r[mol.children[i+1].indx]-r[mol.children[i].indx] # difference in position
-			#print("dr from dbepot:")
-			#print(dr)
-			dr2=dr*dr 			# squared
-			adr2=sum(dr2) 		# summed
-			adr=np.sqrt(adr2) 	# rooted
-			dBE=2.0*e0*(adr-dr0)*dr/adr 
-			bps[i]+=dBE
-	return bps
+				dr 		   = rAtom - molSim[bnd[bondedTo]] # difference in positions
+				#print("dr from dbepot: " + str(dr))
+				absdr 	   = np.sqrt(sum(dr**)) 	# squared, summed, then rooted
+				dBE 	   = 2.0 * e0 * (adr-dr0) * dr / adr 
+				bps[atID] += dBE
+	# 4 return the array of forces on all particles in the simulation
+	return bps, aps
 
 
 #gradient of bond angle potential (negative force) 						TODO : REMAKE THIS METHOD FOR NEW DATA STRUCTURE
-def dBA(r,mol,angs): # called once per update
+def dBA(aps,atID,angs): # called once per atom in dBE
 	# THIS METHOD IS BUILT FOR WATER-STYLE 3-ATOM MOLECULES 			TODO : ALLOW BONDING TO MORE THAN 2 OTHERS
 								# transition metals / coordination complexes will be treated separately, if at all
 								# will see if ionic character of bonds pops out on its own or needs some hard-coding
 	
-	# initialise array of zeros for all particles in sim, x 3 for force vectors on each atom
-	aps=np.zeros([nParticles,dimens])
-	# big rewrite:
-	for i in range(len(angs)): #loop over angles
-		for childIndex in range(mol.n):
-			if angs[i][0] == childIndex: # if the bond matches this molecule
-				#i -= 1
-				# load atomPosition indices from angles array
-				a1=int(angs[i][0])
-				a2=int(angs[i][1])
-				a3=int(angs[i][2])
-				#print("dBA for " + mol.name)
-				#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
-				#if childIndex==a1 or childIndex==a2 or childIndex==a3:
-				th00=angs[i][3] #equilibrium angle
-				e0 =angs[i][4] #bending modulus
-				# calculate the vectors between the atoms' current positions
-				#if childIndex==a1 or childIndex==a2:
-				r1 = r[a1] - r[a2] #bond vector 1 (from middle atom to atom 1)
-				r2 = r[a3] - r[a2] #bond vector 2 (middle atom to atom 2)
-				#else:
-				#	r1 = r[a3] - r[a2] #bond vector 1 (from middle atom to atom 1)
-				#	r2 = r[a1] - r[a2] #bond vector 2 (middle atom to atom 2)
-				#print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
-				#print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
-				ar1 = abs(np.linalg.norm(r1)) #lengths of bonds
-				ar2 = abs(np.linalg.norm(r2))
-				#print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
-				dot = np.dot(r1,r2) #r1 dot r2
-				#print("dot product: " + str(dot))
-				ndot=dot/(ar1*ar2) #normalize dot product by vector lengths i.e. get the cos of angle
-				#print("normalised dot product in angle calculation: " + str(ndot))
-				th = np.arccos(ndot) #bond angle, theta
-				dUdth=-2.0*e0*(th-th00) #-dU/dtheta
-				if (childIndex==a1 or childIndex==a3):
-					numerator 	= (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
-					denominator = np.sqrt(1.0 - ndot**2)
-					dUdr 		= dUdth * numerator/denominator
-					aps[i+1] 	+= dUdr
-				elif (childIndex==a2):
-					denominator	= np.sqrt(1.0 - ndot**2)
-					#print (" denominator in angle calculation: " + str(denominator))
-					n1 			= - (r2 + r1)
-					n2			= dot * r1 / ar1**2
-					n3			= dot * r2 / ar2**2
-					numerator	= (n1+n2+n3)/(ar1*ar2)
-					dUdr		= dUdth * numerator/denominator
-					aps[i+1]	+= dUdr
-					aps[i]		+= dUdr
-					aps[i-1]	+= dUdr
+	#print("dBA for " + str(atID))
+	th00 = angs[0] #equilibrium angle
+	e0   = angs[1] #bending modulus
+	for i in range(len(angs[2, :])): #loop over particles bonded
+		# TODO
+		# The original MD code works out angles by going through each particle, and checking an angles list for details
+		# 	it then applies a force based on the angle calculated relative to two other particles.
+		# 	This reflects sp2-character (trigonal planar) orbital hybridisation geometry, with an implied lone pair 
+		# 		on the central atom, and sp hybridisation of the two flanking H atoms.
+		# I would like to make this versatile for sp3 (tetrahedral) and sp (linear) geometries, and enable chaining of
+		# 	hybridised atoms. Right now, this simply maintains a shape. There is very little chemical logic to it
+
+		# load atomPosition indices from angles array
+		a1 = int(angs[i])
+		a2 = int(angs[i+1])
+		a3 = int(angs[i+2])
+		#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
+		# calculate the vectors between the atoms' current positions
+		r1 = r[a1] - r[a2] #bond vector 1 (from middle atom to atom 1)
+		r2 = r[a3] - r[a2] #bond vector 2 (middle atom to atom 2)
+		#print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
+		#print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
+		# calculate absolute lengths of those bonds
+		ar1 = abs(np.linalg.norm(r1)) 
+		ar2 = abs(np.linalg.norm(r2))
+		#print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
+		dot = np.dot(r1,r2) #r1 dot r2
+		#print("dot product: " + str(dot)) 
+		ndot=dot/(ar1*ar2) #normalize dot product by vector lengths i.e. get the cos of angle
+		#print("normalised dot product in angle calculation: " + str(ndot))
+		th = np.arccos(ndot) #bond angle, theta
+		dUdth=-2.0*e0*(th-th00) #-dU/dtheta
+		denominator	= np.sqrt(1.0 - ndot**2)
+		# if the particle is on the end
+		if (i == 2 or i == len(angs)):
+			numerator 	= (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
+			dUdr 		= dUdth * numerator/denominator
+			aps[i+1] 	+= dUdr
+		# else it is in the middle
+		else:
+			#print (" denominator in angle calculation: " + str(denominator))
+			numerator	= (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1))/(ar1*ar2)
+			dUdr		= dUdth * numerator/denominator
+			aps[i+1]	+= dUdr
+			aps[i]		+= dUdr
+			aps[i-1]	+= dUdr
 	return aps
 
 def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player, location):
