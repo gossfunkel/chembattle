@@ -1,54 +1,50 @@
 from ursina import *
 from chempy import Substance
+from random import randint
+import numpy as np
+import atoms as ats
 
-# ''' --NOTES: 
-# Coulomb's law: f = k*q1*q2/r**
-#k = 0.000000008988 # Nm**/C**
-# Lennard-Jones potential is worked out via:
-# Van der Waals' attractive force: F a r**6
-# Pauli's repulsive force: F a 1/x**12
-# '''
-# ''' ---from ursina api ref for CubicBezier
-# Curves from Ursina are used by Entity when animating, like this:
-# e = Entity()
-# e.animate_y(1, curve=curve.in_expo)
-# e2 = Entity(x=1.5)
-# e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))
-# '''
-# This is the game's physics engine.
+# This will be the game's particle physics engine.
+# 				!!! This file currently untested and EXTREMELY janky !!!
 # 
-# I am in the process of rewriting a basic Lennard-Jones, Spring Bonding and Electric molecular dynamics sim. 
-# 
+# N.B. THIS WILL NOT WORK UNTIL THE UPDATE FUNCTION FROM THE OLD CLASS IS TRANSLATED INTO THIS OR THE ATOMS CLASS
+# 	the drawing of the atoms was previously handled by a Molecule object in the AMP class. Atoms will now draw themselves.
+# 	
 # This physics engine and the networking class will be the main core of the game engine for this project, and if I can 
-# get a working prototype without wasting the whole summer on it, I think it might be worth keeping up:)
-# '''
+# 	get a working prototype without wasting the whole summer on it, I think it might be worth keeping up:)
 
-# holds the simulation data
-# initialised as a list for loading. Later converted to numpy ndarray
-# each array on the top level contains the data for a given particle (atom) in the molecular simulation
-# [0[ typeID ],1[ bonds ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID]
+#  ===== === = CLASS DATA = === ===== 
+
+# molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray
+# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
+# 	[0[ typeID ],1[ bonds ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID]
 molecularSim = []
 # stores values for lookup
-# [0 name ,1[ sigma ],2[ epsilon ],3[ mass ]]
+# 	[0 name ,1[ sigma ],2[ epsilon ],3[ mass ]]
 atomTypes 	 = []
-# list of models to draw
+# list of models for ursina to draw
 drawAtts 	 = []
+# list of molecules to calculate bonding  			TODO will this have the bond data in it? probably not
+molecules 	 = []
 
 # global values for simulation - can be modified in action
 nParticles	= 0 	# number of particles in sim
-nMolecules = 0
+nMolecules  = 0 	# number of molecules in sim
 dimens		= 3 	# number of spacial dimensions
 setdt 		= 0.002
 simSize		= 15 	# scale of the simulation space in angstroms
 simSizeVec	= np.zeros([D])+LL
 fixTemp		= 200 	# maintained temperature in K - TODO: CHANGE FOR PRESSURE (walls)
 
+# physical/chemical constants
 kR  = 148000.0  #spring potential is usually defined as U = (k/2)(r-r_0)^2. can include /2
 kTh = 35300.0  #same explanation as Kr but with bending energy
 kb  = 0.8314459920816467 # Boltzmann constant in A^2 D ps^-2 K^-1
 kA  = 6.0221409e+26 #Avogadros constant x 1000 (g->kg)
 kEq = 1.60217662E-19 #electron charge in coulombs
 kQcs = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
+
+# ===== === = CLASS METHODS = === ===== 
 
 def reflectBC(r,v): 											# update to pass the whole simulation for boundary processing
 	newv = 1.0 * v
@@ -143,6 +139,91 @@ def coul(molSim, atTypes, atID): # called in loops for every atom in mol, for ev
 	FF =np.transpose(np.transpose(drv)*r3) # transpose the distance array, multiply by force, transpose back
 	return np.sum(FF,axis=0) # sum the value of axis 0 of the transposed & multiplied array
 	#return np.zeros(D) disable charge force
+
+#gradient of bond length potential (negative force)
+def dBEpot(molSim): # called once per update
+	bps=np.zeros([nParticles,dimens])
+									# TODO DECIDE WHETHER TO KEEP BONDING INFO IN MOLECULE LIST OR IN molecularSim[i,1,x]
+									# 	previous bond data structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
+		for molID in range(nMolecules): #loop over molecule indices
+			#print("calculating bonds for molecule: " + str(mol)
+			# load bond length and strength
+			dr0=molecules[mol,0] # bl
+			e0 =molecules[mol,1] # be
+			for atom in range(len(molecules[mol])): # iterate through particle indices saved to molecule 
+				rAtom = molSim[molecules[mol,atom],2]
+				for bonded in molSim[atom,1]: # iterate through particles bonded to each particle
+				# print("bonding particle: " + str(atom))
+				dr=r[mol.children[i].indx]-r[mol.children[i-1].indx] # difference in position
+			else: 
+				dr=r[mol.children[i+1].indx]-r[mol.children[i].indx] # difference in position
+			#print("dr from dbepot:")
+			#print(dr)
+			dr2=dr*dr 			# squared
+			adr2=sum(dr2) 		# summed
+			adr=np.sqrt(adr2) 	# rooted
+			dBE=2.0*e0*(adr-dr0)*dr/adr 
+			bps[i]+=dBE
+	return bps
+
+
+#gradient of bond angle potential (negative force) 						TODO : REMAKE THIS METHOD FOR NEW DATA STRUCTURE
+def dBA(r,mol,angs): # called once per update
+	# THIS METHOD IS BUILT FOR WATER-STYLE 3-ATOM MOLECULES 			TODO : ALLOW BONDING TO MORE THAN 2 OTHERS
+								# transition metals / coordination complexes will be treated separately, if at all
+								# will see if ionic character of bonds pops out on its own or needs some hard-coding
+	
+	# initialise array of zeros for all particles in sim, x 3 for force vectors on each atom
+	aps=np.zeros([nParticles,dimens])
+	# big rewrite:
+	for i in range(len(angs)): #loop over angles
+		for childIndex in range(mol.n):
+			if angs[i][0] == childIndex: # if the bond matches this molecule
+				#i -= 1
+				# load atomPosition indices from angles array
+				a1=int(angs[i][0])
+				a2=int(angs[i][1])
+				a3=int(angs[i][2])
+				#print("dBA for " + mol.name)
+				#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
+				#if childIndex==a1 or childIndex==a2 or childIndex==a3:
+				th00=angs[i][3] #equilibrium angle
+				e0 =angs[i][4] #bending modulus
+				# calculate the vectors between the atoms' current positions
+				#if childIndex==a1 or childIndex==a2:
+				r1 = r[a1] - r[a2] #bond vector 1 (from middle atom to atom 1)
+				r2 = r[a3] - r[a2] #bond vector 2 (middle atom to atom 2)
+				#else:
+				#	r1 = r[a3] - r[a2] #bond vector 1 (from middle atom to atom 1)
+				#	r2 = r[a1] - r[a2] #bond vector 2 (middle atom to atom 2)
+				#print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
+				#print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
+				ar1 = abs(np.linalg.norm(r1)) #lengths of bonds
+				ar2 = abs(np.linalg.norm(r2))
+				#print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
+				dot = np.dot(r1,r2) #r1 dot r2
+				#print("dot product: " + str(dot))
+				ndot=dot/(ar1*ar2) #normalize dot product by vector lengths i.e. get the cos of angle
+				#print("normalised dot product in angle calculation: " + str(ndot))
+				th = np.arccos(ndot) #bond angle, theta
+				dUdth=-2.0*e0*(th-th00) #-dU/dtheta
+				if (childIndex==a1 or childIndex==a3):
+					numerator 	= (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
+					denominator = np.sqrt(1.0 - ndot**2)
+					dUdr 		= dUdth * numerator/denominator
+					aps[i+1] 	+= dUdr
+				elif (childIndex==a2):
+					denominator	= np.sqrt(1.0 - ndot**2)
+					#print (" denominator in angle calculation: " + str(denominator))
+					n1 			= - (r2 + r1)
+					n2			= dot * r1 / ar1**2
+					n3			= dot * r2 / ar2**2
+					numerator	= (n1+n2+n3)/(ar1*ar2)
+					dUdr		= dUdth * numerator/denominator
+					aps[i+1]	+= dUdr
+					aps[i]		+= dUdr
+					aps[i-1]	+= dUdr
+	return aps
 
 def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, location=None):
 
@@ -257,6 +338,8 @@ def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, locatio
 	drawAtts.append([newat for newat in newatts])
 	return molecularSim # not sure if this makes sense
 
+# ===== === = UPDATE FUNCTION = === =====
+
 def Update():
 	for atom in nParticles:
 		lj = -np.array([dLJp(molecularSim, atomTypes, atom)]) # Lennard-Jones
@@ -289,3 +372,18 @@ def Update():
 
 	molecularSim[3] , molecularSim[4] = reflectBC(molecularSim[3] , molecularSim[4])
 		
+# ''' --NOTES: 
+# Coulomb's law: f = k*q1*q2/r**
+#k = 0.000000008988 # Nm**/C**
+# Lennard-Jones potential is worked out via:
+# Van der Waals' attractive force: F a r**6
+# Pauli's repulsive force: F a 1/x**12
+# '''
+
+# ''' ---from ursina api ref for CubicBezier
+# Curves from Ursina are used by Entity when animating, like this:
+# e = Entity()
+# e.animate_y(1, curve=curve.in_expo)
+# e2 = Entity(x=1.5)
+# e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))
+# '''
