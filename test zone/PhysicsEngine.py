@@ -225,7 +225,7 @@ def dBA(r,mol,angs): # called once per update
 					aps[i-1]	+= dUdr
 	return aps
 
-def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, location=None):
+def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player, location):
 
 	atfact  = ats.AtomFactory() # factory method for generating atoms
 	newatts = [] 			    # instantiate list for new atoms in molecule
@@ -331,45 +331,64 @@ def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player=0, locatio
 		# this might have to be saved to see if I can figure out a holistic approach to electrons
 
 	# load new data into simulation 
-	listSim = molecularSim.toList()
-	listSim.append([newData for newData in newAtomData])
-	molecularSim = np.ndarray(listSim)
+	molSim = np.ndarray(listSim)
+	nMolecules 	+= 1
+	listSim 	 = molecularSim.toList()
+	listSim.append([newData for newData in newAtomData]) # TODO add some exception raising here if something goes wrong
 	# pass models to physics class
 	drawAtts.append([newat for newat in newatts])
-	return molecularSim # not sure if this makes sense
+	return molSim # not sure if this makes sense, dont know how to call this and not have scope issues
+							# since molecularSim isn't being used as a global variable, I should make a setter to call this
+							# complex routine from outside the simulation, to give more moderation on who can call it
+
+# decision logic for when to construct a molecule at code request
+# 	Just because CreateMol can be called, doesn't mean it should execute. This function controls that and
+# 		helps manage scope.
+def RequestCreateMol(atomTypes, molName, numMolsCreate, player=0, location=None):
+	global molecularSim
+										# TODO move things like positioning of atoms etc to this method
+	molecularSim = CreateMol(atomTypes, molName, numMolsCreate, player, location)
+	# throw some exceptions if something goes wrong loading the molecules; expect a True return
+	return True
 
 # ===== === = UPDATE FUNCTION = === =====
 
 def Update():
-	for atom in nParticles:
+	# reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo
+	forces = np.zeros(nParticles,dimens)
+	for atom in range(nParticles):
+		# currently loading to variables rather than accumulating F for debugging purposes
 		lj = -np.array([dLJp(molecularSim, atomTypes, atom)]) # Lennard-Jones
-		#print("LJ:")
-		#print(lj)
+		#print("LJ: + str(lj))
 		ch = -np.array([coul(molecularSim, atomTypes, atom)]) # Coulomb
-		#print("CH:")
-		#print(ch)
-		# bond angles and forces
-		bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule
-		#print("bep:")
-		#print(bep)
-		ba = -dBA(molecularSim) # returns array for molecule
-		#print("ba:")
-		#print(ba)
-		# array of forces on atoms in molecule
-		F= ((lj + bep) + ba) + ch # currently only works for molecules of size 3
-		# F=ma     a = F/m     a is extended to include newly calculated accelerations 
-		a.extend(np.transpose(np.transpose(F)/mol.mm)) #Force->acceleration
-		#print("acceleration for " + mol.name + ": ")
-		#print(a)
-	# calculus also allows us to derive velocities and positions from the acceleration
-	#print("velocities before:")
-	#print(atomVelocities)
-	# verlet integration: atomPositions = 2 * atomPositions - atomPositionsPrev + a
-	# requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
-	molecularSim[4] = molecularSim[4] + np.array(a) * time.dt # convert flexible list into numpy array for maths
-	molecularSim[4] = rescaleT(molecularSim[4],Temp0) # scale velocities to keep temperature consistent
-	molecularSim[3] = molecularSim[3] + molecularSim[4] * time.dt  # this is going to cause problems. I'll have a fixed-rate simulation loop running soon
+		#print("CH:" + str(ch))
+		forces[atom] = [lj,ch]
 
+	# 							==========
+	# bond angles and forces
+	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule
+	#print("bep: + str(bep))
+	ba = -dBA(molecularSim) # returns array for molecule
+	#print("ba:" + str(ba))
+	# array of forces on atoms in molecule
+	forces= [((lj[i] + bep[i]) + ba[i]) + ch[i] for i in range(nParticles)]
+	# F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
+	a.extend(np.transpose(np.transpose(forces)/molSim[MASSES])) #Force->acceleration 		TODO store a mass value for each particle
+	#print("acceleration at end of calculations: " + str(a))
+	# 							==========
+
+	# calculus also allows us to derive velocities and positions from the acceleration
+	# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
+	# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
+	# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
+	molecularSim[4] = molecularSim[4] + np.array(a) * setdt # convert flexible list of accellerations into numpy array for maths
+	molecularSim[4] = rescaleT(molecularSim[4],Temp0) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
+
+	# UPDATE PARTICLE POSITIONS ==========
+	molecularSim[3] = molecularSim[3] + molecularSim[4] * setdt
+	# still need to figure out frame-rate consistency. setdt is required to get reliable behaviour/physics
+
+	# process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary
 	molecularSim[3] , molecularSim[4] = reflectBC(molecularSim[3] , molecularSim[4])
 		
 # ''' --NOTES: 
