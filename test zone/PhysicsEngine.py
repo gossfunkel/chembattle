@@ -5,26 +5,26 @@ import numpy as np
 import atoms as ats
 
 # This will be the game's particle physics engine.
-# 				!!! This file currently untested and EXTREMELY janky !!!
-# 
-# N.B. THIS WILL NOT WORK UNTIL THE UPDATE FUNCTION FROM THE OLD CLASS IS TRANSLATED INTO THIS OR THE ATOMS CLASS
-# 	the drawing of the atoms was previously handled by a Molecule object in the AMP class. Atoms will now draw themselves.
+	# 				!!! This file currently untested and EXTREMELY janky !!!
+	# 
+	# N.B. THIS WILL NOT WORK UNTIL THE UPDATE FUNCTION FROM THE OLD CLASS IS TRANSLATED INTO THIS OR THE ATOMS CLASS
+	# 	the drawing of the atoms was previously handled by a Molecule object in the AMP class. Atoms will now draw themselves.
 # 	
-# This physics engine and the networking class will be the main core of the game engine for this project, and if I can 
-# 	get a working prototype without wasting the whole summer on it, I think it might be worth keeping up:)
+	# This physics engine and the networking class will be the main core of the game engine for this project, and if I can 
+	# 	get a working prototype without wasting the whole summer on it, I think it might be worth keeping up:)
 
 #  ===== === = CLASS DATA = === ===== 
 
 # molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray
-# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
-# 	[0[ typeID ],1[ bonds ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass]
+	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
+	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass]
 molecularSim = []
 # stores values for lookup
 # 	[0 name ,1[ sigma ],2[ epsilon ]]
 atomTypes 	 = []
 # list of models for ursina to draw
 drawAtts 	 = []
-# list of molecules to calculate bonding 
+# list of molecules to use for calculating bond potentials
 molecules 	 = []
 
 # global values for simulation - can be modified in action
@@ -223,25 +223,26 @@ def dBA(aps,atID,angs): # called once per atom in dBE
 		aps[molSim[i,0]] += dUdth * numerator/denominator
 	return aps
 
-def CreateMol(molName, numMolsCreate, player, location):
+def CreateMol(molName, numMolsCreate, player, position): 							# BROKEN : BONDS, ANGLES
 	# 1 initialise variables
 	atfact  = ats.AtomFactory() # factory method for generating atoms
 	newatts = [] 			    # instantiate list for new atoms in molecule
 	atTypes = atomTypes
+	molID   = nMolecules + 1
 	
 	# 2 interpret molName
 	newmol 		 = Substance.from_formula(molName) # get a new chempy Substance object from the name
 	comp 		 = newmol.composition 				 # get the elemental composition as a dictionary
-	bondLengs 	 = [] 																		# TODO find bond lengths
-	bondEnergies = [] 																		# TODO find bond energies
-	bondAngles	 = [] 																		# TODO find bond angles
+	bondLengs 	 = [] 																		# TODO find/assign bond lengths
+	bondEnergies = [] 																		# TODO find/assign bond energies
+	bondAngles	 = [] 																		# TODO find/assigm bond angles
 	for elementindex,quant in comp.items(): # iterate through the members of the composition dictionary
 		for i in range(quant): # loop for quantity
 			# generate atoms of given type and add new atom to list
 			newatts.append(atfact.createAtom(elementindex,player)) 
 	
 	# 3 initialise array for simulation particle data entries for the new atoms in the molecule
-	newDataArray = np.empty(len(newatts))
+	newDataArray = np.empty(len(newatts)).toList()
 	molSize 	 = len(newatts)
 	sumcharge 	 = 0
 	elnegal = []
@@ -251,19 +252,18 @@ def CreateMol(molName, numMolsCreate, player, location):
 	for newAtom in range(molSize):
 		nAtomTypes  = len(atTypes)
 		# 4.1 initialise new index as the length of the atomTypes array (1 above highest valid index)
-		# 	moleculeSim atom data format: [typeIndex,bonds,angles,position,velocity,charge,moleculeID,mass]
-		newAtomData = [nAtomTypes,[],[],[],[],0]
+		# 			and load the mass of the particle													TODO MASS !!!!!!!!!!!
+		# 	moleculeSim atom data format: [typeIndex,bonds,position,velocity,charge,moleculeID,mass]
+		newAtomData = [nAtomTypes,[],[],[],[],molID,MASS]
 		newat 		= newatts[newAtom]
 		# 4.2 check types: search typearray for atom name
-		for typ in range(nAtomTypes):
-			# if the name in the given type array matches, save its index to the new atom's data array
-			if (atTypes[typ,0] == newat.name):
-				newAtomData[0] = typ
+		# if the name in the given type array matches, save its index to the new atom's data array
+		newAtomData[0] = [typ for typ in range(nAtomTypes) if (atTypes[typ,0] == newat.name)]
 		
 		if (newAtomData[0] == nAtomTypes): # create new type and add to atomTypes 
 			# 4.2.1 save type array index for data
 			newAtomData[0] = tpindex
-			# 4.2.2 load values - name, sigma(i), epsilon(i),mass,population=1 for newly initialised type
+			# 4.2.2 load values - name, sigma(i), epsilon(i),population=1 for newly initialised type
 				# atomType format:	[name,[ sigma ],[ epsilon ],mass]
 			atTypes.append(newat.name,[newat.sig],[newat.eps]],1)
 		else: 
@@ -273,46 +273,44 @@ def CreateMol(molName, numMolsCreate, player, location):
 		# 4.3 load bond lengths, energies, and angles
 			#covbonds structure: [indx,bonded-to,bond-length,gamma(bond-strength)]
 		if (molSize > 1):
-			newAtomData[newAtom,1] = [bondLengs[newAtom],kR]]
+			#newAtomData[1] = [bondLengs[newAtom],kR]]
 			if newAtom < (molSize - 1):
 																			# TODO HOW TO TELL NEW ATOMS HOW TO BOND?
 				for bonds in atomBonds:
 					# TODO bond length and atoms to bond is information that this constructor needs
 					# 	this information will have to be loaded with the molecule and assigned here
-					newAtomData[2].append([bondLength,kTh,newAtom-1,newAtom,newAtom+1,bondAngles[newAtom],])
+					newAtomData[1].append([bondLength,kTh,newAtom-1,newAtom,newAtom+1,bondAngles[newAtom],])
 		# 4.4 load initial position values
-		# TODO ACTUALLY I FORGOT I CHANGED THE COORDS SO IT DOESNT CROSS THE AXES AND USE NEGATIVE COORDINATES
-		# SO I'LL HAVE TO REDO THIS. SERVES ME RIGHT FOR TRYING TO BE SMART AND WRITE NON-BRANCHING CODE LMAO
-		player = (-2 * player) + 1 # set player = 1 if player 0, or = -1 if player 1, to position appropriately
-		if (location == None): newAtomData[3] = Vec3(player*30 + randint(-5,5),-12 + randint(-1,1),player*20 + randint(-5,5))
-		else: newAtomData[3] = Vec3(player*30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5)) + location
-		elif (player == 1 and location != None): newAtomData[3] = Vec3(30+randint(-5,5),-12+randint(-1,1),20+randint(-5,5)) + location
-
-		if (newAtom > len(bondLengs)-1):
-			newAtomData[newAtom,1] = bondLengs[newAtom-1]
-			if (newAtom > 0):
-				# increment temporary position variable by bond length to give smoother load-in
-				newAtomData[3] = np.array(newAtomData[3]) + np.array([1.0/bondLengs[newAtom]**3 , 1.0/bondLengs[newAtom]**3 , 0])
-					# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
-		
+		newAtomData[2] = position
 		# 4.5 tell atom game objects where they will be rendered
-		newat.world_location = Vec3(newAtomData[3])
+		newat.world_location = Vec3(newAtomData[2])
+		# 4.6 increment position for next atom generated 					TODO !!! NEED NEW BOND LENGTHS VALUES/ARRAY
+		position = np.array(newAtomData[2]) + np.array([1.0/bondLengs[newAtom]**3 , 1.0/bondLengs[newAtom]**3 , 0])
+		if (i%2==0):
+			#self.children[i].rotation_y = 180
+			position[1] += 1
+		else:
+			position[2] -= 1
+		# temporarily extend bond info along whole molecule 	TODO this seems wrong
+		#if (newAtom > len(bondLengs)-1):
+		#	newAtomData[newAtom,1] = bondLengs[newAtom-1]
 
-		# 4.6 initialise velocity to 0
-		newAtomData[4] = [np.zeros(dimens)]
+		# 4.7 initialise velocity to 0
+		newAtomData[3] = [np.zeros(dimens)]
 
-		# 4.7 do charge calculations
+		# 4.8 do charge calculations
 		formalCharges.append(newat.charge)
 		sumcharge += newat.charge
 		elnegal.append(newat.electroNegAllen)
-		sumelecneg += newat.electroNegAllen # ========== END OF FOR LOOP - THRU ATOMS ============
+		sumelecneg += newat.electroNegAllen 
+
+		newDataArray.append([newAtomData])# ========== END OF FOR LOOP THRU NEW ATOMS ============
 	
 	# 5 calculate charge distribution
 								# hacky temporary assigning of partial charge; calculating partial charges
 								# 	using Allen electronegativity and formal charge contributions
+								#	 might use this? if i don't ditch it for a better method
 	formalCharges = np.array(formalCharges)
-	#								 might use this? if i don't ditch all of this for a better method
-	
 	# 5.1 find the difference between the largest and smallest electronegativities in the atom
 	sortedElnegal = np.array(elnegal)
 	sortedElnegal.sort()
@@ -321,7 +319,7 @@ def CreateMol(molName, numMolsCreate, player, location):
 	for atomnum in range(molSize):
 		# assign sign based on charge of free atom
 		diffNeg = formalCharges[atomnum]/formalCharges[atomnum]
-		newAtomData[atomnum,5] = sumcharge + diffNeg * (elnegal[i] / sumelecneg) 
+		newDataArray[atomnum,5] = sumcharge + diffNeg * (elnegal[atomnum] / sumelecneg) 
 		# latter term represents ratio of electronegativity in molecule. 
 			
 		# AMBER uses e = sum(qiqj/rij) so could maybe rearrange that. distance could define how much electrons can split charge
@@ -331,21 +329,32 @@ def CreateMol(molName, numMolsCreate, player, location):
 	# 6 load new data into simulation 
 	nMolecules 	+= 1
 	listSim 	 = molecularSim.toList()
-	listSim.extend(newAtomData) 			# TODO add some exception raising here if something goes wrong
+	listSim.extend(newDataArray) 			# TODO add some exception raising here if something goes wrong
 	# 7 pass models to list to render
 	drawAtts.extend(newatts)
 	return np.ndarray(listSim), atTypes # not sure if this makes sense, dont know how to call this and not have scope issues
 							# since molecularSim isn't being used as a global variable, I should make a setter to call this
 							# complex routine from outside the simulation, to give more moderation on who can call it
 
-# decision logic for when to construct a molecule at code request
+# decision logic for when to construct a molecule at code request. Should return True if succesful.
 		# 	Just because CreateMol can be called, doesn't mean it should execute. This function controls that and
-		# 		helps manage scope.
+		# 		helps manage scope, and adds some game logic packaging
 def RequestCreateMol(molName, numMolsCreate, player=0, location=None):
+	# 	TODO allow passing multiple types of molecule at once with *variable passing
+
+	# 1 calculate molecule spawn location based on which player is spawning the molecules
+	if (location == None): newAtomData[3] = Vec3((player+1)*18 + randint(-5,5),
+															 5 + randint(-1,1),
+							 (100*(player+1) - 100 + 8*player) + randint(-5,5))
+	else: newAtomData[3] = Vec3((player+1)*18 + randint(-5,5),
+											5 + randint(-1,1),
+			(100*(player+1) - 100 + 8*player) + randint(-5,5)) + location
+
+	# 2 create the new molecule and update the simulation to include it
 	global molecularSim
-										# TODO move things like positioning of atoms etc to this method
-	molecularSim = CreateMol(atomTypes, molName, numMolsCreate, player, location)
-	# throw some exceptions if something goes wrong loading the molecules; expect a True return
+	global atomTypes
+	molecularSim, atomTypes = CreateMol(atomTypes, molName, numMolsCreate, player, location)
+	# 3 throw some exceptions if something goes wrong loading the molecules; expect a True return to this function
 	if type(molecularSim) == None: 
 		molecularSim = []
 		raise Exception("MOLECULAR SIM NOT LOADED PROPERLY; RESETTING")
@@ -388,17 +397,17 @@ def Update():
 	molecularSim[3] , molecularSim[4] = reflectBC(molecularSim[3] , molecularSim[4])
 		
 # ''' --NOTES: 
-# Coulomb's law: f = k*q1*q2/r**
-#k = 0.000000008988 # Nm**/C**
-# Lennard-Jones potential is worked out via:
-# Van der Waals' attractive force: F a r**6
-# Pauli's repulsive force: F a 1/x**12
-# '''
+	# Coulomb's law: f = k*q1*q2/r**
+		#k = 0.000000008988 # Nm**/C**
+	# Lennard-Jones potential is worked out via:
+		# Van der Waals' attractive force: F a r**6
+		# Pauli's repulsive force: F a 1/x**12
+	# '''
 
-# ''' ---from ursina api ref for CubicBezier
-# Curves from Ursina are used by Entity when animating, like this:
-# e = Entity()
-# e.animate_y(1, curve=curve.in_expo)
-# e2 = Entity(x=1.5)
-# e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))
-# '''
+	# ''' ---from ursina api ref for CubicBezier
+		# Curves from Ursina are used by Entity when animating, like this:
+		# e = Entity()
+		# e.animate_y(1, curve=curve.in_expo)
+		# e2 = Entity(x=1.5)
+		# e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))
+	# '''

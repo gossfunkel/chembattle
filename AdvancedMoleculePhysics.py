@@ -298,7 +298,7 @@ def CreateMolecule(location, *mols, player=0, bl=[1], velocity=[np.zeros(D)]):
 	atfact = ats.AtomFactory() # factory method for generating atoms
 
 	# update location based on player info
-	if (player == 0 and location == None): location = Vec3(18+randint(-5,5),5+randint(-1,1),8+randint(-5,5))
+	if (player == 0 and location == None): location = Vec3(18+randint(-5,5),5+randint(-1,1),(8+randint(-5,5))
 	elif (player == 1 and location == None): location = Vec3(32+randint(-5,5),5+randint(-1,1),92+randint(-5,5))
 
 	# run the creation procedure for every molecule passed in *mols tuple
