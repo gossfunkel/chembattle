@@ -2,7 +2,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import *
 import sys
 import numpy as np
-import AdvancedMoleculePhysics as amp
+import PhysicsEngine as physics
 import atoms
 import ui
 
@@ -119,9 +119,8 @@ def input(self):
 		switchCameraPos()
 
 def update():
-	mols = amp.GetMolecules()
-	#print(mols)
-	amp.UpdateMP()
+	#amp.UpdateMP()
+	physics.Update()
 
 	if not ui.cm.isFollowing():
 		camera.position += (5 * (held_keys['up_arrow'] - held_keys['down_arrow']) * time.dt, 0, 
@@ -133,7 +132,6 @@ def update():
 		camera.rotation_x += 20 * (held_keys['q'] - held_keys['e']) * time.dt # x rotation - q & e
 		camera.rotation_y += 20 * (held_keys['v'] - held_keys['c']) * time.dt # y rotation - c & v
 	else: 
-		#print(mols[0].world_position)
 		camera.look_at(mols[0].world_position)
 		dist = np.linalg.norm(camera.world_position-mols[0].world_position)
 		if dist > 10:
@@ -141,8 +139,6 @@ def update():
 
 	#p1memcoll = p1membrane.intersects()
 	#if p1memcoll.hit:
-	#	if p1memcoll.entity in mols:
-	#		p1memcoll.entity.velocity = -p1memcoll.entity.velocity
 
 if __name__ == "__main__":
 	app.run()
