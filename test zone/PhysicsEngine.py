@@ -17,14 +17,14 @@ import atoms as ats
 
 # molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray
 # 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
-# 	[0[ typeID ],1[ bonds ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID]
+# 	[0[ typeID ],1[ bonds ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass]
 molecularSim = []
 # stores values for lookup
-# 	[0 name ,1[ sigma ],2[ epsilon ],3[ mass ]]
+# 	[0 name ,1[ sigma ],2[ epsilon ]]
 atomTypes 	 = []
 # list of models for ursina to draw
 drawAtts 	 = []
-# list of molecules to calculate bonding  			TODO will this have the bond data in it? probably not
+# list of molecules to calculate bonding 
 molecules 	 = []
 
 # global values for simulation - can be modified in action
@@ -63,82 +63,51 @@ def reflectBC(r,v): 											# update to pass the whole simulation for boundar
 
 # Gradient of Lennard-Jones potential on one body (negative force)
 def dLJp(molSim,atTypes,atID): # called in loops for every atom in simulation
-	#atm = mol.children[atid]
+	# convenience variable
+	atTpID = molSim[atID,0]
 	#pvi = mol.children[atid].indx # position and vector array index of atom
 
-	# if this is the only atom of its type, remove its sigma value to create the temporary array
-	#if (atTypes[molSim[atID],3] == 1): 
-		#sg=np.delete(sigl,0)
-		#eps=
-		#print("removed unique type " + tp[mol.tpis[atid]])
-	# otherwise index 0 is used for interactions w/ others of its type
-	#ep = np.array([epsl])
-	# remove epsilon value for self if it is unique
-	#if mol.children[atid].isUnique(): ep=np.delete(ep,0) 
-	
-	#  removal method to keep indices matching commented out
-	# create arrays for constants, initially of all type indices
-	#sg = [atom[0] for atom in molSim]
-	#ep = sg
-	#rm = [] # array to remove
-	sg = []
-	ep = []
-	for i in nParticles:
-		# populate the array with the values of sigma for each combination of particles
-		# n.b. this function is called once for every atom in the sim
-		if (molSim[i,5] != molSim[atID,5]): 
-			sg.append(atTypes[tpi[i],1,molSim[atID,0]])
-			ep.append(atTypes[tpi[i],2, molSim[atID,0]])
-			#if (molSim[i,5] == molSim[atID,5]): 
-				#rm.append(i)
-	#for i in rm:
-		#sg = np.delete(sg,i)
-		#ep = np.delete(ep,i)
-	sixConst = ep*(sg**6)
-	twelveConst = 2.0*ep*(sg**12)
+	# create arrays for constants for the type of the atom being calculated for
+	sg = [atTypes[:,1,atTpID]]
+	ep = [atTypes[:,2,atTpID]]
 	
 	# calculate distance vector then absolute distance in each dimension TODO check this is how array indexing works
-	drv=molSim[2,axis=1] - molSim[atID,2] # distance vector for every point
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distances of that lad
+	drv  = molSim[:, 2].copy() - molSim[atID,2].copy() 			 # distance vector for every point
+	dr   = [np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] # absolute distances of those vectors
+	#print("ep: " + str(ep) + " || dr: " + str(dr))
+	dLJP = np.zeros(dimens) 									 # force vector on atom being calculated for
 
-	# truncate to only calculate only for nearby (less than 4 fm away) atoms. May be replaced by partitioning
-	if ((dr[i] > 4) for i in dr):
-		return 0.0
-	else: # calculate dLJP (8-14 from 6-12)
-		#print("ep: " + str(ep))
-		#print("dr: " + str(dr))
-		# TODO
-		# 	figure out how the hell to look up the correct sigma and epsilon values for the target interactions
-		for i in range(len(sg)):
-			r8   = sixConst[i] * (1.0/np.array(dr))**8 # IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
-			r14  = twelveConst[i] * (1.0/np.array(dr))**14
+	# truncate to calculate only for nearby atoms (less than 4 angstroms away). May be replaced by partitioning
+	if ((dr[i] < 4) for i in dr): # calculate dLJP (8-14 from 6-12) force from distance array member
+		# IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
+		r8   = ep[i]*(sg[i]**6) * (1.0/np.array(dr))**8 
+		r14  = 2.0*ep[i]*(sg[i]**12) * (1.0/np.array(dr))**14
 		r8v  = np.transpose(np.transpose(drv)*r8)
 		r14v = np.transpose(np.transpose(drv)*r14)
 		r8vs = np.sum(r8v,axis=0)
 		r14vs= np.sum(r14v,axis=0)
-		return 24.0*(r14vs-r8vs)
-
-	#return dLJP
+		dLJP += 24.0*(r14vs-r8vs)
+	# return the total force vector on the atom
+	return dLJP
 	
 # derivative of coulomb potential (negative force)
-def coul(molSim, atTypes, atID): # called in loops for every atom in mol, for every mol in molecules 
+def coul(molSim, atTypes, atID): # called once per particle, calculates field effect as a whole
+	# TBC: Will see if ionic character of bonds pops out or needs some hard-coding
 	#qs = [molSim[i,4] for i in nParticles]
-	qs = []
+	qs = [molSim[:,4]]
 	for i in nParticles:
 		if (molSim[i,5] != molSim[atID,5]): 
 				qs.append(molSim[i,4])
 			# no charge interactions with own molecule
-			
-	#qs=1.0*np.array([ml.charges for ml in mols])
-	qs = 1.0*np.array(qs)
-	r = np.delete(molSim[1,axis=1],atID)    # TODO check this is how 2D array indexing works
-	drv=r-r[atID] #distance in each dimension
-	drv=np.delete(drv,atID,0) #remove ith element (no self-interactions)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance
-	r3=q0*qs*kc*((1.0/np.array(dr))**3.0) # Coulomb's law      TODO Update constants
-	FF =np.transpose(np.transpose(drv)*r3) # transpose the distance array, multiply by force, transpose back
-	return np.sum(FF,axis=0) # sum the value of axis 0 of the transposed & multiplied array
-	#return np.zeros(D) disable charge force
+	qs 			= 1.0 * np.array(qs)
+	r 			= np.delete(molSim[:, 1].copy(),atID)
+	drv 		= r - r[atID] #distance in each dimension
+	drv 		= np.delete(drv,atID,0) #remove ith element (no self-interactions)
+	dr 			= [np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance
+	r3 			= molSim[atID,4] * qs * kQcs * ((1.0 / np.array(dr)**3.0) # Coulomb's law      TODO Update constants
+	forcefield  = np.transpose(np.transpose(drv) * r3) # transpose the distance array, multiply by force, transpose back
+	#return np.zeros(dimens) # uncomment to disable EM field force
+	return np.sum(forcefield,axis=0) # sum the value of axis 0 of the transposed & multiplied array
 
 #gradient of bond length potential (negative force)
 def dBEpot(molSim): # called once per update
@@ -158,11 +127,7 @@ def dBEpot(molSim): # called once per update
 			# 	bond data structure: [atom,bonded-to,bond-length,gamma(bond-strength)]
 			dr0= bond[0] 					# bl
 			e0 = molSim[atID,1,1] 			# be
-
-													# TODO DOES THIS NEED TO BE DONE ONE LEVEL UP?
-													#	 HOW MANY TIMES ARE BOND ANGLE FORCES BEING CALCULATED?
-			aps = dBA(aps,atID,bond[2]) 	# calculate bond angle force around this atom
-
+			
 			# 3 loop over all bonded atoms and calculate forces
 			for bondedTo in range(len(bond[3, :])): # iterate through particles bonded to atom
 				# print("bonding particle: " + str(atom))
@@ -171,27 +136,34 @@ def dBEpot(molSim): # called once per update
 				absdr 	   = np.sqrt(sum(dr**)) 	# squared, summed, then rooted
 				dBE 	   = 2.0 * e0 * (adr-dr0) * dr / adr 
 				bps[atID] += dBE
-	# 4 return the array of forces on all particles in the simulation
+
+			# 4 Calculate bond angle forces (once per bond)
+			#print("calculating dBA for " + str(atID))
+			aps = dBA(aps,atID,bond[2]) 	# calculate bond angle force around this atom
+	# 5 return the array of forces on all particles in the simulation
 	return bps, aps
 
 
 #gradient of bond angle potential (negative force) 						TODO : REMAKE THIS METHOD FOR NEW DATA STRUCTURE
 def dBA(aps,atID,angs): # called once per atom in dBE
-	# THIS METHOD IS BUILT FOR WATER-STYLE 3-ATOM MOLECULES 			TODO : ALLOW BONDING TO MORE THAN 2 OTHERS
-								# transition metals / coordination complexes will be treated separately, if at all
-								# will see if ionic character of bonds pops out on its own or needs some hard-coding
-	
-	#print("dBA for " + str(atID))
-	th00 = angs[0] #equilibrium angle
-	e0   = angs[1] #bending modulus
-	for i in range(len(angs[2, :])): #loop over particles bonded
-		# TODO
-		# The original MD code works out angles by going through each particle, and checking an angles list for details
+	# this calculates bond angle forces for every pair of bonds	around a shared/middle/mediating/axial atom
+		# So if a particle has multiple bonds, forces will need to be calculated multiple times.
+		# If angles don't properly match, geometry may get fucky.
+		# It updates an array of force on atoms from bond angles (aps)
+	# The original MD code works out angles by going through each particle, and checking an angles list for details
 		# 	it then applies a force based on the angle calculated relative to two other particles.
 		# 	This reflects sp2-character (trigonal planar) orbital hybridisation geometry, with an implied lone pair 
 		# 		on the central atom, and sp hybridisation of the two flanking H atoms.
 		# I would like to make this versatile for sp3 (tetrahedral) and sp (linear) geometries, and enable chaining of
-		# 	hybridised atoms. Right now, this simply maintains a shape. There is very little chemical logic to it
+		# 	hybridised atoms. Right now, this simply maintains a shape. There is very little chemical logic to it. This 
+		# 	could continue, but I want to include lone pairs- for now, sp3 hybrids will simply work by stacking bonds on an
+		# 	atom, and sp hybrids will break the routine (ndot of opposing vectors is -1, results in dividing by 0)
+											# 	TODO : MAKE ROUTINE CHECK IF BOND ANGLE HAS ALREADY BEEN CALCULATED BEFORE
+									# 	this will be necessary to prevent each atom's bond array generating duplicate forces
+
+	th00 = angs[0] #equilibrium angle
+	e0   = angs[1] #bending modulus
+	for i in range(len(angs[2, :])): #loop over particles in bond
 
 		# load atomPosition indices from angles array
 		a1 = int(angs[i])
@@ -212,29 +184,30 @@ def dBA(aps,atID,angs): # called once per atom in dBE
 		ndot=dot/(ar1*ar2) #normalize dot product by vector lengths i.e. get the cos of angle
 		#print("normalised dot product in angle calculation: " + str(ndot))
 		th = np.arccos(ndot) #bond angle, theta
+		if (th == 180): raise Exception("180 degree bond angles not supported by dBA routine yet!")
 		dUdth=-2.0*e0*(th-th00) #-dU/dtheta
 		denominator	= np.sqrt(1.0 - ndot**2)
 		# if the particle is on the end
 		if (i == 2 or i == len(angs)):
-			numerator 	= (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
-			dUdr 		= dUdth * numerator/denominator
-			aps[i+1] 	+= dUdr
+			# calculation for differentiation
+			numerator 		  = (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
 		# else it is in the middle
 		else:
 			#print (" denominator in angle calculation: " + str(denominator))
-			numerator	= (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1))/(ar1*ar2)
-			dUdr		= dUdth * numerator/denominator
-			aps[i+1]	+= dUdr
-			aps[i]		+= dUdr
-			aps[i-1]	+= dUdr
+			# calculation for differentiation
+			numerator		  = (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1))/(ar1*ar2)
+		# derivative of energy over distance (force field)
+		dUdr			  = dUdth * numerator/denominator
+		# derivative of energy over distance (force field)
+		aps[molSim[i,0]] += dUdr
 	return aps
 
 def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player, location):
-
+	# 1 initialise variables
 	atfact  = ats.AtomFactory() # factory method for generating atoms
 	newatts = [] 			    # instantiate list for new atoms in molecule
-
-	# interpret molName
+	
+	# 2 interpret molName
 	newmol 		 = Substance.from_formula(molName) # get a new chempy Substance object from the name
 	comp 		 = newmol.composition 				 # get the elemental composition as a dictionary
 	bondLengs 	 = [] 																		# TODO find bond lengths
@@ -247,44 +220,47 @@ def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player, location)
 			newatts.append(newt) # add new atom to list
 			#print("created " + newt.name)
 	
-	# initialise array for simulation particle data entries for the new atoms in the molecule
+	# 3 initialise array for simulation particle data entries for the new atoms in the molecule
 	newDataArray = np.empty(len(newatts))
 	molSize 	 = len(newatts)
 	sumcharge 	 = 0
 	elnegal = []
 	sumelecneg = 0
 
-	# load each atom
+	# 4 load each atom
 	for newAtom in range(molSize):
 		nAtomTypes  = len(atomTypes)
-		# initialise new index as the length of the atomTypes array (1 above highest valid index)
-		# 	moleculeSim atom data format: [typeIndex,bonds,angles,position,velocity,charge]
+		# 4.1 initialise new index as the length of the atomTypes array (1 above highest valid index)
+		# 	moleculeSim atom data format: [typeIndex,bonds,angles,position,velocity,charge,moleculeID,mass]
 		newAtomData = [nAtomTypes,[],[],[],[],0]
 		newat 		= newatts[newAtom]
-		# check types: search typearray for atom name
+		# 4.2 check types: search typearray for atom name
 		for typ in range(nAtomTypes):
 			# if the name in the given type array matches, save its index to the new atom's data array
 			if (atomTypes[typ,0] == newat.name):
 				newAtomData[0] = typ
 		
 		if (newAtomData[0] == nAtomTypes): # create new type and add to atomTypes 
-			# 1 save type array index for data
+			# 4.2.1 save type array index for data
 			newAtomData[0] = tpindex
-			# 2 load values - name, sigma(i), epsilon(i),mass,population=1 for newly initialised type
+			# 4.2.2 load values - name, sigma(i), epsilon(i),mass,population=1 for newly initialised type
 				# atomType format:	[name,[ sigma ],[ epsilon ],mass]
-			atomTypes.append(newat.name,[newat.sig],[newat.eps],newat.mass],1)
+			atomTypes.append(newat.name,[newat.sig],[newat.eps]],1)
 		else: 
 			# type already loaded, index value already copied
 			# increment population of atomType
 			atomTypes[tpindex,4] = atomTypes[tpindex,4] + 1
-		# load bond lengths, energies, and angles
+		# 4.3 load bond lengths, energies, and angles
 			#covbonds structure: [indx,bonded-to,bond-length,gamma(bond-strength)]
 		if (molSize > 1):
 			newAtomData[newAtom,1] = [bondLengs[newAtom],kR]]
 			if newAtom < (molSize - 1):
-																				# TODO program in variable bonding configurations
-				newAtomData[2] = [newAtom-1,newAtom,newAtom+1,bondAngles[newAtom],kTh]
-		# load initial position values
+																			# TODO HOW TO TELL NEW ATOMS HOW TO BOND?
+				for bonds in atomBonds:
+					# TODO bond length and atoms to bond is information that this constructor needs
+					# 	this information will have to be loaded with the molecule and assigned here
+					newAtomData[2].append([bondLength,kTh,newAtom-1,newAtom,newAtom+1,bondAngles[newAtom],])
+		# 4.4 load initial position values
 		if (player == 0 and location == None): newAtomData[3] = Vec3(-30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5))
 		elif (player == 1 and location == None): newAtomData[3] = Vec3(30+randint(-5,5),-12+randint(-1,1),20+randint(-5,5))
 		elif (player == 0 and location != None): newAtomData[3] = Vec3(-30+randint(-5,5),-12+randint(-1,1),-20+randint(-5,5)) + location
@@ -297,31 +273,29 @@ def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player, location)
 				newAtomData[3] = np.array(newAtomData[3]) + np.array([1.0/bondLengs[newAtom]**3 , 1.0/bondLengs[newAtom]**3 , 0])
 					# in future, this will be replaced with / followed by Maxwell-Boltzmann to match initial velocities to Temp
 		
-		# tell atom game objects where they will be rendered
+		# 4.5 tell atom game objects where they will be rendered
 		newat.world_location = Vec3(newAtomData[3])
 
-		# initialise velocity to 0
+		# 4.6 initialise velocity to 0
 		newAtomData[4] = [np.zeros(dimens)]
 
-		# do charge calculations
+		# 4.7 do charge calculations
 		formalCharges.append(newat.charge)
 		sumcharge += newat.charge
 		elnegal.append(newat.electroNegAllen)
 		sumelecneg += newat.electroNegAllen # ========== END OF FOR LOOP - THRU ATOMS ============
-	# calculate charge distribution
-	# hacky temporary assigning of partial charge based on electronegativity
-	# calculate partial charges using Allen electronegativity and formal charge contributions
+	
+	# 5 calculate charge distribution
+								# hacky temporary assigning of partial charge; calculating partial charges
+								# 	using Allen electronegativity and formal charge contributions
 	formalCharges = np.array(formalCharges)
-	# might use this? if i don't ditch all of this for a better method
-	#sortedChrg = np.array(chrg)
-	#sortedChrg.sort()
-	#diffChrg = sortedChrg[-1] - sortedChrg[0]
-
-	# find the difference between the largest and smallest electronegativities in the atom
+	#								 might use this? if i don't ditch all of this for a better method
+	
+	# 5.1 find the difference between the largest and smallest electronegativities in the atom
 	sortedElnegal = np.array(elnegal)
 	sortedElnegal.sort()
 	diffNeg = sortedElnegal[-1] - sortedElnegal[0]
-	# go through atoms and calculate partial charge as a function of electronegativity
+	# 5.2 go through atoms and calculate partial charge as a function of electronegativity
 	for atomnum in range(molSize):
 		if (formalCharges[atomnum] < 0): 	# assign sign based on charge of free atom
 			diffNeg *= -1
@@ -334,32 +308,37 @@ def CreateMol(molecularSim, atomTypes, molName, numMolsCreate, player, location)
 		# where at a distance beyond the maximum bonding distance the charge on an atom reaches the formal charge of a free atom
 		# this might have to be saved to see if I can figure out a holistic approach to electrons
 
-	# load new data into simulation 
+	# 6 load new data into simulation 
 	molSim = np.ndarray(listSim)
 	nMolecules 	+= 1
 	listSim 	 = molecularSim.toList()
 	listSim.append([newData for newData in newAtomData]) # TODO add some exception raising here if something goes wrong
-	# pass models to physics class
+	# 7 pass models to physics class
 	drawAtts.append([newat for newat in newatts])
 	return molSim # not sure if this makes sense, dont know how to call this and not have scope issues
 							# since molecularSim isn't being used as a global variable, I should make a setter to call this
 							# complex routine from outside the simulation, to give more moderation on who can call it
 
 # decision logic for when to construct a molecule at code request
-# 	Just because CreateMol can be called, doesn't mean it should execute. This function controls that and
-# 		helps manage scope.
+		# 	Just because CreateMol can be called, doesn't mean it should execute. This function controls that and
+		# 		helps manage scope.
 def RequestCreateMol(atomTypes, molName, numMolsCreate, player=0, location=None):
 	global molecularSim
 										# TODO move things like positioning of atoms etc to this method
 	molecularSim = CreateMol(atomTypes, molName, numMolsCreate, player, location)
 	# throw some exceptions if something goes wrong loading the molecules; expect a True return
+	if type(molecularSim) == None: 
+		molecularSim = []
+		raise Exception("MOLECULAR SIM NOT LOADED PROPERLY; RESETTING")
+
 	return True
 
 # ===== === = UPDATE FUNCTION = === =====
 
 def Update():
-	# reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo
+	# 0 reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo
 	forces = np.zeros(nParticles,dimens)
+	# 1 iterate through particles in simulation
 	for atom in range(nParticles):
 		# currently loading to variables rather than accumulating F for debugging purposes
 		lj = -np.array([dLJp(molecularSim, atomTypes, atom)]) # Lennard-Jones
@@ -369,22 +348,22 @@ def Update():
 		forces[atom] = [lj,ch]
 
 	# 							==========
-	# bond angles and forces
+	# 2 calculate forces maintaining bond angles and lengths
 	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule
 	#print("bep: + str(bep))
 	ba = -dBA(molecularSim) # returns array for molecule
 	#print("ba:" + str(ba))
-	# array of forces on atoms in molecule
-	forces= [((lj[i] + bep[i]) + ba[i]) + ch[i] for i in range(nParticles)]
-	# F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
-	a.extend(np.transpose(np.transpose(forces)/molSim[MASSES])) #Force->acceleration 		TODO store a mass value for each particle
+	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field
+	forces= [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for i in range(nParticles)]
+	# 4 F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
+	a = np.transpose(np.transpose(forces)/molSim[:,6]) #Force->acceleration 		TODO store a mass value for each particle
 	#print("acceleration at end of calculations: " + str(a))
 	# 							==========
 
 	# calculus also allows us to derive velocities and positions from the acceleration
-	# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
-	# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
-	# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
+		# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
+		# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
+		# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
 	molecularSim[4] = molecularSim[4] + np.array(a) * setdt # convert flexible list of accellerations into numpy array for maths
 	molecularSim[4] = rescaleT(molecularSim[4],Temp0) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
 

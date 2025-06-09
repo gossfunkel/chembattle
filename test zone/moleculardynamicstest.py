@@ -257,10 +257,11 @@ def dBEpot(r,bnds):
 def dBA(r,angs):
 	aps=np.zeros([n,3])
 	for i in range(n): #loop over all particles
-		for j in range(len(angs)): #check all bonds to see if particle i is bonded
+		for j in range(len(angs)): # load bond data from each bond
 			a1=int(angs[j][0])
 			a2=int(angs[j][1])
 			a3=int(angs[j][2])
+			#check all bonds to see if particle i is in bond data
 			if i==a1 or i==a2 or i==a3:
 				th00=angs[j][3] #equilibrium angle
 				e0 =angs[j][4] #bending modulus
@@ -276,12 +277,12 @@ def dBA(r,angs):
 				ndot=dot/(ar1*ar2) #normalize dot product by vector lengths i.e. get the cos of angle
 				th=math.acos(ndot) #bond angle, theta
 				dUdth=-2.0*e0*(th-th00) #-dU/dtheta
-				if a1==i or a3==i:
+				if a1==i or a3==i: # if end (hydrogen) position
 					numerator=(r2/(ar1*ar2))-(dot/(ar1*ar1*ar1*ar2*2.0))
 					denominator=np.sqrt(1.0-ndot*ndot)
 					dUdr=dUdth*numerator/denominator
 					aps[i]+=dUdr
-				if i==a2:
+				if i==a2: # if middle (oxygen) position
 					denominator=np.sqrt(1.0-ndot*ndot)
 					n1=-(r2+r1)
 					n2=dot*r1/(ar1*ar1)
