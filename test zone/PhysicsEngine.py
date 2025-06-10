@@ -93,7 +93,7 @@ def dLJp(atID): # called in loops for every atom in simulation
 	sg = [atomTypes[:,1,atTpID].copy()]
 	ep = [atomTypes[:,2,atTpID].copy()]
 	
-	# calculate distance vector then absolute distance in each dimension TODO check this is how array indexing works
+	# calculate distance vector then absolute distance in each dimension 
 	drv  = molecularSim[:, 2].copy() - molecularSim[atID,2].copy() 	# distance vector for every point
 	dr   = [np.sqrt((a[0]**)+(a[1]**)+(a[2]**)) for a in drv] 		# absolute distances of those vectors
 	#print("ep: " + str(ep) + " || dr: " + str(dr))
@@ -153,16 +153,19 @@ def dBEpot(molSim): # called once per update
 				dr 		   = rAtom - molSim[bnd[bondedTo]] # difference in positions
 				#print("dr from dbepot: " + str(dr))
 				bps[atID] += 2.0 * e0 * (np.sqrt(sum(dr**)) - dr0) * dr / adr 
+				# 4 Calculate bond angle forces (once per bonded neighbour)
+				aps = dBA(aps,atID,bnd[bondedTo],bond[2,0],bond[2,1])
+				# because this calculates through the neighbours, it is not suited to calculating the force
+				# on atoms in-between other atoms. I may write a new procedure for this; dBA is getting a bit mad
 
-			# 4 Calculate bond angle forces (once per bond)
 			#print("calculating dBA for " + str(atID))
-			aps = dBA(aps,atID,bond[2]) 	# calculate bond angle force around this atom
+			#aps = dBA(aps,atID,bond[2]) 	# calculate bond angle force around this atom
+			)
 	# 5 return the array of forces on all particles in the simulation
 	return bps, aps
 
-
 #gradient of bond angle potential (negative force) 						TODO : REMAKE THIS METHOD FOR NEW DATA STRUCTURE
-def dBA(aps,atID,angs): # called once per atom in dBE
+def dBA(aps,atomID,neighbour,th00,e0): # called once per bonded atom to each atom in dBE
 	# this calculates bond angle forces for every pair of bonds	around a shared/middle/mediating/axial atom
 		# So if a particle has multiple bonds, forces will need to be calculated multiple times.
 		# If angles don't properly match, geometry may get fucky.
@@ -175,52 +178,65 @@ def dBA(aps,atID,angs): # called once per atom in dBE
 		# 	hybridised atoms. Right now, this simply maintains a shape. There is very little chemical logic to it. This 
 		# 	could continue, but I want to include lone pairs- for now, sp3 hybrids will simply work by stacking bonds on an
 		# 	atom, and sp hybrids will break the routine (ndot of opposing vectors is -1, results in dividing by 0)
+	# The new methodology of this method is that it is called once per bonded atom. Angle forces are exerted by neighbours
+		# of each neighbour, so this loop iterates through all neighbours of the neighbour and calculates forces to maintain
+		# the bond angles thereof. It outputs only the force on each side-particle; I have not yet implemented a solution to
+		# the lack of force on the atoms acting as an intermediary/middle/axis between other bonded neighbours. The 
+		# numerator in the differentiation for the force on the middle particle is given as: 
+			#	numerator		  = (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1)) / (ar1*ar2)
+	# N.B.: due to the choice to calculate for every particle, calculations will need to be done perhaps more than they need 
+		# to. Given particles i, j, and k, where i is bonded to j and j is bonded to k, this will calculate the bond angle ijk
+		# twice; once when calculating for i, and once when calculating for k. In future, I'll probably have to rewrite this
+		# to be more efficient with the computations. I haven't yet figured out how to do this.
+											
 											# 	TODO : MAKE ROUTINE CHECK IF BOND ANGLE HAS ALREADY BEEN CALCULATED BEFORE
 									# 	this will be necessary to prevent each atom's bond array generating duplicate forces
 
 	# 1 set values for angle to enforce
-	th00 = angs[0] #equilibrium angle
-	e0   = angs[1] #bending modulus
+	#th00 = angs[0] #equilibrium angle
+	#e0   = angs[1] #bending modulus
+	if (th00 > 170 and th00 < 190): # sp character - linear
+		# code for calculating bond angle force for linear bonds
+		aps[atID] = 0.0
+	elif(th00 > 110 and th00 < 130): # sp2 character - trigonal planar
+		# 2 loop over particles bonded to neighbour -1 (no two-member angles! angles need 3+ points)
+		for angledAtom in range(len(moleculeSim[neighbour,1])) if (moleculeSim[neighbour,1,angledAtom] != atID): 
+			# 2.1 load indices from angles array
+			a3 = int(moleculeSim[neighbour,1,angledAtom]])
+			#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
 
-	# 2 loop over particles in angle 					TODO is this creating redundancy??? the force isn't split up...
-	for i in range(len(angs[2, :])): 
-		# 2.1 load indices from angles array
-		a1 = int(angs[i])
-		a2 = int(angs[i+1])
-		a3 = int(angs[i+2])
-		#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
+			# 2.2 calculate the vectors between the atoms' current positions
+			r1 = r[atomID] - r[neighbour] #bond vector 1 (from middle atom to atom currently being calculated for)
+			r2 = r[a3] - r[neighbour] #bond vector 2 (middle atom to other atom)
+			#print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
+			#print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
 
-		# 2.2 calculate the vectors between the atoms' current positions
-		r1 = r[a1] - r[a2] #bond vector 1 (from middle atom to atom 1)
-		r2 = r[a3] - r[a2] #bond vector 2 (middle atom to atom 2)
-		#print("r values in angle calculation: ra1:" + str(r[a1]) + ", ra2:" + str(r[a2]) + ", ra3:" + str(r[a3]))
-		#print("r values in angle calculation: r1:" + str(r1) + ", r2:" + str(r2))
-
-		# 2.3 calculate absolute lengths of those vectors, their dot product, then normalise and arccos to get angle theta
-		ar1 = abs(np.linalg.norm(r1)) 
-		ar2 = abs(np.linalg.norm(r2))
-		#print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
-		dot = np.dot(r1,r2) 						# dot product of distance vectors between atoms in molecule
-		#print("dot product: " + str(dot)) 
-		ndot=dot/(ar1*ar2) 							# normalize dot product by vector lengths i.e. get the cos of angle
-		#print("normalised dot product in angle calculation: " + str(ndot))
-		th = np.arccos(ndot) 						# bond angle, theta
-		if (th == 180): raise Exception("180 degree bond angles not supported by dBA routine yet!")
-		
-		# 2.4 check atom position in angle 							TODO maths stuff to get rid of these if statements
-		if (i == 2 or i == len(angs)):  			# if the particle is on the end of the molecule 
-													# calculation for differentiation - linear end atoms
+			# 2.3 calculate absolute lengths of those vectors, their dot product, then normalise and arccos to get angle theta
+			ar1 = abs(np.linalg.norm(r1)) 
+			ar2 = abs(np.linalg.norm(r2))
+			#print("lengths of bonds in dBA: ar1: " + str(ar1) + ", ar2: " + str(ar2))
+			dot = np.dot(r1,r2) 						# dot product of distance vectors between atoms in molecule
+			#print("dot product: " + str(dot)) 
+			ndot=dot/(ar1*ar2) 							# normalize dot product by vector lengths i.e. get the cos of angle
+			#print("normalised dot product in angle calculation: " + str(ndot))
+			th = np.arccos(ndot) 						# bond angle, theta
+			#if (th == 180): raise Exception("180 degree bond angles not supported by dBA routine yet!")
+			
+			# 2.4 check atom position in angle 							TODO maths stuff to get rid of these if statements
+			#if (i == 2 or i == len(angs)):  			# if the particle is on the end of the molecule 
+														# calculation for differentiation - linear end atoms
 			numerator 		  = (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))
-		else: 										# else it is in the middle
-													# calculation for differentiation - axial atoms
-			numerator		  = (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1)) / (ar1*ar2)
-		# 2.5 differentiate to calculate force
-		dUdth = -2.0 * e0 * (th-th00) # - dU/dtheta
-		denominator	= np.sqrt(1.0 - ndot**2)
-		#print (" denominator in angle calculation: " + str(denominator))
+			#else: 										# else it is in the middle
+			# TODO can I just remove this? I guess the mediating atom also feels a force from the angle that I should include
+			#											# calculation for differentiation - axial atoms
+			#	numerator		  = (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1)) / (ar1*ar2)
+			# 2.5 differentiate to calculate force
+			dUdth = -2.0 * e0 * (th-th00) # - dU/dtheta
+			denominator	= np.sqrt(1.0 - ndot**2)
+			#print (" denominator in angle calculation: " + str(denominator))
 
-		# 2.5.1 force found as derivative of energy over distance (force field) i.e. dUdr
-		aps[molSim[i,0]] += dUdth * numerator/denominator
+			# 2.5.1 force found as derivative of energy over distance (force field) i.e. dUdr
+			aps[atomID] += dUdth * numerator/denominator
 	return aps
 
 def CreateMol(molName, numMolsCreate, player, position): 							# BROKEN : BONDS, ANGLES
@@ -382,19 +398,19 @@ def Update():
 	#print("acceleration at end of calculations: " + str(a))
 	# 							==========
 
-	# calculus also allows us to derive velocities and positions from the acceleration
+	# 5 calculus also allows us to derive velocities and positions from the acceleration
 		# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
 		# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
 		# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
-	molecularSim[4] = molecularSim[4] + np.array(a) * setdt # convert flexible list of accellerations into numpy array for maths
-	molecularSim[4] = rescaleT(molecularSim[4]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
+	molecularSim[:,3] = molecularSim[:,3] + np.array(a) * setdt # convert flexible list of accellerations into numpy array for maths
+	molecularSim[:,3] = rescaleT(molecularSim[:,3]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
 
-	# UPDATE PARTICLE POSITIONS ==========
-	molecularSim[3] = molecularSim[3] + molecularSim[4] * setdt
+	# 6 UPDATE PARTICLE POSITIONS ==========
+	molecularSim[:,2] = molecularSim[:,2] + molecularSim[:,3] * setdt
 	# still need to figure out frame-rate consistency. setdt is required to get reliable behaviour/physics
 
-	# process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary
-	molecularSim[3] , molecularSim[4] = reflectBC(molecularSim[3] , molecularSim[4])
+	# 7 process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary
+	molecularSim[:,2] , molecularSim[:,3] = reflectBC(molecularSim[:,2], molecularSim[:,3])
 		
 # ''' --NOTES: 
 	# Coulomb's law: f = k*q1*q2/r**
