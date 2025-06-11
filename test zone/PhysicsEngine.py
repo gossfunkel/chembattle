@@ -46,19 +46,18 @@ kQcs = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, e
 
 # ===== === = CLASS METHODS = === ===== 
 
-def reflectBC(r,v): 											# update to pass the whole simulation for boundary processing
+def reflectBC(r,v):
 	newv = 1.0 * v
 	newr = 1.0 * r
-	for mol in molecules: 										# MOLECULES - CHANGE FOR SIM
-		for at in mol.children: 								# ATOMS IN MOLS - CHANGE
-			for j in range(dimens): # for each pair of boundaries in a dimension
-				if (newr[at.indx,j] < 0): # if beneath 0, reflect
-					newr[at.indx,j] = -newr[at.indx,j]
-					newv[at.indx,j] = abs(v[at.indx,j])
-				if (newr[at.indx,j] > simSizeVec[j]): # if beyond simSize, reflect
-					newr[at.indx,j] = 2.0 * simSizeVec[j]-newr[at.indx,j]
-					newv[at.indx,j] = -abs(v[at.indx,j])
-	return newr,newv 											# TODO update to directly modify positions in simulation array
+	for atom in range(nParticles):
+		for j in range(dimens): # for each pair of boundaries in a dimension
+			if (newr[atom,j] < 0): # if beneath 0, reflect
+				newr[atom,j] = -newr[atom,j]
+				newv[atom,j] = abs(v[atom,j])
+			if (newr[atom,j] > simSizeVec[j]): # if beyond simSize, reflect
+				newr[atom,j] = 2.0 * simSizeVec[j]-newr[atom,j]
+				newv[atom,j] = -abs(v[atom,j])
+	return newr,newv
 
 def rescaleT(v):
 	# mass / v^2
@@ -399,9 +398,13 @@ def Update():
 	# 							==========
 
 	# 5 calculus also allows us to derive velocities and positions from the acceleration
+	# Euler method. This is unstable and creates increasing errors, especially for anything other than the shortest timesteps
 		# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
 		# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
 		# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
+		# CONSIDER: rk4 (runge-kutte)
+		# CONSIDER: Beeman predictor-corrector
+		# CONSIDER: Conditional methodology
 	molecularSim[:,3] = molecularSim[:,3] + np.array(a) * setdt # convert flexible list of accellerations into numpy array for maths
 	molecularSim[:,3] = rescaleT(molecularSim[:,3]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
 
