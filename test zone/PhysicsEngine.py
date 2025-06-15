@@ -17,6 +17,8 @@ import atoms as ats
 
 # molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray
 	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
+	# TODO REPLACE VEL WITH ACC IN ARRAY
+	# TODO STORE acc, pos, and force from prev iteration for next cycle
 	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass]
 molecularSim = []
 # stores values for lookup
@@ -392,6 +394,24 @@ def Update():
 	#print("ba:" + str(ba))
 	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field
 	forces= [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for i in range(nParticles)]
+	
+	# TODO calculate impulse rather than force to allow dt to vary with dr
+	# I = dF/dt
+	
+	# TODO calculate position before acceleration using the following formulae
+	# TODO also use rk4 to do them- the formulae below do not have this implemented
+	# TODO do i need to transpose the arrays for the calculation?
+	# n.b. the following assumes column 3 of the array is acceleration
+	
+	# save previous position and acceleration values
+	# prev_pos = molSim[:, 2]
+	# prev_acc = molSim[:, 3]
+	# molSim[:, 2] = dt^2*(-(molSim[:, 3] - (forces - prev_forces)/dt)/4*mass) + molSim[:, 2]
+	# then calculate acceleration for the next cycle
+	# molSim[:, 3] = ((4(molSim[:, 2] - prev_pos)/2*dt)/(-1)*dt) + prev_acc
+	# finally, set f0 for next cycle
+	# prev_forces = forces
+	
 	# 4 F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
 	a = np.transpose(np.transpose(forces)/molSim[:,6]) #Force->acceleration 
 	#print("acceleration at end of calculations: " + str(a))
