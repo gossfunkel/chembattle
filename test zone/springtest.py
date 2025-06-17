@@ -38,18 +38,18 @@ def input(self):
 		appliedf = Vec3(0.0,0.0,0.0)
 		window.color = color.gray
 
-
+# Newton's second law + velocity time integration
 def secondLaw(t,v):
 	# dv/dt = a
 	if t > 0:
-		return (f/m) / t # a = f/m and v = a/t
-	else: 
-		return 0
+		return (f/m + v0) * dt # a = f/m and dv/dt
+	else: return v
 
+# Applies more force the further the mass is from the equilibrium point k**2
 def spring(t,pos):
-	# dr/dt = v
+	# dv/dt = a
 	if t > 0:
-		return np.array([0,pos[1]*k**2 / t,0])
+		#return np.array([0,pos[1]*-(k**2) / dt,0]) MATHS CHECK
 	else: 
 		return np.zeros(3)
 
@@ -60,12 +60,13 @@ def spring(t,pos):
 # 	vel = vel +a * t
 # 	return vel
 
-# def posvel(t,r):
-# 	return block.world_position + v * t
+ def posvel(t,v):
+ 	return v * dt + r0
 
 def rk4step(t,dt,x,evaluate):
 	# runge-kutte 4
 	# f(x,t) = dx/dt
+	# pass dt instead of t?
 	k1 = evaluate(t,x)
 	k2 = evaluate(t + setdt/2,x+k1*setdt/2)
 	k3 = evaluate(t + setdt/2,x+k2*setdt/2)
@@ -78,9 +79,9 @@ def update():
 	global block
 	global t
 	
-	f = appliedf - rk4step(t,setdt,block.world_position,spring)			# spring
+	a = appliedf + rk4step(t,setdt,r,spring)			# spring
 	#a = f / m
-	v = rk4step(t,setdt,block.world_position,secondLaw)		# apply force
+	v = rk4step(t,setdt,,secondLaw)		# apply force and return v
 	#v = v + a/setdt 						# move
 	block.world_position = block.world_position + v/setdt
 
