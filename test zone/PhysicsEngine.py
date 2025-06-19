@@ -19,7 +19,7 @@ import atoms as ats
 	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
 	# TODO REPLACE VEL WITH ACC IN ARRAY
 	# TODO STORE acc, pos, and force from prev iteration for next cycle
-	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ velocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass]
+	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevAcceleration [x,y,z] ],4[ charge ],5 moleculeID,6 mass, 7 previousForce [x,y,z] ]
 molecularSim = []
 # stores values for lookup
 # 	[0 name ,1[ sigma ],2[ epsilon ]]
@@ -312,7 +312,7 @@ def CreateMol(molName, numMolsCreate, player, position): 							# BROKEN : BONDS
 		#if (newAtom > len(bondLengs)-1):
 		#	newAtomData[newAtom,1] = bondLengs[newAtom-1]
 
-		# 4.7 initialise velocity to 0
+		# 4.7 initialise acceleration to 0
 		newAtomData[3] = [np.zeros(dimens)]
 
 		# 4.8 do charge calculations
@@ -381,9 +381,13 @@ def RequestCreateMol(molName, numMolsCreate, player=0, location=None):
 # ===== === = UPDATE FUNCTION = === =====
 
 def Update():
+	# save previous position, force, and acceleration values for integration calculations
+	prev_pos = molSim[:, 2]
+	prev_acc = molSim[:, 3]
+	prev_for = molSim[:, 7]
 	# 0 reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo
 	forces = np.zeros(nParticles,dimens)
-	# 1 iterate through particles in simulation
+	# 1 iterate through particles in simulation to calculate ljp and  coul
 	forces[atom] = [-np.array([dLJp(atom)]),-np.array([coul(atom)]) for atom in range(nParticles)]
 
 	# 							==========
@@ -393,27 +397,26 @@ def Update():
 	ba = -dBA(molecularSim) # returns array for molecule
 	#print("ba:" + str(ba))
 	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field
-	forces= [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for i in range(nParticles)]
+	molSim[:, 7] = [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for i in range(nParticles)]
 	
 	# TODO calculate impulse rather than force to allow dt to vary with dr
-	# I = dF/dt
+	# J = dF/dt
 	
 	# TODO calculate position before acceleration using the following formulae
 	# TODO also use rk4 to do them- the formulae below do not have this implemented
 	# TODO do i need to transpose the arrays for the calculation?
 	# n.b. the following assumes column 3 of the array is acceleration
 	
-	# save previous position and acceleration values
-	# prev_pos = molSim[:, 2]
-	# prev_acc = molSim[:, 3]
-	# molSim[:, 2] = dt^2*(-(molSim[:, 3] - (forces - prev_forces)/dt)/4*mass) + molSim[:, 2]
+
+	# calculate rt = dt^2(-(a0 - J)/4mass) + r0
+	molSim[:, 2] = setdt**2 * ( -(prev_acc - (molSim[:, 7] - prev_for)/dt)/4*mass) + prev_pos
 	# then calculate acceleration for the next cycle
 	# molSim[:, 3] = ((4(molSim[:, 2] - prev_pos)/2*dt)/(-1)*dt) + prev_acc
 	# finally, set f0 for next cycle
 	# prev_forces = forces
 	
 	# 4 F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
-	a = np.transpose(np.transpose(forces)/molSim[:,6]) #Force->acceleration 
+	a = np.transpose(np.transpose(molSim[:, 7])/molSim[:,6]) #Force->acceleration 
 	#print("acceleration at end of calculations: " + str(a))
 	# 							==========
 
