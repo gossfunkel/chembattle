@@ -1,5 +1,8 @@
+# prototyping the card system, collectibles, and other ui/interactive/player-side features
+
 from ursina import *
 from ursina.prefabs.first_person_controller import *
+from ursina.shaders import lit_with_shadows_shader 
 from queue import Queue
 #from typing import List
 from random import uniform
@@ -15,9 +18,15 @@ window.fullscreen = False
 window.fps_counter.enabled = True
 window.exit_button.enabled = False
 window.color = color.black
+EditorCamera()
+pivot = Entity()
+DirectionalLight(parent=pivot, y=2, z=3, shadows=True, rotation=(45, -55, 45))
 
 boxes = []
 boxCount = 0
+boxIcon = Button(color=color.cyan,scale=0.1,text_color=color.black,text='Boxes: ',position=(.8,.4),parent=camera.ui)
+boxText = Text('x',position=(.8,.3735),text_color=color.black,background=color.gray,parent=camera.ui)
+
 cardsprite = load_texture('../assets/card-tex-paper.jpg')
 
 # smoothly transition a vector via linear interpolation
@@ -43,6 +52,8 @@ class Card(Draggable):
 			position=(.8,.1),
 			texture=cardsprite,
 			disabled=True,
+			shader=lit_with_shadows_shader,
+			parent=camera.ui,
 			highlight_scale=1.05,
 			radius=.04)
 		self.name = name
@@ -90,6 +101,8 @@ class BlueBox(Entity):
 
 	def update(self):
 		global boxCount
+
+		self.rotation_y += 10 * time.dt
 
 		if self.hovered:
 			self.destination = Vec3(6.5,3,0)
@@ -174,7 +187,13 @@ def discardCard(disCard):
 	# 	print("Queue already empty!")
 	# 	return False
 
-drawbutt = Button(scale_x=.4, scale_y=.12, color=color.green, position=(-.75,.4), text="Draw a card", on_click=drawCard)
+drawbutt = Button(scale_x=.4, 
+				scale_y=.12, 
+				color=color.green, 
+				position=(-.75,.4), 
+				parent=camera.ui,
+				text="Draw a card", 
+				on_click=drawCard)
 #discardbutt = Button(scale_x=.4, scale_y=.12, color=color.red, position=(-.75,.24), text="despawn a card", on_click=discardCard)
 
 # temporary
@@ -184,7 +203,7 @@ loadDeck(boxDeck)
 #	if 
 
 def update():
-	pass
+	boxText.text = boxCount
 	#if buttq.full:
 	#	despawn()
 	#	window.color = color.orange
