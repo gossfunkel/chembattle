@@ -2,6 +2,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import *
 from queue import Queue
 #from typing import List
+from random import uniform
 from dataclasses import dataclass
 import sys
 import numpy as np
@@ -16,7 +17,22 @@ window.exit_button.enabled = False
 window.color = color.black
 
 boxes = []
+boxCount = 0
 cardsprite = load_texture('../assets/card-tex-paper.jpg')
+
+# smoothly transition a vector via linear interpolation
+def SlideTo(pops, fpos, lerp):
+	#target = Vec3([pops])
+	#follow = Vec3([fpos])
+	distance = np.linalg.norm(pops-fpos)
+	if (distance > 0):
+		direction = (pops - fpos) / distance
+		min_step = max(0.02, distance - 0) #final int is max follow distance setting
+		max_step = distance
+		step_distance = min_step + (max_step - min_step) * lerp #LERP factor
+		new_follow = Vec3(fpos + direction * (step_distance * time.dt))
+	else: return(fpos)
+	return(new_follow)
 
 class Card(Draggable):
 	def __init__(self, name, maxtemp, text, funcFx):
@@ -32,20 +48,60 @@ class Card(Draggable):
 		self.name = name
 		self.maxtemp = maxtemp
 		self.fx = Func(funcFx)
+		# lerp variables - should probably have a method to set lerpspeed for a movement rather than randomly changing it
+		self.destination = self.position
+		self.lerpspeed = 14.6
 
 	def __repr__(self):
 		return (f'''{self.__class__.__name__} named {self.name} with effect {self.fx}.''')
 
 	def stop_dragging(self):
+		super().stop_dragging()
+		print("dropping card")
 		if (mouse.position[0] > -.5 and mouse.position[0] < .5 and mouse.position[1] > -.5 and mouse.position[1] < .5):
 			self.fx()
 			discardCard(self)
 		else:
-			# todo: lerp to position
 			print(mouse.position)
-			self.position = (-.7 + counter/5,-.5)
+			# todo change for reliable hand positions . some kind of hand tracker
+			self.destination = Vec3(-.7 + counter/5,-.5,0)
+			self.lerpspeed = 16.8
 
-def FXmakeBox(): return boxes.append(Entity(model='cube',parent=scene,scale=0.2,color=color.cyan, origin=(0,0)))
+	def update(self):
+		super().update()
+		distancetodest = np.linalg.norm(self.destination - self.position)
+		if ((not self.dragging) and distancetodest > 0.05): 
+			print("lerping card")
+			self.position = SlideTo(self.destination,self.position,self.lerpspeed)
+		elif ((not self.dragging) and distancetodest < 0.05 and distancetodest > 0): 
+			self.position = self.destination
+
+class BlueBox(Entity):
+	def __init__(self):
+		super().__init__(self,
+			model='cube',
+			parent=scene,
+			scale=0.2,
+			collider='cube',
+			color=color.cyan,
+			origin=(uniform(0,1),uniform(0,1)))
+		self.destination = self.position
+		self.lerpspeed = 20.0
+
+	def update(self):
+		global boxCount
+
+		if self.hovered:
+			self.destination = Vec3(6.5,3,0)
+		distancetodest = np.linalg.norm(self.destination - self.position)
+		if (distancetodest > 0.05): 
+			print("lerping box")
+			self.position = SlideTo(self.destination,self.position,self.lerpspeed)
+		elif (distancetodest < 0.05 and distancetodest > 0): 
+			self.enabled = False
+			boxCount += 1
+
+def FXmakeBox(): return boxes.append(BlueBox())
 
 @dataclass
 class CardDeck():
@@ -89,7 +145,8 @@ def drawCard():
 		counter += 1
 		drawnCard = activeDeck.get()
 		cardHand.append(drawnCard)
-		drawnCard.position = (-.7 + counter/5,-.5)
+		drawnCard.destination = Vec3(-.7 + counter/5,-.5,0)
+		drawnCard.lerpspeed = 19.0
 		drawnCard.color=color.rgb(0.5 + counter/25,0.5 + counter/25,0 + counter/25)
 		drawnCard.enabled = True
 		return drawnCard
