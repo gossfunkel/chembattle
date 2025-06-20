@@ -24,9 +24,9 @@ Chemicals, therefore, are the only real way for either player to affect the othe
 
 Can you find me a letter that comes before alpha? The game is not even a single file yet; each of the main components of the game is being designed and tested independently as separate test files.
 
-'''main.py''' is, of course, the aspirational game file. This file will get the bigger updates rolled into it as they reach relatively stable states. You can run it now to see the rough layout of the game board.
+'''/main.py''' is, of course, the aspirational game file. This file will get the bigger updates rolled into it as they reach relatively stable states. You can run it now to see the rough layout of the game board.
 
-The test files contain most of what I'm actively working on. '''PhysicsEngine.py''' is the file for the revamped, comprehensive molecular dynamics simulator. '''cardtestfile.py''' contains the prototyped card and token game. 
+The test files in '''/test zone/''' contain most of what I'm actively working on. '''PhysicsEngine.py''' is the file for the revamped, comprehensive molecular dynamics simulator. '''cardgameproto.py''' contains the prototyped card and token game. 
 
 The current dependencies to install to build the test files are:
 - ursina
