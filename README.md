@@ -20,6 +20,20 @@ What are they utilising these molecules for? Well, to win the game! How? By brea
 
 Chemicals, therefore, are the only real way for either player to affect the other, and so you are both forced to try to turn the environment to your advantage and drive home a strategy that leaves your opponent powerless to prevent your victory.
 
+## How do I try it out?
+
+Can you find me a letter that comes before alpha? The game is not even a single file yet; each of the main components of the game is being designed and tested independently as separate test files.
+
+'''/main.py''' is, of course, the aspirational game file. This file will get the bigger updates rolled into it as they reach relatively stable states. You can run it now to see the rough layout of the game board.
+
+The test files in '''/test zone/''' contain most of what I'm actively working on. '''PhysicsEngine.py''' is the file for the revamped, comprehensive molecular dynamics simulator. '''cardgameproto.py''' contains the prototyped card and token game. 
+
+The current dependencies to install to build the test files are:
+- ursina
+- numpy
+- chempy
+which can be installed using python's '''pip''' package manager.
+
 ## What will it look like?
 
 It's still very very early days, so there aren't any previews, renders, models, or anything else that can help show others the pictures in my head of how the game will turn out. However, as I work on the project, I'll try to start taking and sharing screenshots as soon as it starts to show where it's going.
