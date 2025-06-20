@@ -22,10 +22,15 @@ EditorCamera()
 pivot = Entity()
 DirectionalLight(parent=pivot, y=2, z=3, shadows=True, rotation=(45, -55, 45))
 
-boxes = []
-boxCount = 0
-boxIcon = Button(color=color.cyan,scale=0.1,text_color=color.black,text='Boxes: ',position=(.8,.4),parent=camera.ui)
-boxText = Text('x',position=(.8,.3735),text_color=color.black,background=color.gray,parent=camera.ui)
+atpStock = []
+atpCount = 0
+atpIcon = Button(color=color.cyan,scale=0.1,text_color=color.black,text='ATP:',position=(.8,.4),parent=camera.ui)
+atpText = Text('0',position=(.8,.3735),text_color=color.black,background=color.gray,parent=camera.ui)
+
+nucStock = []
+nucCount = 0
+nucIcon = Button(color=color.magenta,scale=0.1,text_color=color.black,text='NP:',position=(.8,.2),parent=camera.ui,radius=.5)
+nucText = Text('0',position=(.8,.1735),text_color=color.black,background=color.gray,parent=camera.ui)
 
 cardsprite = load_texture('../assets/card-tex-paper.jpg')
 
@@ -49,7 +54,7 @@ class Card(Draggable):
 			color=color.rgb(0.5,0.5,0),
 			scale_x=0.3,
 			scale_y=0.4,
-			position=(.8,.1),
+			position=(.8,-0.3),
 			texture=cardsprite,
 			disabled=True,
 			shader=lit_with_shadows_shader,
@@ -87,7 +92,7 @@ class Card(Draggable):
 		elif ((not self.dragging) and distancetodest < 0.05 and distancetodest > 0): 
 			self.position = self.destination
 
-class BlueBox(Entity):
+class ATP(Entity):
 	def __init__(self):
 		super().__init__(self,
 			model='cube',
@@ -95,26 +100,54 @@ class BlueBox(Entity):
 			scale=0.2,
 			collider='cube',
 			color=color.cyan,
-			origin=(uniform(0,1),uniform(0,1)))
+			origin=(-1 + uniform(0,1),1 + uniform(0,1)))
 		self.destination = self.position
 		self.lerpspeed = 20.0
 
 	def update(self):
-		global boxCount
+		global atpCount
 
 		self.rotation_y += 10 * time.dt
 
 		if self.hovered:
-			self.destination = Vec3(6.5,3,0)
+			self.destination = Vec3(6.5,3.2,0)
 		distancetodest = np.linalg.norm(self.destination - self.position)
 		if (distancetodest > 0.05): 
-			print("lerping box")
+			print("lerping ATP")
 			self.position = SlideTo(self.destination,self.position,self.lerpspeed)
 		elif (distancetodest < 0.05 and distancetodest > 0): 
 			self.enabled = False
-			boxCount += 1
+			atpCount += 1
 
-def FXmakeBox(): return boxes.append(BlueBox())
+class Nucleotide(Entity):
+	def __init__(self):
+		super().__init__(self,
+			model='sphere',
+			parent=scene,
+			scale=0.24,
+			collider='sphere',
+			color=color.magenta,
+			origin=(1 + uniform(0,1),-1 + uniform(0,1)))
+		self.destination = self.position
+		self.lerpspeed = 20.0
+
+	def update(self):
+		global nucCount
+
+		self.rotation_y += 10 * time.dt
+
+		if self.hovered:
+			self.destination = Vec3(6.5,1.8,0)
+		distancetodest = np.linalg.norm(self.destination - self.position)
+		if (distancetodest > 0.05): 
+			print("lerping Nucleotide")
+			self.position = SlideTo(self.destination,self.position,self.lerpspeed)
+		elif (distancetodest < 0.05 and distancetodest > 0): 
+			self.enabled = False
+			nucCount += 1
+
+def FXmakeATP(): return atpStock.append(ATP())
+def FXmakeNuc(): return nucStock.append(Nucleotide())
 
 @dataclass
 class CardDeck():
@@ -124,10 +157,20 @@ class CardDeck():
 	def __post_init__(self):
 		self.size = len(self.cards)
 
-boxDeck = CardDeck([Card('Make Box',
+testcardlist = []
+for c in range(60):
+	if c%2:
+		testcardlist.append(Card('Free nucleotides',
 				250.0,
-				"Generate a three-\ndimensional box in your\nvirtual environment.\nOut of nothing.\nPoof.",
-				Func(FXmakeBox)) for c in range(60)])
+				"Generate some Nucleo-\ntides in your virtual\nenvironment.\nOut of nothing.\nPoof.",
+				Func(FXmakeNuc)))
+	else: 
+		testcardlist.append(Card('Free ATP',
+				250.0,
+				"Generate some ATP\nin your virtual\nenvironment.\nOut of nothing.\nPoof.",
+				Func(FXmakeATP)))
+
+testDeck = CardDeck(testcardlist)
 
 
 activeDeck = Queue(maxsize=60)
@@ -197,13 +240,14 @@ drawbutt = Button(scale_x=.4,
 #discardbutt = Button(scale_x=.4, scale_y=.12, color=color.red, position=(-.75,.24), text="despawn a card", on_click=discardCard)
 
 # temporary
-loadDeck(boxDeck)
+loadDeck(testDeck)
 
 #def input(self):
 #	if 
 
 def update():
-	boxText.text = boxCount
+	atpText.text = atpCount
+	nucText.text = nucCount
 	#if buttq.full:
 	#	despawn()
 	#	window.color = color.orange
