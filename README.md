@@ -28,6 +28,32 @@ For now, I can say that there are plans for different biomes based on different 
 
 If you can lend a hand, let me know, but for now, I'm having fun figuring out this insane project! I'm teaching myself everything I need to know (with some help and advice from anyone who's actually educated and studied in the relevant fields), so you won't need a degree to make sense of it.
 
+## Okay, but... how will it actually work? Like what does gameplay look and feel like?
+
+The basic play of a game goes like this.
+
+You select a deck and a level, and enter matchmaking or host/join a game. You are loaded in to a game board in which you are positioned within a translucent bubble- your cell.
+
+You will see icons on the right side of your UI featuring a pink 'nucleotide' icon and a blue 'ATP' icon. You start the game with a supply of nucleotides.
+
+You then select the floating orb in your cell- the nucleus- to open your deck menu and select cards you'd like to use in the early game. You are charged nucleotide points for each card developed this way.
+
+As you exit the menu the nucleus shows the progress of developing cards, and as they are completed they fly to the bottom of your screen to your hand. On hovering the mouse over these cards in your hand, they move up and fan out to allow you to read the full text of each card.
+
+The cards feature a name, unique art, a maximum temperature value and pH limits, and text explaining any effects, costs, and products of the cards. Some cards will be directly playable for effects like a cone of light from the mouse, a beam of UV rays, or a drop-bundle of molecules; whereas others can be played to the deck to work as enzymatic 'factories', soaking up and spitting out the appropriate substrates and products. Some will appear darkened with an ATP cost, which you can choose to pay as often and as much as you like from your ATP storage on your sidebar.
+
+You will play a couple of cards to the board and spawn some early-game simple molecules, and usually focus on building an early economy. This will ensure you a supply of nucleotides for more (and often more point-expensive) cards, ATP to fuel card effects, and the appropriate chemicals on which your strategy or economy relies. When you produce DNA/RNA nucleotides or ATP (by card or by chemical reaction), the molecule pops out into a little glowing pink or cyan (appropriately) sprite, which can be collected manually by passing the mouse over them, or will tick automatically into the sidebar if not interacted with for a short time.
+
+You may then gather up some small molecules into a bundle using the collector tool, shrinking them away to a numbered icon on your sidebar below nucleotides and ATP. Unlike those special 'points' molecules, collected molecules can only be dropped as a bundle- you can't drop them here and there. By default, you can also only drop molecules you've collected up to within the boundaries of your own cell.
+
+Around the mid-game, both players will have started to influence the area between both of you in the centre of the board- gathering chemicals, releasing others, modifying the environment and responding to the situation. You and your opponent will have started to develop cards that define your deck by now, or will be actively engaging an early aggressive tactic. Depending on the map, random events may have now changed the boardstate, providing symmetric effects for both players to adapt to.
+
+Perhaps vacuoles have been dispatched with cargo of threatening chemicals towards the opponent, powered by a membrane-bound Flaggelum card. Or maybe a player with reinforced cell membranes is acidifying the field, damaging the opponents' membrane that slows the movement of the acids towards their delicate economy. Maybe otherwise a flush of rich hydrocarbons led a player to pivot to a strategy that employs otherwise expensive lipids that can be produced from the long chains. Real biochemistry is the inspiration, but the method is very much a tabletop battle of small molecules.
+
+By the end of the game, a competent player will have their win condition in sight and be actively expending their resources per their plan to counter the opponents' defenses and destabilise their nucleotide economy. 
+
+As soon as either player is unable to draw cards, the game is over. The exact way this limit works will be the product of the initial testing and design phase of the prototyped game, simultaneously with detailed balance planning and card/deck designing, in which the state of the game when it reaches players will be worked through. First, I need to feel how the fundamentals of the game feel! Then it'll be easier to compliment the fun and challenge, and not ramp up frustration factors.
+
 ## How does it work? Why is it such a mad project?
 
 I'm effectively blending simulation software that's used for research purposes into the dynamics of molecules with a game engine. And I'm doing it in *python*, of all things. I'm considering moving it to another engine/language (perhaps unity, cryengine, or something else based on C++,C#, or Java, since I used those many moons ago), but for now I'm trying to get a working prototype to get the feel for the gameplay and to design the really fun stuff- cards, decks, playstyles, metagame, and art.
