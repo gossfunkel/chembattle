@@ -17,8 +17,8 @@ import atoms as ats
 
 # molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray
 	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
-	# TODO REPLACE VEL WITH ACC IN ARRAY
-	# TODO STORE acc, pos, and force from prev iteration for next cycle
+	# This is effectively a dataset storing a mass and charge field. Mass is located at position, charge is located to 
+	# 	(hybridised/energised) atomic orbitals within a set distance of this same position. Masses are associated with charges. 
 	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevAcceleration [x,y,z] ],4[ charge ],5 moleculeID,6 mass, 7 previousForce [x,y,z] ]
 molecularSim = []
 # stores values for lookup

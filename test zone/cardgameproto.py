@@ -12,6 +12,7 @@ import numpy as np
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 1080, 600
 app = Ursina(size=(WINDOW_WIDTH,WINDOW_HEIGHT))
+window.vsync = False
 window.title = "Card Battle"
 window.borderless = False
 window.fullscreen = False
@@ -21,6 +22,10 @@ window.color = color.black
 EditorCamera()
 pivot = Entity()
 DirectionalLight(parent=pivot, y=2, z=3, shadows=True, rotation=(45, -55, 45))
+
+#fpcontroller takes mouse; look up alternatives
+#player = FirstPersonController(y=2, origin_y=-.5)
+#player.gravity = 0
 
 atpStock = []
 atpCount = 0

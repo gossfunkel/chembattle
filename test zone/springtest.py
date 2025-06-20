@@ -36,24 +36,24 @@ window.color 				= color.gray
 
 setdt = 0.02
 
-block = Entity(model='cube',scale=3,color=color.blue, world_position=np.zeros(3))
-m = 1.0 		# mass in g
+block = Entity(model='cube',scale=3,color=color.blue, world_position=Vec3(0,10,0))
+m = .1 		# mass in g
 k = 1.0 		# spring constant
-damp = 0.8 		# damping factor
+damp = 0.1 		# damping factor
 f = np.zeros(3) # force
 v = np.array([1.0,1.0,1.0]) # velocity 
 t = 0.0 		# initial timestep
-appliedf = np.zeros(3) # force from input
+# appliedf = np.zeros(3) # force from input
 
-def input(self):
-	global appliedf
-	# press space to hit box
-	if (held_keys['space']):
-		appliedf = Vec3(0.0,100.0,0.0)
-		window.color = color.brown
-	else: 
-		appliedf = Vec3(0.0,0.0,0.0)
-		window.color = color.gray
+# def input(self):
+# 	global appliedf
+# 	# press space to hit box
+# 	if (held_keys['space']):
+# 		appliedf = Vec3(0.0,100.0,0.0)
+# 		window.color = color.brown
+# 	else: 
+# 		appliedf = Vec3(0.0,0.0,0.0)
+# 		window.color = color.gray
 
 # Applies more force the further the mass is from the equilibrium point k**2
 #def spring(t,pos):
@@ -63,22 +63,24 @@ def input(self):
 #	#else: 
 #	#	return np.zeros(3)
 
-def spring(dt,pos,v): return (-k * pos) / damp * v
+def spring(pos,v): return (-k * pos) / damp * v
 
 # gradient * change over x axis + integral constant
 # TODO swap these out for my ODEs and correct the functioning of the system
 # this doesnt do angular momentum or anything but i found a good page on my phone that has code i just need to translate from C(++?)
-def accel(dt,r): return (appliedf + -k * r) * dt
-def velacc(dt,v): return a * dt + v
-def posvel(dt,r): return v * dt + r
+# maybe it should return a velocity (change in position) rather than a force?
+def accel(dt,r): return (-k * r) * dt
+def velacc(dt,a): return a / dt
+def posvel(dt,v): return v / dt
 
+# integrates by using values from the differential function dy/dx to estimate more accurate values for y
 def rk4(x,y,dx,evaluate):
 	# runge-kutte 4
-	k1 = dx * evaluate(x,y)
-	k2 = dx * evaluate(x+dx/2.0,y+k1/2.0)
-	k3 = dx * evaluate(x+dx/2.0,y+k2/2.0)
-	k4 = dx * evaluate(x+dx,y+k4)
-	y = y + (k1 + 2*k2 + 2*k3 + k4)/6
+	k1 = dx * evaluate(x,y) 				# y(x) at x
+	k2 = dx * evaluate(x+dx/2.0,y+k1/2.0) 	# y(x) at x+dx/2
+	k3 = dx * evaluate(x+dx/2.0,y+k2/2.0) 	# y(x) at x+dx/2
+	k4 = dx * evaluate(x+dx,y+k3)			# y(x) at x+dx
+	y = y + (k1 + 2*k2 + 2*k3 + k4)/6 		# weighted average for y(x) at x+dx
 	x = x + dx
 	return x,y
 
@@ -91,16 +93,19 @@ def update():
 	a = np.zeros(3) # accelerationa = np.zeros(3) # acceleration
 	
 	#appliedf += rk4step(time.dt,k,block.world_position,spring)			# spring
-	a = appliedf + (-k* Vec3(0,0,0)-block.world_position)/ m
-	v = rk4step(time.dt,a,v,velacc)
-	block.world_position = rk4step(time.dt,v,block.world_position,posvel)
+	#a = (-k* Vec3(0,0,0)-block.world_position)/ m
+	# using spring constant to define a, calculate v using rk4 integration
+	v = rk4(t,v,time.dt,spring)[1]
+	#v = rk4(time.dt,v,time.dt,velacc)[1]
+	# how to work out r when v(dt/2) is unknown? can i get rk4 to do both calculations at once?
+	t, block.world_position = rk4(t,v,time.dt,posvel)
 	#v = v + a/setdt 						# move
 	#block.world_position = block.world_position + v/setdt
 
 	print(block.world_position)
 
 	# increment time
-	t += time.dt
+	#t += time.dt
 
 if __name__ == "__main__":
 	app.run()
