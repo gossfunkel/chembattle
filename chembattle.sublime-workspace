@@ -4,12 +4,272 @@
 		"selected_items":
 		[
 			[
-				"F_",
-				"F_Lypogenesis"
+				"pos",
+				"position"
+			],
+			[
+				"atp",
+				"atpSprites"
+			],
+			[
+				"app",
+				"append"
+			],
+			[
+				"re",
+				"remove"
+			],
+			[
+				"bo",
+				"boxCount"
+			],
+			[
+				"box",
+				"boxText"
+			],
+			[
+				"de",
+				"destination"
+			],
+			[
+				"ler",
+				"lerpspeed"
+			],
+			[
+				"molSim",
+				"molSim"
+			],
+			[
+				"ca",
+				"card"
+			],
+			[
+				"card",
+				"cardHand"
+			],
+			[
+				"hand",
+				"cardHand"
+			],
+			[
+				"pla",
+				"playCard"
+			],
+			[
+				"disc",
+				"discardCard"
+			],
+			[
+				"acti",
+				"activeDeck"
+			],
+			[
+				"cards",
+				"cards"
+			],
+			[
+				"m",
+				"maxtemp"
+			],
+			[
+				"dra",
+				"drawnCard"
+			],
+			[
+				"ac",
+				"activeDeck"
+			],
+			[
+				"__",
+				"__name__"
+			],
+			[
+				"spawn",
+				"spawn"
+			],
+			[
+				"p",
+				"pos"
+			],
+			[
+				"se",
+				"setdt"
+			],
+			[
+				"v",
+				"v"
+			],
+			[
+				"r",
+				"r"
+			],
+			[
+				"atom",
+				"atom"
+			],
+			[
+				"molec",
+				"molecules"
 			],
 			[
 				"mol",
-				"molecules"
+				"molID"
+			],
+			[
+				"atT",
+				"atTpID"
+			],
+			[
+				"force",
+				"forcefield"
+			],
+			[
+				"bond",
+				"bond"
+			],
+			[
+				"bonded",
+				"bondedTo"
+			],
+			[
+				"mole",
+				"molecularSim"
+			],
+			[
+				"ch",
+				"ch"
+			],
+			[
+				"chi",
+				"children"
+			],
+			[
+				"rot",
+				"rotation"
+			],
+			[
+				"ran",
+				"range"
+			],
+			[
+				"chil",
+				"childIndex"
+			],
+			[
+				"vel",
+				"velocities"
+			],
+			[
+				"n",
+				"newatts"
+			],
+			[
+				"nw",
+				"newat"
+			],
+			[
+				"a",
+				"append"
+			],
+			[
+				"pois",
+				"positions"
+			],
+			[
+				"newA",
+				"newAtomData"
+			],
+			[
+				"formal",
+				"formalCharges"
+			],
+			[
+				"c",
+				"charge"
+			],
+			[
+				"newAtom",
+				"newAtomData"
+			],
+			[
+				"new",
+				"newatts"
+			],
+			[
+				"lis",
+				"listSim"
+			],
+			[
+				"sim",
+				"simulation"
+			],
+			[
+				"posi",
+				"position"
+			],
+			[
+				"newa",
+				"newatts"
+			],
+			[
+				"newAt",
+				"newAtomData"
+			],
+			[
+				"tp",
+				"tpindex"
+			],
+			[
+				"at",
+				"atomTypes"
+			],
+			[
+				"simSi",
+				"simSizeVec"
+			],
+			[
+				"so",
+				"sortedChrg"
+			],
+			[
+				"sort",
+				"sortedChrg"
+			],
+			[
+				"sor",
+				"sortedElnegal"
+			],
+			[
+				"electr",
+				"electroNegAllen"
+			],
+			[
+				"sum",
+				"sumcharge"
+			],
+			[
+				"aps",
+				"apsFormatted"
+			],
+			[
+				"i",
+				"i"
+			],
+			[
+				"ve",
+				"velocity"
+			],
+			[
+				"cal",
+				"calculation"
+			],
+			[
+				"to",
+				"tolist"
+			],
+			[
+				"F_",
+				"F_Lypogenesis"
 			],
 			[
 				"atm",
@@ -20,18 +280,6 @@
 				"atomVelocities"
 			],
 			[
-				"pos",
-				"pos"
-			],
-			[
-				"new",
-				"newpos"
-			],
-			[
-				"ch",
-				"chldatoms"
-			],
-			[
 				"parT",
 				"partType"
 			],
@@ -40,24 +288,12 @@
 				"atoms"
 			],
 			[
-				"atom",
-				"atomPositions"
-			],
-			[
 				"rt",
 				"return"
 			],
 			[
 				"LL",
 				"LL"
-			],
-			[
-				"at",
-				"atomAccel"
-			],
-			[
-				"vel",
-				"velocity"
 			],
 			[
 				"li",
@@ -108,18 +344,6 @@
 				"eps"
 			],
 			[
-				"r",
-				"r"
-			],
-			[
-				"__",
-				"__init__"
-			],
-			[
-				"pla",
-				"player"
-			],
-			[
 				"p1me",
 				"p1memcoll"
 			],
@@ -144,16 +368,8 @@
 				"cameraFollowing"
 			],
 			[
-				"ca",
-				"cameraFollowing"
-			],
-			[
 				"s",
 				"self"
-			],
-			[
-				"chi",
-				"children"
 			],
 			[
 				"hyd",
@@ -224,10 +440,6 @@
 				"on_click"
 			],
 			[
-				"a",
-				"a"
-			],
-			[
 				"loc",
 				"location"
 			],
@@ -256,20 +468,12 @@
 				"menuItem"
 			],
 			[
-				"re",
-				"return"
-			],
-			[
 				"all",
 				"all_sprites"
 			],
 			[
 				"ui",
 				"uiobjects"
-			],
-			[
-				"ve",
-				"Vector2"
 			],
 			[
 				"wid",
@@ -304,144 +508,12 @@
 				"mouse"
 			],
 			[
-				"ran",
-				"randint"
-			],
-			[
-				"dra",
-				"dragging"
-			],
-			[
 				"text",
 				"textSurf"
 			],
 			[
 				"Ji",
 				"JiggleBall"
-			],
-			[
-				"Dir",
-				"LayeredDirty"
-			],
-			[
-				"spr",
-				"sprite"
-			],
-			[
-				"u",
-				"update"
-			],
-			[
-				"rel",
-				"releasedr"
-			],
-			[
-				"mole",
-				"molecules"
-			],
-			[
-				"init",
-				"__init__"
-			],
-			[
-				"el",
-				"ele"
-			],
-			[
-				"lo",
-				"location"
-			],
-			[
-				"ini",
-				"__init__"
-			],
-			[
-				"q",
-				"QuitButton"
-			],
-			[
-				"tr",
-				"True"
-			],
-			[
-				"add",
-				"addHydro"
-			],
-			[
-				"pro",
-				"process"
-			],
-			[
-				"uio",
-				"uiobj"
-			],
-			[
-				"alre",
-				"alreadyPressed"
-			],
-			[
-				"mou",
-				"mousePos"
-			],
-			[
-				"fil",
-				"fill"
-			],
-			[
-				"fill",
-				"fillColours"
-			],
-			[
-				"Hyd",
-				"Hydrogen"
-			],
-			[
-				"Hydro",
-				"HydrogenButton"
-			],
-			[
-				"wo",
-				"wobble"
-			],
-			[
-				"foll",
-				"follow_vector"
-			],
-			[
-				"max",
-				"max_step"
-			],
-			[
-				"width",
-				"width"
-			],
-			[
-				"wob",
-				"wobbley"
-			],
-			[
-				"c",
-				"center"
-			],
-			[
-				"pr",
-				"print"
-			],
-			[
-				"WI",
-				"WINDOW_HEIGHT"
-			],
-			[
-				"TIN",
-				"TINYIB_RESPAGE"
-			],
-			[
-				"b",
-				"break"
-			],
-			[
-				"loca",
-				"locationOffset"
 			]
 		]
 	},
@@ -451,7 +523,7 @@
 			"file": "main.py",
 			"settings":
 			{
-				"buffer_size": 3853,
+				"buffer_size": 3820,
 				"line_ending": "Windows"
 			}
 		},
@@ -459,7 +531,15 @@
 			"file": "AdvancedMoleculePhysics.py",
 			"settings":
 			{
-				"buffer_size": 20712,
+				"buffer_size": 27177,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test zone/PhysicsEngine.py",
+			"settings":
+			{
+				"buffer_size": 23983,
 				"line_ending": "Windows"
 			}
 		},
@@ -467,7 +547,7 @@
 			"file": "atoms.py",
 			"settings":
 			{
-				"buffer_size": 9443,
+				"buffer_size": 9967,
 				"line_ending": "Windows"
 			}
 		},
@@ -489,6 +569,14 @@
 			}
 		},
 		{
+			"file": "docs/maps.md",
+			"settings":
+			{
+				"buffer_size": 2271,
+				"line_ending": "Windows"
+			}
+		},
+		{
 			"file": "achievements.md",
 			"settings":
 			{
@@ -500,8 +588,58 @@
 			"file": "docs/AdvancedMoleculePhysics_docs.md",
 			"settings":
 			{
-				"buffer_size": 10128,
+				"buffer_size": 10161,
 				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test zone/moleculardynamicstest.py",
+			"settings":
+			{
+				"buffer_size": 12371,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "docs/chembattle-pseudocode",
+			"settings":
+			{
+				"buffer_size": 3749,
+				"line_ending": "Windows",
+				"name": "chembattle pseudocode"
+			}
+		},
+		{
+			"file": "test zone/testscripts.py",
+			"settings":
+			{
+				"buffer_size": 179,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test zone/springtest.py",
+			"settings":
+			{
+				"buffer_size": 4239,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test zone/integrationtest.py",
+			"settings":
+			{
+				"buffer_size": 1434,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "test zone/cardgameproto.py",
+			"settings":
+			{
+				"buffer_size": 7929,
+				"line_ending": "Windows",
+				"name": "from ursina import *"
 			}
 		}
 	],
@@ -533,6 +671,10 @@
 	},
 	"file_history":
 	[
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/MERGE_MSG",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/TEMPLATE-ursina_tester.py",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/moleculardynamicstest.mp",
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.gitignore",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/cards.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/ui.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/atoms.py",
@@ -658,6 +800,27 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"box",
+			"8",
+			"											#",
+			"molecularSim",
+			"field",
+			"dr0",
+			"0",
+			"print(",
+			"p",
+			"print(",
+			"j",
+			"glo",
+			"atomPositi",
+			"rescalePos",
+			"atomPositions",
+			"print",
+			"nam",
+			"name",
+			"nam",
+			"e",
+			"nam",
 			"mp",
 			"CAN",
 			"walls",
@@ -712,7 +875,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 14,
 			"sheets":
 			[
 				{
@@ -720,15 +883,15 @@
 					"file": "main.py",
 					"settings":
 					{
-						"buffer_size": 3853,
+						"buffer_size": 3820,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								301,
+								301
 							]
 						],
 						"settings":
@@ -747,15 +910,15 @@
 					"file": "AdvancedMoleculePhysics.py",
 					"settings":
 					{
-						"buffer_size": 20712,
+						"buffer_size": 27177,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								3513,
+								3004
 							]
 						],
 						"settings":
@@ -764,25 +927,25 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 756.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "atoms.py",
+					"file": "test zone/PhysicsEngine.py",
 					"settings":
 					{
-						"buffer_size": 9443,
+						"buffer_size": 23983,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								1208,
+								1208
 							]
 						],
 						"settings":
@@ -791,13 +954,40 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 994.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 3,
+					"file": "atoms.py",
+					"settings":
+					{
+						"buffer_size": 9967,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2823,
+								2823
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 968.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
 					"file": "ui.py",
 					"settings":
 					{
@@ -808,8 +998,8 @@
 						"selection":
 						[
 							[
-								0,
-								0
+								1623,
+								1623
 							]
 						],
 						"settings":
@@ -818,13 +1008,13 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 840.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 4,
+					"buffer": 5,
 					"file": "cards.py",
 					"settings":
 					{
@@ -852,7 +1042,33 @@
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 6,
+					"file": "docs/maps.md",
+					"settings":
+					{
+						"buffer_size": 2271,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								265,
+								265
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
 					"file": "achievements.md",
 					"settings":
 					{
@@ -879,19 +1095,19 @@
 					"type": "text"
 				},
 				{
-					"buffer": 6,
+					"buffer": 8,
 					"file": "docs/AdvancedMoleculePhysics_docs.md",
 					"settings":
 					{
-						"buffer_size": 10128,
+						"buffer_size": 10161,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								4432,
+								4432
 							]
 						],
 						"settings":
@@ -900,7 +1116,171 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
+						"translation.y": 588.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "test zone/moleculardynamicstest.py",
+					"settings":
+					{
+						"buffer_size": 12371,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								489,
+								489
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4992.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "docs/chembattle-pseudocode",
+					"settings":
+					{
+						"buffer_size": 3749,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								706,
+								706
+							]
+						],
+						"settings":
+						{
+							"auto_name": "chembattle pseudocode",
+							"syntax": "Packages/Java/Java.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 201.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "test zone/testscripts.py",
+					"settings":
+					{
+						"buffer_size": 179,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								179,
+								179
+							]
+						],
+						"settings":
+						{
+							"auto_name": "",
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
 						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "test zone/springtest.py",
+					"settings":
+					{
+						"buffer_size": 4239,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3985,
+								3985
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1046.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 13,
+					"file": "test zone/integrationtest.py",
+					"settings":
+					{
+						"buffer_size": 1434,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								23,
+								23
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 14,
+					"file": "test zone/cardgameproto.py",
+					"settings":
+					{
+						"buffer_size": 7929,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3841,
+								3841
+							]
+						],
+						"settings":
+						{
+							"auto_name": "from ursina import *",
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 1529.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -941,7 +1321,7 @@
 	"menu_visible": true,
 	"output.exec":
 	{
-		"height": 189.0
+		"height": 196.0
 	},
 	"replace":
 	{

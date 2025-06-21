@@ -27,15 +27,17 @@ DirectionalLight(parent=pivot, y=2, z=3, shadows=True, rotation=(45, -55, 45))
 #player = FirstPersonController(y=2, origin_y=-.5)
 #player.gravity = 0
 
+atpSprites = []
 atpStock = []
 atpCount = 0
-atpIcon = Button(color=color.cyan,scale=0.1,text_color=color.black,text='ATP:',position=(.8,.4),parent=camera.ui)
-atpText = Text('0',position=(.8,.3735),text_color=color.black,background=color.gray,parent=camera.ui)
+atpIcon = Button(color=color.cyan,scale=0.1,text_color=color.black,text='ATP:',position=(.8,.4,1),parent=camera.ui)
+atpText = Text('0',position=(.8,.3735,0),text_color=color.black,background=color.gray,parent=camera.ui)
 
+nucSprites = []
 nucStock = []
 nucCount = 0
-nucIcon = Button(color=color.magenta,scale=0.1,text_color=color.black,text='NP:',position=(.8,.2),parent=camera.ui,radius=.5)
-nucText = Text('0',position=(.8,.1735),text_color=color.black,background=color.gray,parent=camera.ui)
+nucIcon = Button(color=color.magenta,scale=0.1,text_color=color.black,text='NP:',position=(.8,.2,1),parent=camera.ui,radius=.5)
+nucText = Text('0',position=(.8,.1735,0),text_color=color.black,background=color.gray,parent=camera.ui)
 
 cardsprite = load_texture('../assets/card-tex-paper.jpg')
 
@@ -54,12 +56,12 @@ def SlideTo(pops, fpos, lerp):
 	return(new_follow)
 
 class Card(Draggable):
-	def __init__(self, name, maxtemp, text, funcFx):
+	def __init__(self, pos, name, maxtemp, text, funcFx):
 		super().__init__(text=(name + "\n\n\n" + text + "\n\n\nMax temp: " + str(maxtemp)),
 			color=color.rgb(0.5,0.5,0),
 			scale_x=0.3,
 			scale_y=0.4,
-			position=(.8,-0.3),
+			position=pos,
 			texture=cardsprite,
 			disabled=True,
 			shader=lit_with_shadows_shader,
@@ -103,7 +105,7 @@ class ATP(Entity):
 			model='cube',
 			parent=scene,
 			scale=0.2,
-			collider='cube',
+			collider='box',
 			color=color.cyan,
 			origin=(-1 + uniform(0,1),1 + uniform(0,1)))
 		self.destination = self.position
@@ -114,6 +116,10 @@ class ATP(Entity):
 
 		self.rotation_y += 10 * time.dt
 
+		#for atp in atpSprites:
+			#if self.intersects(atp):
+				#self.position = self.position - (self.position * atp.position)
+
 		if self.hovered:
 			self.destination = Vec3(6.5,3.2,0)
 		distancetodest = np.linalg.norm(self.destination - self.position)
@@ -123,6 +129,8 @@ class ATP(Entity):
 		elif (distancetodest < 0.05 and distancetodest > 0): 
 			self.enabled = False
 			atpCount += 1
+			atpStock.append(self)
+			#atpSprites.remove(self)
 
 class Nucleotide(Entity):
 	def __init__(self):
@@ -150,9 +158,11 @@ class Nucleotide(Entity):
 		elif (distancetodest < 0.05 and distancetodest > 0): 
 			self.enabled = False
 			nucCount += 1
+			nucStock.append(self)
+			#nucSprites.remove(self)
 
-def FXmakeATP(): return atpStock.append(ATP())
-def FXmakeNuc(): return nucStock.append(Nucleotide())
+def FXmakeATP(): return atpSprites.append([ATP() for _ in range(5)])
+def FXmakeNuc(): return nucSprites.append([Nucleotide() for _ in range(5)])
 
 @dataclass
 class CardDeck():
@@ -165,12 +175,12 @@ class CardDeck():
 testcardlist = []
 for c in range(60):
 	if c%2:
-		testcardlist.append(Card('Free nucleotides',
+		testcardlist.append(Card(Vec3(.8,-0.3,c/10), 'Free nucleotides',
 				250.0,
 				"Generate some Nucleo-\ntides in your virtual\nenvironment.\nOut of nothing.\nPoof.",
 				Func(FXmakeNuc)))
 	else: 
-		testcardlist.append(Card('Free ATP',
+		testcardlist.append(Card(Vec3(.8,-0.3,c/10), 'Free ATP',
 				250.0,
 				"Generate some ATP\nin your virtual\nenvironment.\nOut of nothing.\nPoof.",
 				Func(FXmakeATP)))
@@ -206,7 +216,7 @@ def drawCard():
 		counter += 1
 		drawnCard = activeDeck.get()
 		cardHand.append(drawnCard)
-		drawnCard.destination = Vec3(-.7 + counter/5,-.5,0)
+		drawnCard.destination = Vec3(-.7 + counter/5,-.5,counter/10)
 		drawnCard.lerpspeed = 19.0
 		drawnCard.color=color.rgb(0.5 + counter/25,0.5 + counter/25,0 + counter/25)
 		drawnCard.enabled = True
