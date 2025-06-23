@@ -300,8 +300,8 @@ def coul(r,i,chrgs):
 		if mols[i]==mols[j]:
 			qs[j]=0.0
 	qs=np.delete(qs,i)
-	drv=r-r[i] #distance in each dimension
-	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
+	drv=r-r[i] #distance to particle i for each particle
+	drv=np.delete(drv,i,0) #remove ith element (no self-interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance
 	r3=q0*qs*kc*((1.0/np.array(dr))**3.0) # Coulomb's law
 	FF =np.transpose(np.transpose(drv)*r3) # transpose the distance array, multiply by force, transpose back
