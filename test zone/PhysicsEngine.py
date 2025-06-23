@@ -32,6 +32,10 @@ drawAtts 	 = []
 # list of molecules to use for calculating bond potentials
 molecules 	 = []
 
+# for instancing graphics to gpu:
+atomModel = Entity(model='sphere', scale=(1,1,1), world_position=(0,0,0))
+atomNodes = NodePath('atomNodes')
+
 # global values for simulation - can be modified in action
 nParticles	= 0 	# number of particles in sim
 nMolecules  = 0 	# number of molecules in sim
@@ -429,6 +433,15 @@ def Update():
 	#molecularSim[:,3] = rescaleT(molecularSim[:,3]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
 	# 7 process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary
 	molecularSim[:,2] , molecularSim[:,3] = reflectBC(molecularSim[:,2], molecularSim[:,3])
+
+	# instance atoms to the GPU
+	# TODO only send those positions which change
+	# TODO draw different models for different nuclei
+	# TODO shade in particles/fx for electrons/charge 
+	for atom in drawAtts:
+		placeholder = atomNodes.attachNewNode('atomModel-placeholder')
+		placeholder.setPos(atom[2])
+		atomModel.instanceTo(placeholder)
 	# CONSIDER calculate impulse rather than force to allow dt to vary with dr
 	# J = dF/dt
 	# CONSIDER do i need to transpose the arrays for the calculation?
