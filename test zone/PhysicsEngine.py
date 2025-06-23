@@ -88,7 +88,8 @@ def SlideTo(pops, fpos, lerp):
 	return(new_follow)
 
 # Gradient of Lennard-Jones potential on one body (negative force)
-def dLJp(atID): # called in loops for every atom in simulation
+# TODO remodel to calculate based on a given set of positions
+def dLJp(atID, r): # called in loops for every atom in simulation
 	# convenience variable
 	atTpID = molecularSim[atID,0]
 	#pvi = mol.children[atid].indx # position and vector array index of atom
@@ -98,7 +99,7 @@ def dLJp(atID): # called in loops for every atom in simulation
 	ep = [atomTypes[:,2,atTpID].copy()]
 	
 	# calculate distance vector then absolute distance in each dimension 
-	drv  = molecularSim[:, 2].copy() - molecularSim[atID,2].copy() 	# distance vector for every point
+	drv  =  - molecularSim[atID,2].copy() 	# distance vector for every point
 	dr   = [np.sqrt((a[0]**)+(a[1]**)+(a[2]**)) for a in drv] 		# absolute distances of those vectors
 	#print("ep: " + str(ep) + " || dr: " + str(dr))
 	dLJP = np.zeros(dimens) 									 	# force vector on atom being calculated for
@@ -381,71 +382,68 @@ def RequestCreateMol(molName, numMolsCreate, player=0, location=None):
 
 	return True
 
-# ===== === = UPDATE FUNCTION = === =====
+def ode(atomPositions, v0, dt):
+	# two simultaneous integrations; acceleration to velocity, and velocity to position
 
-def Update():
-	# todo
-	# calculate polynomial equation for a by taking delR/delField
-	# then solve for r
-	# first rk4 takes position and charge arrays and solves partial to yield an acceleration field
-	# second rk4 takes position and mass arrays and solves partial over time
-	
-	# save previous position, force, and acceleration values for integration calculations
-	prev_pos = molSim[:, 2]
-	prev_acc = molSim[:, 3]
-	prev_for = molSim[:, 7]
 	# 0 reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo
-	forces = np.zeros(nParticles,dimens)
+	forces = np.zeros(len(atomPositions),dimens)
 	# 1 iterate through particles in simulation to calculate ljp and  coul
-	forces[atom] = [-np.array([dLJp(atom)]),-np.array([coul(atom)]) for atom in range(nParticles)]
-
+	for atomPos in len(atomPositions):
+		forces[atomPos] = -np.array([dLJp(atomPos, atomPositions) - coul(atomIndex)])
 	# 							==========
 	# 2 calculate forces maintaining bond angles and lengths
+	# TODO MAKE THESE TWO INTO RIGID CONSTRAINTS
 	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule
 	#print("bep: + str(bep))
 	ba = -dBA(molecularSim) # returns array for molecule
 	#print("ba:" + str(ba))
 	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field
-	molSim[:, 7] = [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for i in range(nParticles)]
-	
-	# TODO calculate impulse rather than force to allow dt to vary with dr
-	# J = dF/dt
-	
-	# TODO calculate position before acceleration using the following formulae
-	# TODO also use rk4 to do them- the formulae below do not have this implemented
-	# TODO do i need to transpose the arrays for the calculation?
-	# n.b. the following assumes column 3 of the array is acceleration
-	
-
+	forces = [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for atomIndex in atoms]
+	# 4 F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
+	a = np.transpose(np.transpose(forces)/molSim[:,6]) # find r''(dt) = a(r,q,m)
+	# 5 UPDATE PARTICLE VELOCITIES we now integrate our motion equations
+	v = v0 + np.array(a) * dt 								   # find r'(dt) = v(dt) from a 
+	# 6 UPDATE PARTICLE POSITIONS ==========
+	pos = pos + v * dt 								   # find r(dt)
+	return a,v,pos 									   # return dv/dt and v for rk4, return r for newton
 	# calculate rt = dt^2(-(a0 - J)/4mass) + r0
-	molSim[:, 2] = setdt**2 * ( -(prev_acc - (molSim[:, 7] - prev_for)/dt)/4*mass) + prev_pos
+	#molSim[:, 2] = setdt**2 * ( -(prev_acc - (molSim[:, 7] - prev_for)/dt)/4*mass) + prev_pos
 	# then calculate acceleration for the next cycle
 	# molSim[:, 3] = ((4(molSim[:, 2] - prev_pos)/2*dt)/(-1)*dt) + prev_acc
 	# finally, set f0 for next cycle
 	# prev_forces = forces
-	
-	# 4 F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
-	a = np.transpose(np.transpose(molSim[:, 7])/molSim[:,6]) #Force->acceleration 
+
+def rk4(pos, velo, dt):
+    k1,velo,pos = ode(pos, velo, 0)
+    k2,velo,pos = ode(pos, v + k1*dt/2, dt/2)
+    k3,velo,pos = ode(pos, v + k2*dt/2, dt/2)
+    k4,velo,pos = ode(pos, v + k3*dt, dt)
+    return pos, velo + dt/6*(k1 + 2*k2 + 2*k3 + k4)
+
+# ===== === = UPDATE FUNCTION = === =====
+
+def Update():
+	# one rk4 to do both integration steps simultaneously for more definition
+	molecularSim[:, 2], molecularSim[:, 3] = rk4(molecularSim[:, 2].copy(), molecularSim[:, 3].copy(), setdt)
+	# TODO DAMPING FACTOR 
+	#molecularSim[:,3] = rescaleT(molecularSim[:,3]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
+	# 7 process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary
+	molecularSim[:,2] , molecularSim[:,3] = reflectBC(molecularSim[:,2], molecularSim[:,3])
+	# CONSIDER calculate impulse rather than force to allow dt to vary with dr
+	# J = dF/dt
+	# CONSIDER do i need to transpose the arrays for the calculation?
+	# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
+		# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
+		# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
+		# CONSIDER: Beeman predictor-corrector
+		# CONSIDER: Conditional methodology
+		# CONSIDER: partial differential; calculate polynomial equation for a by taking delR/delField then solve for r
+	# CONSIDER save previous position, force, and acceleration values for integration calculations
+	#prev_pos = molecularSim[:, 2].copy()
+	#prev_vel = molecularSim[:, 3].copy()
 	#print("acceleration at end of calculations: " + str(a))
 	# 							==========
 
-	# 5 calculus also allows us to derive velocities and positions from the acceleration
-	# Euler method. This is unstable and creates increasing errors, especially for anything other than the shortest timesteps
-		# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a
-		# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations 
-		# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution
-		# CONSIDER: rk4 (runge-kutte)
-		# CONSIDER: Beeman predictor-corrector
-		# CONSIDER: Conditional methodology
-	molecularSim[:,3] = molecularSim[:,3] + np.array(a) * setdt # convert flexible list of accellerations into numpy array for maths
-	molecularSim[:,3] = rescaleT(molecularSim[:,3]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS
-
-	# 6 UPDATE PARTICLE POSITIONS ==========
-	molecularSim[:,2] = molecularSim[:,2] + molecularSim[:,3] * setdt
-	# still need to figure out frame-rate consistency. setdt is required to get reliable behaviour/physics
-
-	# 7 process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary
-	molecularSim[:,2] , molecularSim[:,3] = reflectBC(molecularSim[:,2], molecularSim[:,3])
 		
 # ''' --NOTES: 
 	# Coulomb's law: f = k*q1*q2/r**
