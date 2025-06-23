@@ -384,6 +384,12 @@ def RequestCreateMol(molName, numMolsCreate, player=0, location=None):
 # ===== === = UPDATE FUNCTION = === =====
 
 def Update():
+	# todo
+	# calculate polynomial equation for a by taking delR/delField
+	# then solve for r
+	# first rk4 takes position and charge arrays and solves partial to yield an acceleration field
+	# second rk4 takes position and mass arrays and solves partial over time
+	
 	# save previous position, force, and acceleration values for integration calculations
 	prev_pos = molSim[:, 2]
 	prev_acc = molSim[:, 3]
