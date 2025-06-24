@@ -16,6 +16,7 @@ EditorCamera()
 sky = Sky()
 pivot = Entity()
 DirectionalLight(parent=pivot, y=1.5, z=3, shadows=True, rotation=(65, -15, 45))
+selectView = True
 
 # some physical constants
 kb  = 0.8314459920816467 # Boltzmann
@@ -26,14 +27,14 @@ ech = 1.60217662E-19 #electron charge in coulombs
 setdt = 0.005
 
 # game entities with initial position vectors
-firstAtom = Entity(model='sphere', scale=0.1, position=np.array([-2,0,0]), color=color.red)
-secondAtom = Entity(model='sphere', scale=0.1, position=np.array([2,0,0]), color=color.blue)
+firstAtom = Entity(model='sphere', scale=0.1, position=np.array([-10,0,0]), color=color.red)
+secondAtom = Entity(model='sphere', scale=0.1, position=np.array([10,0,0]), color=color.blue)
 
 # derivatives of motion for calculations
 veli = np.array([0.0,0.0,0.0])
 velj = np.array([0.0,0.0,0.0])
-acci = np.array([0.0,0.0,0.0])
-accj = np.array([0.0,0.0,0.0])
+#acci = np.array([0.0,0.0,0.0])
+#accj = np.array([0.0,0.0,0.0])
 
 # physical values
 chrgi = 0.41
@@ -46,41 +47,60 @@ def dLJP(parti,partj):
 	ep = 3.24
 	sg = 0.98
 
-	drv  = partj.position - parti.position
+	drv  = partj - parti
 	dr   = np.sqrt(drv[0]**2+drv[1]**2+drv[2]**2)
 	r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
 	r14vs= np.sum(np.transpose(np.transpose(drv) * 2.0*ep*(sg**12) * (1.0/np.array(dr))**14),axis=0)
 	return 24.0*(r14vs-r8vs)
 
-def coul(parti,partj,qi,qj):
+def coul(parti,partj,qi=0.41,qj=0.41):
 	kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 
-	drv = partj.position - parti.position
+	drv = partj - parti
 	dr  = np.sqrt(drv[0]**2 + drv[1]**2 + drv[2]**2) 		 # absolute distance of those lads
 	r3  = kc * qi * qj * ((1.0/dr)**3.0) 					 # Coulomb's law
 	return np.sum(np.transpose(np.transpose(drv)*r3),axis=0) # transpose the distance vector, multiply by force, transpose back
 
+def ode(rx, ry, v0, dt):
+	#forces = np.zeros(2,3)
+	force = -np.array([dLJP(rx, ry) - coul(rx, ry)])
+	#forcej = -np.array([dLJp(rj, ri) - coul(rj, ri)])
+	#a = np.transpose(np.transpose(forces)/masses]) # find r''(dt) = a(r,q,m)
+	a = force / massi 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
+	v = v0 + a * dt 								# find r'(dt) = v(dt) from a 
+	rx = rx + v * dt 								# find r(dt)
+	ry + ry - v * dt
+	return a,v,rx,ry 									# return dv/dt and v for rk4, return r for newton
+	
+def rk4(posi, posj, velo, dt):
+    k1,velo,posi, posj = ode(posi, posj, velo, 0)
+    k2,velo,posi, posj = ode(posi, posj, velo + k1*dt/2, dt/2)
+    k3,velo,posi, posj = ode(posi, posj, velo + k2*dt/2, dt/2)
+    k4,velo,posi, posj = ode(posi, posj, velo + k3*dt, dt)
+    return posi, velo + dt/6*(k1 + 2*k2 + 2*k3 + k4)
+
+def input(self):
+	global selectView
+	if held_keys['space']:
+		selectView = not selectView
+
 def update():
-	global veli, velj, acci, accj
-
-	# force calculations
-	forcei = -np.array([dLJP(firstAtom,secondAtom) + coul(firstAtom,secondAtom,chrgi,chrgj)])
-	forcej = -np.array([dLJP(secondAtom,firstAtom) + coul(secondAtom,firstAtom,chrgj,chrgi)])
-
-	# a = F/m
-	acci = np.transpose(np.transpose(forcei)/massi)
-	accj = np.transpose(np.transpose(forcej)/massj)
-
-	print(forcei)
-	print(acci)
+	global veli, velj
+	firstAtom.position, veli = rk4(firstAtom.position, secondAtom.position, veli, setdt)
+	secondAtom.position, velj = rk4(secondAtom.position, firstAtom.position, velj, setdt)
 	print(veli)
-
+	# force calculations
+	#forcei = -np.array([dLJP(firstAtom,secondAtom) + coul(firstAtom,secondAtom,chrgi,chrgj)])
+	#forcej = -np.array([dLJP(secondAtom,firstAtom) + coul(secondAtom,firstAtom,chrgj,chrgi)])
+	# a = F/m
+	#acci = np.transpose(np.transpose(forcei)/massi)
+	#accj = np.transpose(np.transpose(forcej)/massj)
 	# euler integration of position derivatives to position
-	veli = veli + (setdt * acci)
-	velj = velj + (setdt * accj)
-	firstAtom.position = firstAtom.position + (veli * setdt)
-	secondAtom.position = firstAtom.position + (velj * setdt)
-
-	camera.lookAt(firstAtom)
+	#veli = veli + (setdt * acci)
+	#velj = velj + (setdt * accj)
+	#firstAtom.position = firstAtom.position + (veli * setdt)
+	#secondAtom.position = firstAtom.position + (velj * setdt)
+	if selectView: camera.lookAt(firstAtom)
+	else: camera.lookAt(secondAtom)
 
 app.run()

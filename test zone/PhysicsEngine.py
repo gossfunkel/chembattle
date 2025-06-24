@@ -93,6 +93,10 @@ def SlideTo(pops, fpos, lerp):
 
 # Gradient of Lennard-Jones potential on one body (negative force)
 # TODO remodel to calculate based on a given set of positions
+# 	currently, it uses the index of the atom in the simulation array to find its position - this is not what it's passed.
+# 	in order to work in our ODE, it needs to calculate 'in ignorance;' it has to be able to work on parts of the
+# 	simulation data without invoking or updating the values in the simulation. This will also allow for better
+# 	spacial partitioning, and may make it easier to switch out potentials, constraints, and force-sources
 def dLJp(atID, r): # called in loops for every atom in simulation
 	# convenience variable
 	atTpID = molecularSim[atID,0]
@@ -103,7 +107,7 @@ def dLJp(atID, r): # called in loops for every atom in simulation
 	ep = [atomTypes[:,2,atTpID].copy()]
 	
 	# calculate distance vector then absolute distance in each dimension 
-	drv  =  - molecularSim[atID,2].copy() 	# distance vector for every point
+	drv  = r - molecularSim[atID,2].copy() 	# distance vector for every point
 	dr   = [np.sqrt((a[0]**)+(a[1]**)+(a[2]**)) for a in drv] 		# absolute distances of those vectors
 	#print("ep: " + str(ep) + " || dr: " + str(dr))
 	dLJP = np.zeros(dimens) 									 	# force vector on atom being calculated for
@@ -122,6 +126,7 @@ def dLJp(atID, r): # called in loops for every atom in simulation
 	return dLJP
 	
 # derivative of coulomb potential (negative force)
+# TODO: SEE NOTES ON dLJP METHOD
 def coul(atID): # called once per particle, calculates field effect as a whole
 	# TBC: Will see if ionic character of bonds pops out or needs some hard-coding
 	#qs = [molecularSim[i,4] for i in nParticles]
@@ -388,22 +393,21 @@ def RequestCreateMol(molName, numMolsCreate, player=0, location=None):
 
 def ode(atomPositions, v0, dt):
 	# two simultaneous integrations; acceleration to velocity, and velocity to position
-
+	# 							==========
 	# 0 reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo
 	forces = np.zeros(len(atomPositions),dimens)
 	# 1 iterate through particles in simulation to calculate ljp and  coul
 	for atomPos in len(atomPositions):
-		forces[atomPos] = -np.array([dLJp(atomPos, atomPositions) - coul(atomIndex)])
-	# 							==========
-	# 2 calculate forces maintaining bond angles and lengths
-	# TODO MAKE THESE TWO INTO RIGID CONSTRAINTS
-	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule
-	#print("bep: + str(bep))
-	ba = -dBA(molecularSim) # returns array for molecule
-	#print("ba:" + str(ba))
+		forces[atomPos] = -np.array([dLJp(atomPositions[atomPos], atomPositions)])
+		chargeForces[atomPos] = -np.array(coul(atomPositions[atomPos], atomPositions))
+	# 2 calculate forces maintaining bond angles and lengths # TODO MAKE THESE TWO INTO RIGID CONSTRAINTS (if they aren't already)
+	# TODO I may switch these constraints for an EM-PEP field, with physical constraints to model the electron spacial geometry 
+	# 	of atomic orbitals. I'm hoping that PEP can be modelled to create barriers that condition how charges can be affected by nuclei
+	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule #print("bep: + str(bep))
+	ba = -dBA(molecularSim) # returns array for molecule #print("ba:" + str(ba))
 	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field
 	forces = [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for atomIndex in atoms]
-	# 4 F=ma     a = F/m     			a is extended to add all newly calculated accelerations 
+	# 4 F=ma     a = F/m  
 	a = np.transpose(np.transpose(forces)/molSim[:,6]) # find r''(dt) = a(r,q,m)
 	# 5 UPDATE PARTICLE VELOCITIES we now integrate our motion equations
 	v = v0 + np.array(a) * dt 								   # find r'(dt) = v(dt) from a 
