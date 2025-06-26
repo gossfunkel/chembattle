@@ -4,6 +4,7 @@
 
 from ursina import *
 import numpy as np
+#from panda3d.core import Shader
 #from chempy import Substance
 
 # ursina boilerplate to set up window, camera, and lighting
@@ -22,6 +23,8 @@ pivot = Entity()
 DirectionalLight(parent=pivot, y=1.5, z=3, shadows=True, rotation=(65, -15, 45))
 selectView = True
 
+testShader = Shader(Shader.GLSL, fragment="testFragShader.glsl")
+
 # some physical constants
 kb  = 0.8314459920816467 # Boltzmann
 NA  = 6.0221409e+26 #Avogardos constant x 1000 (g->kg)
@@ -29,27 +32,27 @@ ech = 1.60217662E-19 #electron charge in coulombs
 gravConst = 6.6743e-11 # G in m3/kg/s
 
 # constant deltatime
-setdt = 0.0005
+setdt = 0.00001
 
 # game entities with initial position vectors
-firstAtom = Entity(model='sphere', scale=1., world_position=np.array([8,-10,25]), color=color.red)
-secondAtom = Entity(model='sphere', scale=1., world_position=np.array([22,-10,15]), color=color.blue)
+firstAtom = Entity(model='sphere', scale=1., world_position=np.array([1,-10,35]), color=color.red, shader=testShader)
+secondAtom = Entity(model='sphere', scale=1., world_position=np.array([34,-10,15]), color=color.blue, shader=testShader)
 camera.world_position = Vec3(15,0,22)
 #camera.rotation_x = 0
 
 #visualPlane = Entity(model='plane',collider=None, world_position=np.array([10,-10,20]))
 
 # derivatives of motion for calculations
-veli = np.array([15.0,0.0,15.])
-velj = np.array([-15.0,0.0,-15.])
+veli = np.array([-50.0,0.0,-50.])
+velj = np.array([50.0,0.0,50.])
 #acci = np.array([0.0,0.0,0.0])
 #accj = np.array([0.0,0.0,0.0])
 
 # physical values
 chrgi = 0.41
 chrgj = 0.41
-massi = 1.0
-massj = 1.0
+massi = 0.001
+massj = 0.001
 
 # dLJP for Hydrogen
 def dLJP(parti,partj):
