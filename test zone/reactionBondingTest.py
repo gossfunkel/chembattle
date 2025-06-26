@@ -1,3 +1,7 @@
+# basic physics sim with discretely defined entities (no array)
+# this file is for testing different models of chemical bonding simulation
+# 	primarily focussed on relationships between atoms/nuclei
+
 from ursina import *
 import numpy as np
 #from chempy import Substance
@@ -30,10 +34,10 @@ setdt = 0.0005
 # game entities with initial position vectors
 firstAtom = Entity(model='sphere', scale=1., world_position=np.array([8,-10,25]), color=color.red)
 secondAtom = Entity(model='sphere', scale=1., world_position=np.array([22,-10,15]), color=color.blue)
-camera.world_position = Vec3(10,-11,21)
-camera.rotation_x = 0
+camera.world_position = Vec3(15,0,22)
+#camera.rotation_x = 0
 
-visualPlane = Entity(model='plane',collider=None, world_position=np.array([10,-10,20]))
+#visualPlane = Entity(model='plane',collider=None, world_position=np.array([10,-10,20]))
 
 # derivatives of motion for calculations
 veli = np.array([15.0,0.0,15.])
