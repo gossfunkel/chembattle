@@ -22,17 +22,22 @@ selectView = True
 kb  = 0.8314459920816467 # Boltzmann
 NA  = 6.0221409e+26 #Avogardos constant x 1000 (g->kg)
 ech = 1.60217662E-19 #electron charge in coulombs
+gravConst = 6.6743e-11 # G in m3/kg/s
 
 # constant deltatime
-setdt = 0.005
+setdt = 0.0005
 
 # game entities with initial position vectors
-firstAtom = Entity(model='sphere', scale=0.1, position=np.array([-10,0,0]), color=color.red)
-secondAtom = Entity(model='sphere', scale=0.1, position=np.array([10,0,0]), color=color.blue)
+firstAtom = Entity(model='sphere', scale=1., world_position=np.array([8,-10,25]), color=color.red)
+secondAtom = Entity(model='sphere', scale=1., world_position=np.array([22,-10,15]), color=color.blue)
+camera.world_position = Vec3(10,-11,21)
+camera.rotation_x = 0
+
+visualPlane = Entity(model='plane',collider=None, world_position=np.array([10,-10,20]))
 
 # derivatives of motion for calculations
-veli = np.array([0.0,0.0,0.0])
-velj = np.array([0.0,0.0,0.0])
+veli = np.array([15.0,0.0,15.])
+velj = np.array([-15.0,0.0,-15.])
 #acci = np.array([0.0,0.0,0.0])
 #accj = np.array([0.0,0.0,0.0])
 
@@ -46,27 +51,35 @@ massj = 1.0
 def dLJP(parti,partj):
 	ep = 3.24
 	sg = 0.98
-
+	#print(parti)
 	drv  = partj - parti
-	dr   = np.sqrt(drv[0]**2+drv[1]**2+drv[2]**2)
-	r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
-	r14vs= np.sum(np.transpose(np.transpose(drv) * 2.0*ep*(sg**12) * (1.0/np.array(dr))**14),axis=0)
-	return 24.0*(r14vs-r8vs)
+	dr   = np.sqrt(drv[0]**2 + drv[1]**2 + drv[2]**2)
+	#r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
+	r8vs = np.transpose(np.transpose(drv*(ep*(sg**6) * (1.0/np.array(dr))**8)))
+	r14vs= np.transpose(np.transpose(drv) * 2.0*ep*(sg**12) * (1.0/np.array(dr))**14)
+	#r14vs = np.sum(drv*(2.0*ep*(sg**12) * (1.0/np.array(dr))**14))
+	return np.array((r14vs-r8vs)*24.0)
 
 def coul(parti,partj,qi=0.41,qj=0.41):
 	kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
-
 	drv = partj - parti
 	dr  = np.sqrt(drv[0]**2 + drv[1]**2 + drv[2]**2) 		 # absolute distance of those lads
-	r3  = kc * qi * qj * ((1.0/dr)**3.0) 					 # Coulomb's law
-	return np.sum(np.transpose(np.transpose(drv)*r3),axis=0) # transpose the distance vector, multiply by force, transpose back
+	r3  = kc * qi * qj * (1.0/dr**3.0) 					 	 # Coulomb's law
+	return np.transpose(np.transpose(drv)*r3)				 # transpose the distance vector, multiply by force, transpose back
+	#return np.sum(drv*r3)
+
+def grav(parti,partj):
+	drv = partj - parti
+	dr  = np.sqrt(drv[0]**2 + drv[1]**2 + drv[2]**2) 		 # absolute distance of those lads
+	return gravConst * massi * massj / np.transpose(np.transpose(dr)**2)
 
 def ode(rx, ry, v0, dt):
 	#forces = np.zeros(2,3)
-	force = -np.array([dLJP(rx, ry) - coul(rx, ry)])
+	force = -dLJP(rx, ry) + coul(rx, ry) - grav(rx,ry)
+	#print(force)
 	#forcej = -np.array([dLJp(rj, ri) - coul(rj, ri)])
 	#a = np.transpose(np.transpose(forces)/masses]) # find r''(dt) = a(r,q,m)
-	a = force / massi 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
+	a = np.transpose(np.transpose(force) / massi) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
 	v = v0 + a * dt 								# find r'(dt) = v(dt) from a 
 	rx = rx + v * dt 								# find r(dt)
 	ry + ry - v * dt
@@ -100,6 +113,7 @@ def update():
 	#velj = velj + (setdt * accj)
 	#firstAtom.position = firstAtom.position + (veli * setdt)
 	#secondAtom.position = firstAtom.position + (velj * setdt)
+	
 	if selectView: camera.lookAt(firstAtom)
 	else: camera.lookAt(secondAtom)
 

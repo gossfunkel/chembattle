@@ -399,14 +399,14 @@ def ode(atomPositions, v0, dt):
 	# 1 iterate through particles in simulation to calculate ljp and  coul
 	for atomPos in len(atomPositions):
 		forces[atomPos] = -np.array([dLJp(atomPositions[atomPos], atomPositions)])
-		chargeForces[atomPos] = -np.array(coul(atomPositions[atomPos], atomPositions))
+		chargeForces[atomPos] = np.array(coul(atomPositions[atomPos], atomPositions))
 	# 2 calculate forces maintaining bond angles and lengths # TODO MAKE THESE TWO INTO RIGID CONSTRAINTS (if they aren't already)
 	# TODO I may switch these constraints for an EM-PEP field, with physical constraints to model the electron spacial geometry 
 	# 	of atomic orbitals. I'm hoping that PEP can be modelled to create barriers that condition how charges can be affected by nuclei
 	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule #print("bep: + str(bep))
 	ba = -dBA(molecularSim) # returns array for molecule #print("ba:" + str(ba))
 	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field
-	forces = [((forces[i,0] + bep[i]) + ba[i]) + forces[i,1] for atomIndex in atoms]
+	forces = [((forces[atomIndex] + bep[atomIndex]) + ba[atomIndex]) + chargeForces[atomIndex] for atomIndex in len(atomPositions)]
 	# 4 F=ma     a = F/m  
 	a = np.transpose(np.transpose(forces)/molSim[:,6]) # find r''(dt) = a(r,q,m)
 	# 5 UPDATE PARTICLE VELOCITIES we now integrate our motion equations
