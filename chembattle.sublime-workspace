@@ -4,8 +4,100 @@
 		"selected_items":
 		[
 			[
+				"tex",
+				"texcoord"
+			],
+			[
+				"ve",
+				"vec4"
+			],
+			[
+				"p3",
+				"p3d_MultiTexCoord0"
+			],
+			[
+				"p3d",
+				"p3d_Vertex"
+			],
+			[
+				"test",
+				"testShader"
+			],
+			[
+				"gr",
+				"gravConst"
+			],
+			[
+				"p",
+				"parti"
+			],
+			[
+				"g",
+				"grav"
+			],
+			[
+				"mas",
+				"massj"
+			],
+			[
+				"mass",
+				"massi"
+			],
+			[
+				"atomPos",
+				"atomPositions"
+			],
+			[
+				"pr",
+				"print"
+			],
+			[
+				"se",
+				"selectview"
+			],
+			[
+				"posi",
+				"posi"
+			],
+			[
+				"atomP",
+				"atomPos"
+			],
+			[
 				"pos",
-				"position"
+				"pos"
+			],
+			[
+				"atomp",
+				"atomPositions"
+			],
+			[
+				"mol",
+				"moleculeSim"
+			],
+			[
+				"chr",
+				"chrgi"
+			],
+			[
+				"y",
+				"y"
+			],
+			[
+				"lin",
+				"linspace"
+			],
+			[
+				"ey",
+				"ey"
+			],
+			[
+				"ma",
+				"maxValue"
+			],
+			[
+				"dE",
+				"dExdt"
 			],
 			[
 				"atp",
@@ -88,14 +180,6 @@
 				"spawn"
 			],
 			[
-				"p",
-				"pos"
-			],
-			[
-				"se",
-				"setdt"
-			],
-			[
 				"v",
 				"v"
 			],
@@ -110,10 +194,6 @@
 			[
 				"molec",
 				"molecules"
-			],
-			[
-				"mol",
-				"molID"
 			],
 			[
 				"atT",
@@ -204,10 +284,6 @@
 				"simulation"
 			],
 			[
-				"posi",
-				"position"
-			],
-			[
 				"newa",
 				"newatts"
 			],
@@ -254,10 +330,6 @@
 			[
 				"i",
 				"i"
-			],
-			[
-				"ve",
-				"velocity"
 			],
 			[
 				"cal",
@@ -326,10 +398,6 @@
 			[
 				"Win",
 				"WINDOW_WIDTH"
-			],
-			[
-				"ma",
-				"max_distance"
 			],
 			[
 				"up",
@@ -444,81 +512,39 @@
 				"location"
 			],
 			[
-				"y",
-				"ycoord"
-			],
-			[
 				"ge",
 				"get_frect"
-			],
-			[
-				"te",
-				"textSurfs"
-			],
-			[
-				"sp",
-				"sprite"
-			],
-			[
-				"men",
-				"menuOpenState"
-			],
-			[
-				"menu",
-				"menuItem"
-			],
-			[
-				"all",
-				"all_sprites"
-			],
-			[
-				"ui",
-				"uiobjects"
-			],
-			[
-				"wid",
-				"width"
-			],
-			[
-				"vec",
-				"vec"
-			],
-			[
-				"drag",
-				"dragstate"
-			],
-			[
-				"check",
-				"checkCollides"
-			],
-			[
-				"cl",
-				"cld"
-			],
-			[
-				"wi",
-				"width"
-			],
-			[
-				"get",
-				"get_pos"
-			],
-			[
-				"mo",
-				"mouse"
-			],
-			[
-				"text",
-				"textSurf"
-			],
-			[
-				"Ji",
-				"JiggleBall"
 			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"file": "docs/chembattle-pseudocode",
+			"settings":
+			{
+				"buffer_size": 3749,
+				"line_ending": "Windows",
+				"name": "chembattle pseudocode"
+			}
+		},
+		{
+			"file": "docs/AdvancedMoleculePhysics_docs.md",
+			"settings":
+			{
+				"buffer_size": 10161,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "docs/CHEMBATTLE-TODO.md",
+			"settings":
+			{
+				"buffer_size": 5806,
+				"line_ending": "Windows",
+				"name": "# CHEMBATTLE TODO LIST"
+			}
+		},
 		{
 			"file": "main.py",
 			"settings":
@@ -528,18 +554,21 @@
 			}
 		},
 		{
-			"file": "AdvancedMoleculePhysics.py",
+			"contents": "from ursina import *\nfrom chempy import Substance\nfrom random import randint\nimport numpy as np\nimport atoms as ats\n\n# This will be the game's particle physics engine.\n	# 				!!! This file currently untested and EXTREMELY janky !!!\n	# \n	# N.B. THIS WILL NOT WORK UNTIL THE UPDATE FUNCTION FROM THE OLD CLASS IS TRANSLATED INTO THIS OR THE ATOMS CLASS\n	# 	the drawing of the atoms was previously handled by a Molecule object in the AMP class. Atoms will now draw themselves.\n# 	\n	# This physics engine and the networking class will be the main core of the game engine for this project, and if I can \n	# 	get a working prototype without wasting the whole summer on it, I think it might be worth keeping up:)\n\n#  ===== === = CLASS DATA = === ===== \n\n# molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray\n	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation\n	# This is effectively a dataset storing a mass and charge field. Mass is located at position, charge is located to \n	# 	(hybridised/energised) atomic orbitals within a set distance of this same position. Masses are associated with charges. \n	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevVelocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass, 7 previousForce [x,y,z] ]\n\n	# packaging positions like this will make it easier to send them over to the GPU as a bulk, rather than having to create\n	# 	separate objects for each atom and call the GPU every time, bottlenecking at the draw stage. aka instance rendering\nmolecularSim = []\n# stores values for lookup\n# 	[0 name ,1[ sigma ],2[ epsilon ]]\natomTypes 	 = []\n# list of models for ursina to draw\ndrawAtts 	 = []\n# list of molecules to use for calculating bond potentials\nmolecules 	 = []\n\n# for instancing graphics to gpu:\natomModel = Entity(model='sphere', scale=(1,1,1), world_position=(0,0,0))\natomNodes = NodePath('atomNodes')\n\n# global values for simulation - can be modified in action\nnParticles	= 0 	# number of particles in sim\nnMolecules  = 0 	# number of molecules in sim\ndimens		= 3 	# number of spacial dimensions\nsetdt 		= 0.002\nsimSize		= 15 	# scale of the simulation space in angstroms\nsimSizeVec	= np.zeros([D])+LL\nfixTemp		= 200 	# maintained temperature in K - TODO: CHANGE FOR PRESSURE (walls)\n\n# physical/chemical constants\nkR  = 148000.0  #spring potential is usually defined as U = (k/2)(r-r_0)^2. can include /2\nkTh = 35300.0  #same explanation as Kr but with bending energy\nkB  = 0.8314459920816467 # Boltzmann constant in A^2 D ps^-2 K^-1\nkA  = 6.0221409e+26 #Avogadros constant x 1000 (g->kg)\nkEq = 1.60217662E-19 #electron charge in coulombs\nkQcs = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units\n\n# ===== === = CLASS METHODS = === ===== \n\ndef reflectBC(r,v):\n	newv = 1.0 * v\n	newr = 1.0 * r\n	for atom in range(nParticles):\n		for j in range(dimens): # for each pair of boundaries in a dimension\n			if (newr[atom,j] < 0): # if beneath 0, reflect\n				newr[atom,j] = -newr[atom,j]\n				newv[atom,j] = abs(v[atom,j])\n			if (newr[atom,j] > simSizeVec[j]): # if beyond simSize, reflect\n				newr[atom,j] = 2.0 * simSizeVec[j]-newr[atom,j]\n				newv[atom,j] = -abs(v[atom,j])\n	return newr,newv\n\ndef rescaleT(v):\n	# mass / v^2\n	kineticE   = 0.5 * sum(sum(molSim[:,6] * np.transpose(v**)))\n	avKineticE = KineticE / nParticles\n	tNow 	   = (2.0 / 3) * avKineticE / kB\n	lam 	   = np.sqrt(temp0 / tNow)\n	#lam = (lam - 1.0) * 0.5 + 1.0 # uncomment to update temp slowly\n	return (lam * v) # adjusted velocity\n\n# smoothly transition a vector via linear interpolation\ndef SlideTo(pops, fpos, lerp):\n	#target = Vec3([pops])\n	#follow = Vec3([fpos])\n	distance = np.linalg.norm(pops-fpos)\n	if (distance > 0):\n		direction = (pops - fpos) / distance\n		min_step = max(0, distance - 100) #final int is max follow distance setting\n		max_step = distance\n		step_distance = min_step + (max_step - min_step) * lerp #LERP factor\n		new_follow = Vec3(fpos + direction * (step_distance * time.dt))\n	else: return(fpos)\n	return(new_follow)\n\n# Gradient of Lennard-Jones potential on one body (negative force)\n# TODO remodel to calculate based on a given set of positions\n# 	currently, it uses the index of the atom in the simulation array to find its position - this is not what it's passed.\n# 	in order to work in our ODE, it needs to calculate 'in ignorance;' it has to be able to work on parts of the\n# 	simulation data without invoking or updating the values in the simulation. This will also allow for better\n# 	spacial partitioning, and may make it easier to switch out potentials, constraints, and force-sources\ndef dLJp(atID, r): # called in loops for every atom in simulation\n	# convenience variable\n	atTpID = molecularSim[atID,0]\n	#pvi = mol.children[atid].indx # position and vector array index of atom\n\n	# create arrays for constants for the type of the atom being calculated for\n	sg = [atomTypes[:,1,atTpID].copy()]\n	ep = [atomTypes[:,2,atTpID].copy()]\n	\n	# calculate distance vector then absolute distance in each dimension \n	drv  = r - molecularSim[atID,2].copy() 	# distance vector for every point\n	dr   = [np.sqrt((a[0]**)+(a[1]**)+(a[2]**)) for a in drv] 		# absolute distances of those vectors\n	#print(\"ep: \" + str(ep) + \" || dr: \" + str(dr))\n	dLJP = np.zeros(dimens) 									 	# force vector on atom being calculated for\n\n	# truncate to calculate only for nearby atoms (less than 3 angstroms away). May be replaced by partitioning\n	if ((dr[i] < 3) for i in dr): 				# calculate dLJP (8-14 from 6-12) force from distance array member\n		# NOTE: IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions\n		r8   = ep[i]*(sg[i]**6) * (1.0/np.array(dr))**8 \n		r14  = 2.0*ep[i]*(sg[i]**12) * (1.0/np.array(dr))**14\n		r8v  = np.transpose(np.transpose(drv)*r8)\n		r14v = np.transpose(np.transpose(drv)*r14)\n		r8vs = np.sum(r8v,axis=0)\n		r14vs= np.sum(r14v,axis=0)\n		dLJP += 24.0*(r14vs-r8vs)\n	# return the total force vector on the atom\n	return dLJP\n	\n# derivative of coulomb potential (negative force)\n# TODO: SEE NOTES ON dLJP METHOD\ndef coul(atID): # called once per particle, calculates field effect as a whole\n	# TBC: Will see if ionic character of bonds pops out or needs some hard-coding\n	#qs = [molecularSim[i,4] for i in nParticles]\n	qs = [molecularSim[i,4].copy() for i in nParticles if (molecularSim[i,5] != molecularSim[atID,5])]\n			# no charge interactions with own molecule\n	qs 			= 1.0 * np.array(qs)\n	r 			= np.delete(molecularSim[:, 1].copy(),atID)\n	drv 		= r - r[atID] #distance in each dimension\n	drv 		= np.delete(drv,atID,0) #remove ith element (no self-interactions)\n	dr 			= [np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance\n	r3 			= molecularSim[atID,4].copy() * qs * kQcs * ((1.0 / np.array(dr)**3.0) # Coulomb's law      TODO Update constants\n	forcefield  = np.transpose(np.transpose(drv) * r3) # transpose the distance array, multiply by force, transpose back\n	#return np.zeros(dimens) # uncomment to disable EM field force\n	return np.sum(forcefield,axis=0) # sum the value of axis 0 of the transposed & multiplied array\n\n#gradient of bond length potential (negative force)\ndef dBEpot(molSim): # called once per update\n	# 0 initialise a force of 0 on all particles, then fill in those which feel a force\n	bps = np.zeros([nParticles,dimens])\n	aps = np.zeros([nParticles,dimens])\n\n	# 1 loop through all particle indices in the simulation\n	for atID in range(nParticles): \n		#print(\"calculating bonds for molecule: \" + str(mol)\n		# position vector of current atom\n		rAtom = molSim[atID,2]\n\n		# 2 loop over any bonds in that data entry\n		for bond in molSim[atID,1]:\n			# load bond length and strength\n			# 	bond data structure: [atom,bonded-to,bond-length,gamma(bond-strength)]\n			dr0= bond[0] 					# bl\n			e0 = molSim[atID,1,1] 			# be\n			\n			# 3 loop over all bonded atoms and calculate forces\n			for bondedTo in range(len(bond[3, :])): # iterate through particles bonded to atom\n				#print(\"bonding particle: \" + str(atom))\n				dr 		   = rAtom - molSim[bnd[bondedTo]] # difference in positions\n				#print(\"dr from dbepot: \" + str(dr))\n				bps[atID] += 2.0 * e0 * (np.sqrt(sum(dr**)) - dr0) * dr / adr \n				# 4 Calculate bond angle forces (once per bonded neighbour)\n				aps = dBA(aps,atID,bnd[bondedTo],bond[2,0],bond[2,1])\n				# because this calculates through the neighbours, it is not suited to calculating the force\n				# on atoms in-between other atoms. I may write a new procedure for this; dBA is getting a bit mad\n\n			#print(\"calculating dBA for \" + str(atID))\n			#aps = dBA(aps,atID,bond[2]) 	# calculate bond angle force around this atom\n			)\n	# 5 return the array of forces on all particles in the simulation\n	return bps, aps\n\n#gradient of bond angle potential (negative force) 						TODO : REMAKE THIS METHOD FOR NEW DATA STRUCTURE\ndef dBA(aps,atomID,neighbour,th00,e0): # called once per bonded atom to each atom in dBE\n	# this calculates bond angle forces for every pair of bonds	around a shared/middle/mediating/axial atom\n		# So if a particle has multiple bonds, forces will need to be calculated multiple times.\n		# If angles don't properly match, geometry may get fucky.\n		# It updates an array of force on atoms from bond angles (aps)\n	# The original MD code works out angles by going through each particle, and checking an angles list for details\n		# 	it then applies a force based on the angle calculated relative to two other particles.\n		# 	This reflects sp2-character (trigonal planar) orbital hybridisation geometry, with an implied lone pair \n		# 		on the central atom, and sp hybridisation of the two flanking H atoms.\n		# I would like to make this versatile for sp3 (tetrahedral) and sp (linear) geometries, and enable chaining of\n		# 	hybridised atoms. Right now, this simply maintains a shape. There is very little chemical logic to it. This \n		# 	could continue, but I want to include lone pairs- for now, sp3 hybrids will simply work by stacking bonds on an\n		# 	atom, and sp hybrids will break the routine (ndot of opposing vectors is -1, results in dividing by 0)\n	# The new methodology of this method is that it is called once per bonded atom. Angle forces are exerted by neighbours\n		# of each neighbour, so this loop iterates through all neighbours of the neighbour and calculates forces to maintain\n		# the bond angles thereof. It outputs only the force on each side-particle; I have not yet implemented a solution to\n		# the lack of force on the atoms acting as an intermediary/middle/axis between other bonded neighbours. The \n		# numerator in the differentiation for the force on the middle particle is given as: \n			#	numerator		  = (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1)) / (ar1*ar2)\n	# N.B.: due to the choice to calculate for every particle, calculations will need to be done perhaps more than they need \n		# to. Given particles i, j, and k, where i is bonded to j and j is bonded to k, this will calculate the bond angle ijk\n		# twice; once when calculating for i, and once when calculating for k. In future, I'll probably have to rewrite this\n		# to be more efficient with the computations. I haven't yet figured out how to do this.\n											\n											# 	TODO : MAKE ROUTINE CHECK IF BOND ANGLE HAS ALREADY BEEN CALCULATED BEFORE\n									# 	this will be necessary to prevent each atom's bond array generating duplicate forces\n\n	# 1 set values for angle to enforce\n	#th00 = angs[0] #equilibrium angle\n	#e0   = angs[1] #bending modulus\n	if (th00 > 170 and th00 < 190): # sp character - linear\n		# code for calculating bond angle force for linear bonds\n		aps[atID] = 0.0\n	elif(th00 > 110 and th00 < 130): # sp2 character - trigonal planar\n		# 2 loop over particles bonded to neighbour -1 (no two-member angles! angles need 3+ points)\n		for angledAtom in range(len(moleculeSim[neighbour,1])) if (moleculeSim[neighbour,1,angledAtom] != atID): \n			# 2.1 load indices from angles array\n			a3 = int(moleculeSim[neighbour,1,angledAtom]])\n			#print(\"a1: \" + str(a1) + \", a2: \" + str(a2) + \", a3: \" + str(a3))\n\n			# 2.2 calculate the vectors between the atoms' current positions\n			r1 = r[atomID] - r[neighbour] #bond vector 1 (from middle atom to atom currently being calculated for)\n			r2 = r[a3] - r[neighbour] #bond vector 2 (middle atom to other atom)\n			#print(\"r values in angle calculation: ra1:\" + str(r[a1]) + \", ra2:\" + str(r[a2]) + \", ra3:\" + str(r[a3]))\n			#print(\"r values in angle calculation: r1:\" + str(r1) + \", r2:\" + str(r2))\n\n			# 2.3 calculate absolute lengths of those vectors, their dot product, then normalise and arccos to get angle theta\n			ar1 = abs(np.linalg.norm(r1)) \n			ar2 = abs(np.linalg.norm(r2))\n			#print(\"lengths of bonds in dBA: ar1: \" + str(ar1) + \", ar2: \" + str(ar2))\n			dot = np.dot(r1,r2) 						# dot product of distance vectors between atoms in molecule\n			#print(\"dot product: \" + str(dot)) \n			ndot=dot/(ar1*ar2) 							# normalize dot product by vector lengths i.e. get the cos of angle\n			#print(\"normalised dot product in angle calculation: \" + str(ndot))\n			th = np.arccos(ndot) 						# bond angle, theta\n			#if (th == 180): raise Exception(\"180 degree bond angles not supported by dBA routine yet!\")\n			\n			# 2.4 check atom position in angle 							TODO maths stuff to get rid of these if statements\n			#if (i == 2 or i == len(angs)):  			# if the particle is on the end of the molecule \n														# calculation for differentiation - linear end atoms\n			numerator 		  = (r2/(ar1*ar2))-(dot/(ar1**3 * ar2 * 2.0))\n			#else: 										# else it is in the middle\n			# TODO can I just remove this? I guess the mediating atom also feels a force from the angle that I should include\n			#											# calculation for differentiation - axial atoms\n			#	numerator		  = (dot * r1 / ar1**2 + dot * r2 / ar2**2 - (r2 + r1)) / (ar1*ar2)\n			# 2.5 differentiate to calculate force\n			dUdth = -2.0 * e0 * (th-th00) # - dU/dtheta\n			denominator	= np.sqrt(1.0 - ndot**2)\n			#print (\" denominator in angle calculation: \" + str(denominator))\n\n			# 2.5.1 force found as derivative of energy over distance (force field) i.e. dUdr\n			aps[atomID] += dUdth * numerator/denominator\n	return aps\n\ndef CreateMol(molName, numMolsCreate, player, position): 							# BROKEN : BONDS, ANGLES\n	# 1 initialise variables\n	atfact  = ats.AtomFactory() # factory method for generating atoms\n	newatts = [] 			    # instantiate list for new atoms in molecule\n	atTypes = atomTypes\n	molID   = nMolecules + 1\n	\n	# 2 interpret molName\n	newmol 		 = Substance.from_formula(molName) # get a new chempy Substance object from the name\n	comp 		 = newmol.composition 				 # get the elemental composition as a dictionary\n	bondLengs 	 = [] 																		# TODO find/assign bond lengths\n	bondEnergies = [] 																		# TODO find/assign bond energies\n	bondAngles	 = [] 																		# TODO find/assigm bond angles\n	for elementindex,quant in comp.items(): # iterate through the members of the composition dictionary\n		for i in range(quant): # loop for quantity\n			# generate atoms of given type and add new atom to list\n			newatts.append(atfact.createAtom(elementindex,player)) \n	\n	# 3 initialise array for simulation particle data entries for the new atoms in the molecule\n	newDataArray = np.empty(len(newatts)).toList()\n	molSize 	 = len(newatts)\n	sumcharge 	 = 0\n	elnegal = []\n	sumelecneg = 0\n\n	# 4 load each atom\n	for newAtom in range(molSize):\n		nAtomTypes  = len(atTypes)\n		# 4.1 initialise new index as the length of the atomTypes array (1 above highest valid index)\n		# 			and load the mass of the particle													TODO MASS !!!!!!!!!!!\n		# 	moleculeSim atom data format: [typeIndex,bonds,position,velocity,charge,moleculeID,mass]\n		newAtomData = [nAtomTypes,[],[],[],[],molID,MASS]\n		newat 		= newatts[newAtom]\n		# 4.2 check types: search typearray for atom name\n		# if the name in the given type array matches, save its index to the new atom's data array\n		newAtomData[0] = [typ for typ in range(nAtomTypes) if (atTypes[typ,0] == newat.name)]\n		\n		if (newAtomData[0] == nAtomTypes): # create new type and add to atomTypes \n			# 4.2.1 save type array index for data\n			newAtomData[0] = tpindex\n			# 4.2.2 load values - name, sigma(i), epsilon(i),population=1 for newly initialised type\n				# atomType format:	[name,[ sigma ],[ epsilon ],mass]\n			atTypes.append(newat.name,[newat.sig],[newat.eps]],1)\n		else: \n			# type already loaded, index value already copied\n			# increment population of atomType\n			atTypes[tpindex,4] = atTypes[tpindex,4] + 1\n		# 4.3 load bond lengths, energies, and angles\n			#covbonds structure: [indx,bonded-to,bond-length,gamma(bond-strength)]\n		if (molSize > 1):\n			#newAtomData[1] = [bondLengs[newAtom],kR]]\n			if newAtom < (molSize - 1):\n																			# TODO HOW TO TELL NEW ATOMS HOW TO BOND?\n				for bonds in atomBonds:\n					# TODO bond length and atoms to bond is information that this constructor needs\n					# 	this information will have to be loaded with the molecule and assigned here\n					newAtomData[1].append([bondLength,kTh,newAtom-1,newAtom,newAtom+1,bondAngles[newAtom],])\n		# 4.4 load initial position values\n		newAtomData[2] = position\n		# 4.5 tell atom game objects where they will be rendered\n		newat.world_location = Vec3(newAtomData[2])\n		# 4.6 increment position for next atom generated 					TODO !!! NEED NEW BOND LENGTHS VALUES/ARRAY\n		position = np.array(newAtomData[2]) + np.array([1.0/bondLengs[newAtom]**3 , 1.0/bondLengs[newAtom]**3 , 0])\n		if (i%2==0):\n			#self.children[i].rotation_y = 180\n			position[1] += 1\n		else:\n			position[2] -= 1\n		# temporarily extend bond info along whole molecule 	TODO this seems wrong\n		#if (newAtom > len(bondLengs)-1):\n		#	newAtomData[newAtom,1] = bondLengs[newAtom-1]\n\n		# 4.7 initialise acceleration to 0\n		newAtomData[3] = [np.zeros(dimens)]\n\n		# 4.8 do charge calculations\n		formalCharges.append(newat.charge)\n		sumcharge += newat.charge\n		elnegal.append(newat.electroNegAllen)\n		sumelecneg += newat.electroNegAllen \n\n		newDataArray.append([newAtomData])# ========== END OF FOR LOOP THRU NEW ATOMS ============\n	\n	# 5 calculate charge distribution\n								# hacky temporary assigning of partial charge; calculating partial charges\n								# 	using Allen electronegativity and formal charge contributions\n								#	 might use this? if i don't ditch it for a better method\n	formalCharges = np.array(formalCharges)\n	# 5.1 find the difference between the largest and smallest electronegativities in the atom\n	sortedElnegal = np.array(elnegal)\n	sortedElnegal.sort()\n	diffNeg = sortedElnegal[-1] - sortedElnegal[0]\n	# 5.2 go through atoms and calculate partial charge as a function of electronegativity\n	for atomnum in range(molSize):\n		# assign sign based on charge of free atom\n		diffNeg = formalCharges[atomnum]/formalCharges[atomnum]\n		newDataArray[atomnum,5] = sumcharge + diffNeg * (elnegal[atomnum] / sumelecneg) \n		# latter term represents ratio of electronegativity in molecule. \n			\n		# AMBER uses e = sum(qiqj/rij) so could maybe rearrange that. distance could define how much electrons can split charge\n		# where at a distance beyond the maximum bonding distance the charge on an atom reaches the formal charge of a free atom\n		# this might have to be saved to see if I can figure out a holistic approach to electrons\n\n	# 6 load new data into simulation \n	nMolecules 	+= 1\n	listSim 	 = molecularSim.toList()\n	listSim.extend(newDataArray) 			# TODO add some exception raising here if something goes wrong\n	# 7 pass models to list to render\n	drawAtts.extend(newatts)\n	return np.ndarray(listSim), atTypes # not sure if this makes sense, dont know how to call this and not have scope issues\n							# since molecularSim isn't being used as a global variable, I should make a setter to call this\n							# complex routine from outside the simulation, to give more moderation on who can call it\n\n# decision logic for when to construct a molecule at code request. Should return True if succesful.\n		# 	Just because CreateMol can be called, doesn't mean it should execute. This function controls that and\n		# 		helps manage scope, and adds some game logic packaging\ndef RequestCreateMol(molName, numMolsCreate, player=0, location=None):\n	# 	TODO allow passing multiple types of molecule at once with *variable passing\n\n	# 1 calculate molecule spawn location based on which player is spawning the molecules\n	if (location == None): newAtomData[3] = Vec3((player+1)*18 + randint(-5,5),\n															 5 + randint(-1,1),\n							 (100*(player+1) - 100 + 8*player) + randint(-5,5))\n	else: newAtomData[3] = Vec3((player+1)*18 + randint(-5,5),\n											5 + randint(-1,1),\n			(100*(player+1) - 100 + 8*player) + randint(-5,5)) + location\n\n	# 2 create the new molecule and update the simulation to include it\n	global molecularSim\n	global atomTypes\n	molecularSim, atomTypes = CreateMol(atomTypes, molName, numMolsCreate, player, location)\n	# 3 throw some exceptions if something goes wrong loading the molecules; expect a True return to this function\n	if type(molecularSim) == None: \n		molecularSim = []\n		raise Exception(\"MOLECULAR SIM NOT LOADED PROPERLY; RESETTING\")\n\n	return True\n\ndef ode(atomPositions, v0, dt):\n	# two simultaneous integrations; acceleration to velocity, and velocity to position\n	# 							==========\n	# 0 reinitialise array of forces	==========		TODO this is sooooo cycle inneficient, pls redo\n	forces = np.zeros(len(atomPositions),dimens)\n	# 1 iterate through particles in simulation to calculate ljp and  coul\n	for atomPos in len(atomPositions):\n		forces[atomPos] = -np.array([dLJp(atomPositions[atomPos], atomPositions)])\n		chargeForces[atomPos] = np.array(coul(atomPositions[atomPos], atomPositions))\n	# 2 calculate forces maintaining bond angles and lengths # TODO MAKE THESE TWO INTO RIGID CONSTRAINTS (if they aren't already)\n	# TODO I may switch these constraints for an EM-PEP field, with physical constraints to model the electron spacial geometry \n	# 	of atomic orbitals. I'm hoping that PEP can be modelled to create barriers that condition how charges can be affected by nuclei\n	bep= -dBEpot(molecularSim) # Spring potential. returns array for molecule #print(\"bep: + str(bep))\n	ba = -dBA(molecularSim) # returns array for molecule #print(\"ba:\" + str(ba))\n	# 3 calculate array of forces on all atoms - LJ -> bonds -> EM field\n	forces = [((forces[atomIndex] + bep[atomIndex]) + ba[atomIndex]) + chargeForces[atomIndex] for atomIndex in len(atomPositions)]\n	# 4 F=ma     a = F/m  \n	a = np.transpose(np.transpose(forces)/molSim[:,6]) # find r''(dt) = a(r,q,m)\n	# 5 UPDATE PARTICLE VELOCITIES we now integrate our motion equations\n	v = v0 + np.array(a) * dt 								   # find r'(dt) = v(dt) from a \n	# 6 UPDATE PARTICLE POSITIONS ==========\n	pos = pos + v * dt 								   # find r(dt)\n	return a,v,pos 									   # return dv/dt and v for rk4, return r for newton\n	# calculate rt = dt^2(-(a0 - J)/4mass) + r0\n	#molSim[:, 2] = setdt**2 * ( -(prev_acc - (molSim[:, 7] - prev_for)/dt)/4*mass) + prev_pos\n	# then calculate acceleration for the next cycle\n	# molSim[:, 3] = ((4(molSim[:, 2] - prev_pos)/2*dt)/(-1)*dt) + prev_acc\n	# finally, set f0 for next cycle\n	# prev_forces = forces\n\ndef rk4(pos, velo, dt):\n    k1,velo,pos = ode(pos, velo, 0)\n    k2,velo,pos = ode(pos, v + k1*dt/2, dt/2)\n    k3,velo,pos = ode(pos, v + k2*dt/2, dt/2)\n    k4,velo,pos = ode(pos, v + k3*dt, dt)\n    return pos, velo + dt/6*(k1 + 2*k2 + 2*k3 + k4)\n\n# ===== === = UPDATE FUNCTION = === =====\n\ndef Update():\n	# one rk4 to do both integration steps simultaneously for more definition\n	molecularSim[:, 2], molecularSim[:, 3] = rk4(molecularSim[:, 2].copy(), molecularSim[:, 3].copy(), setdt)\n	# TODO DAMPING FACTOR \n	#molecularSim[:,3] = rescaleT(molecularSim[:,3]) # scale velocities to keep temperature consistent TODO CHANGE FOR PRESSURE FROM WALLS\n	# 7 process boundary condition: reflect off of walls. 		TODO maintain constant pressure so that temp can vary\n	molecularSim[:,2] , molecularSim[:,3] = reflectBC(molecularSim[:,2], molecularSim[:,3])\n\n	# instance atoms to the GPU\n	# TODO only send those positions which change\n	# TODO draw different models for different nuclei\n	# TODO shade in particles/fx for electrons/charge \n	for atom in drawAtts:\n		placeholder = atomNodes.attachNewNode('atomModel-placeholder')\n		placeholder.setPos(atom[2])\n		atomModel.instanceTo(placeholder)\n	# CONSIDER calculate impulse rather than force to allow dt to vary with dr\n	# J = dF/dt\n	# CONSIDER do i need to transpose the arrays for the calculation?\n	# CONSIDER: verlet integration: r[t+1] = 2 * r[t] - r[t-1] + a\n		# 	requires previous step is saved alongside current step for next step to use. Removes velocity from equations \n		# 	would take the place of velocity array in the simulation, could make for more reliable networking/conflict resolution\n		# CONSIDER: Beeman predictor-corrector\n		# CONSIDER: Conditional methodology\n		# CONSIDER: partial differential; calculate polynomial equation for a by taking delR/delField then solve for r\n	# CONSIDER save previous position, force, and acceleration values for integration calculations\n	#prev_pos = molecularSim[:, 2].copy()\n	#prev_vel = molecularSim[:, 3].copy()\n	#print(\"acceleration at end of calculations: \" + str(a))\n	# 							==========\n\n		\n# ''' --NOTES: \n	# Coulomb's law: f = k*q1*q2/r**\n		#k = 0.000000008988 # Nm**/C**\n	# Lennard-Jones potential is worked out via:\n		# Van der Waals' attractive force: F a r**6\n		# Pauli's repulsive force: F a 1/x**12\n	# '''\n\n	# ''' ---from ursina api ref for CubicBezier\n		# Curves from Ursina are used by Entity when animating, like this:\n		# e = Entity()\n		# e.animate_y(1, curve=curve.in_expo)\n		# e2 = Entity(x=1.5)\n		# e2.animate_y(1, curve=curve.CubicBezier(0,.7,1,.3))\n	# '''\n",
+			"file": "test zone/PhysicsEngine.py",
+			"file_size": 26294,
+			"file_write_time": 133953675341087960,
 			"settings":
 			{
-				"buffer_size": 27177,
+				"buffer_size": 25811,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "test zone/PhysicsEngine.py",
+			"file": "AdvancedMoleculePhysics.py",
 			"settings":
 			{
-				"buffer_size": 23983,
+				"buffer_size": 27177,
 				"line_ending": "Windows"
 			}
 		},
@@ -585,28 +614,11 @@
 			}
 		},
 		{
-			"file": "docs/AdvancedMoleculePhysics_docs.md",
-			"settings":
-			{
-				"buffer_size": 10161,
-				"line_ending": "Windows"
-			}
-		},
-		{
 			"file": "test zone/moleculardynamicstest.py",
 			"settings":
 			{
-				"buffer_size": 12371,
+				"buffer_size": 12382,
 				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "docs/chembattle-pseudocode",
-			"settings":
-			{
-				"buffer_size": 3749,
-				"line_ending": "Windows",
-				"name": "chembattle pseudocode"
 			}
 		},
 		{
@@ -641,6 +653,42 @@
 				"line_ending": "Windows",
 				"name": "from ursina import *"
 			}
+		},
+		{
+			"file": "test zone/chargetest.py",
+			"settings":
+			{
+				"buffer_size": 7227,
+				"line_ending": "Windows",
+				"name": "chargetest.py"
+			}
+		},
+		{
+			"file": "test zone/reactionBondingTest.py",
+			"settings":
+			{
+				"buffer_size": 4826,
+				"line_ending": "Windows",
+				"name": "from ursina import *"
+			}
+		},
+		{
+			"file": "test zone/testFragShader.glsl",
+			"settings":
+			{
+				"buffer_size": 379,
+				"line_ending": "Windows",
+				"name": "#version 120"
+			}
+		},
+		{
+			"file": "test zone/testVertexShader.glsl",
+			"settings":
+			{
+				"buffer_size": 443,
+				"line_ending": "Windows",
+				"name": "# version 150"
+			}
 		}
 	],
 	"build_system": "Packages/Python/Python.sublime-build",
@@ -671,6 +719,7 @@
 	},
 	"file_history":
 	[
+		"/C/Users/gossfunkel/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/MERGE_MSG",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/TEMPLATE-ursina_tester.py",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/moleculardynamicstest.mp",
@@ -875,281 +924,11 @@
 	"groups":
 	[
 		{
-			"selected": 14,
+			"selected": 18,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "main.py",
-					"settings":
-					{
-						"buffer_size": 3820,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								301,
-								301
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "AdvancedMoleculePhysics.py",
-					"settings":
-					{
-						"buffer_size": 27177,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3513,
-								3004
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 756.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "test zone/PhysicsEngine.py",
-					"settings":
-					{
-						"buffer_size": 23983,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1208,
-								1208
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 994.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "atoms.py",
-					"settings":
-					{
-						"buffer_size": 9967,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2823,
-								2823
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 968.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "ui.py",
-					"settings":
-					{
-						"buffer_size": 3924,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1623,
-								1623
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 840.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "cards.py",
-					"settings":
-					{
-						"buffer_size": 3741,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3044,
-								3044
-							]
-						],
-						"settings":
-						{
-							"auto_name": "import atoms",
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 681.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "docs/maps.md",
-					"settings":
-					{
-						"buffer_size": 2271,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								265,
-								265
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Markdown/Markdown.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "achievements.md",
-					"settings":
-					{
-						"buffer_size": 1101,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								239,
-								239
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Markdown/Markdown.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "docs/AdvancedMoleculePhysics_docs.md",
-					"settings":
-					{
-						"buffer_size": 10161,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4432,
-								4432
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Markdown/Markdown.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 588.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "test zone/moleculardynamicstest.py",
-					"settings":
-					{
-						"buffer_size": 12371,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								489,
-								489
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 4992.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				},
-				{
-					"buffer": 10,
 					"file": "docs/chembattle-pseudocode",
 					"settings":
 					{
@@ -1177,7 +956,304 @@
 					"type": "text"
 				},
 				{
+					"buffer": 1,
+					"file": "docs/AdvancedMoleculePhysics_docs.md",
+					"settings":
+					{
+						"buffer_size": 10161,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4432,
+								4432
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "docs/CHEMBATTLE-TODO.md",
+					"settings":
+					{
+						"buffer_size": 5806,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2318,
+								2318
+							]
+						],
+						"settings":
+						{
+							"auto_name": "# CHEMBATTLE TODO LIST",
+							"syntax": "Packages/Markdown/Markdown.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 14.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "main.py",
+					"settings":
+					{
+						"buffer_size": 3820,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2437,
+								2437
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "test zone/PhysicsEngine.py",
+					"settings":
+					{
+						"buffer_size": 25811,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1282,
+								1282
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 294.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "AdvancedMoleculePhysics.py",
+					"settings":
+					{
+						"buffer_size": 27177,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3513,
+								3004
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1176.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "atoms.py",
+					"settings":
+					{
+						"buffer_size": 9967,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1220,
+								1236
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 840.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "ui.py",
+					"settings":
+					{
+						"buffer_size": 3924,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1623,
+								1623
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 840.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "cards.py",
+					"settings":
+					{
+						"buffer_size": 3741,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3044,
+								3044
+							]
+						],
+						"settings":
+						{
+							"auto_name": "import atoms",
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 681.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "docs/maps.md",
+					"settings":
+					{
+						"buffer_size": 2271,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								265,
+								265
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "achievements.md",
+					"settings":
+					{
+						"buffer_size": 1101,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								239,
+								239
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Markdown/Markdown.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
 					"buffer": 11,
+					"file": "test zone/moleculardynamicstest.py",
+					"settings":
+					{
+						"buffer_size": 12382,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								10129,
+								10129
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2529.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 12,
 					"file": "test zone/testscripts.py",
 					"settings":
 					{
@@ -1204,7 +1280,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 12,
+					"buffer": 13,
 					"file": "test zone/springtest.py",
 					"settings":
 					{
@@ -1231,7 +1307,7 @@
 					"type": "text"
 				},
 				{
-					"buffer": 13,
+					"buffer": 14,
 					"file": "test zone/integrationtest.py",
 					"settings":
 					{
@@ -1242,8 +1318,8 @@
 						"selection":
 						[
 							[
-								23,
-								23
+								468,
+								291
 							]
 						],
 						"settings":
@@ -1253,13 +1329,13 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 84.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 14,
+					"buffer": 15,
 					"file": "test zone/cardgameproto.py",
 					"settings":
 					{
@@ -1270,8 +1346,63 @@
 						"selection":
 						[
 							[
-								3841,
-								3841
+								755,
+								358
+							]
+						],
+						"settings":
+						{
+							"auto_name": "from ursina import *",
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 16,
+					"file": "test zone/chargetest.py",
+					"settings":
+					{
+						"buffer_size": 7227,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								63,
+								0
+							]
+						],
+						"settings":
+						{
+							"auto_name": "chargetest.py",
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 17,
+					"file": "test zone/reactionBondingTest.py",
+					"settings":
+					{
+						"buffer_size": 4826,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								239,
+								199
 							]
 						],
 						"settings":
@@ -1280,7 +1411,65 @@
 							"syntax": "Packages/Python/Python.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 1529.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 18,
+					"file": "test zone/testFragShader.glsl",
+					"settings":
+					{
+						"buffer_size": 379,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								335,
+								335
+							]
+						],
+						"settings":
+						{
+							"auto_name": "#version 120",
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 19,
+					"file": "test zone/testVertexShader.glsl",
+					"settings":
+					{
+						"buffer_size": 443,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								410,
+								410
+							]
+						],
+						"settings":
+						{
+							"auto_name": "# version 150",
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

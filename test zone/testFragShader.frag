@@ -13,6 +13,6 @@ out vec4 p3d_FragColor;
 
 void main() {
 	vec4 color = texture(p3d_Texture0, texcoord);
-	p3d_FragColor = color.grba;
+	p3d_FragColor = color.gbra;
 	//p3d_FragColor = vec4(0.0,0.0,1.0,1.0);
 }

@@ -20,10 +20,10 @@ window.color = color.black
 EditorCamera()
 sky = Sky()
 pivot = Entity()
-DirectionalLight(parent=pivot, y=1.5, z=3, shadows=True, rotation=(65, -15, 45))
+#DirectionalLight(parent=pivot, y=1.5, z=3, shadows=True, rotation=(65, -15, 45))
 selectView = True
 
-testShader = Shader(Shader.GLSL, fragment="testFragShader.glsl")
+testShader = Shader(Shader.GLSL, vertex="testVertexShader.vert", fragment="testFragShader.frag")
 
 # some physical constants
 kb  = 0.8314459920816467 # Boltzmann
@@ -36,8 +36,9 @@ setdt = 0.00001
 
 # game entities with initial position vectors
 firstAtom = Entity(model='sphere', scale=1., world_position=np.array([1,-10,35]), color=color.red, shader=testShader)
-secondAtom = Entity(model='sphere', scale=1., world_position=np.array([34,-10,15]), color=color.blue, shader=testShader)
+secondAtom = Entity(model='sphere', scale=1., world_position=np.array([14,-10,15]), color=color.blue, shader=testShader)
 camera.world_position = Vec3(15,0,22)
+camera.shader = testShader
 #camera.rotation_x = 0
 
 #visualPlane = Entity(model='plane',collider=None, world_position=np.array([10,-10,20]))

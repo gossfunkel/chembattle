@@ -19,7 +19,7 @@ import atoms as ats
 	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
 	# This is effectively a dataset storing a mass and charge field. Mass is located at position, charge is located to 
 	# 	(hybridised/energised) atomic orbitals within a set distance of this same position. Masses are associated with charges. 
-	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevAcceleration [x,y,z] ],4[ charge ],5 moleculeID,6 mass, 7 previousForce [x,y,z] ]
+	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevVelocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass, 7 previousForce [x,y,z] ]
 
 	# packaging positions like this will make it easier to send them over to the GPU as a bulk, rather than having to create
 	# 	separate objects for each atom and call the GPU every time, bottlenecking at the draw stage. aka instance rendering
