@@ -2,6 +2,27 @@
 # this file is for testing different models of chemical bonding simulation
 # 	primarily focussed on relationships between atoms/nuclei
 
+#TODO :
+# TEST 1: PEP
+# set up a carbon nucleus with no electrons. Add electrons slowly so that they fill the potential well of the 
+# nucleus quantum by quantum (filling orbital shells)
+# TEST 2: HYBRIDISATION
+# Bring two Hydrogen ions near a Sulfur ion such that the S2 orbital of the Sulfur will have to hybridise with 
+# two p-orbitals to allow a bonding configuration. This raises the potential energy level of the two new sp orbitals.
+# Then try Nitrogen and 3x Hydrogen for ammonia, and 
+# TEST 3: PI BONDS
+# Try the following with CO2 as well to see how it works on linear geometry;
+# Construct ethylene (2H sigma bonded to an sp3 hybridised C bonded to another unit of the same, mirrored)
+# Test out systems for electronic repulsion such that the p-orbital electrons localise to the pi-bond space
+# nuclei attract electrons, electrons repel each other, pep defines the limits
+# slow dt down so far; something like 6.0e-17, such that nuclei barely move and electrons wander slowly
+# TEST 4: RESONANCE STRUCTURES
+# Construct a benzene ring. Ensure that the electrons localise appropriately to the two rings. Note that there
+# should now be a small EM field through the hole in the toroidal body of the molecule. 
+# TEST 5: REDOX
+# Can you get a Sodium to give away an electron to Chlorine, on the terms that they become ionically associated
+# as atoms due to the new net charge on each atom? 
+
 from ursina import *
 import numpy as np
 #from panda3d.core import Shader
