@@ -1,4 +1,4 @@
-#version 150
+#version 300
 // test script that swaps red and green channels
 
 // pass value into shader from main code

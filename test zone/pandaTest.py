@@ -1,11 +1,12 @@
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter
-from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib
+from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter, loadPrcFileData
+from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib, NodePath
 from math import sin, cos
+import numpy as np
 
 def createColouredRect(x, z, width, height, colors=None):
-	_format = GeomVertexFormat.getV3c4()
-	vdata   = GeomVertexData('square', _format, Geom.UHDynamic)
+	format = GeomVertexFormat.getV3c4()
+	vdata   = GeomVertexData('square', format, Geom.UHDynamic)
 
 	vertex  = GeomVertexWriter(vdata, 'vertex')
 	color   = GeomVertexWriter(vdata, 'color')
@@ -35,6 +36,9 @@ def createColouredRect(x, z, width, height, colors=None):
 	square = Geom(vdata)
 	square.addPrimitive(tris)
 	return square
+  
+loadPrcFileData('', 'win-size 1000 600') 
+loadPrcFileData('', 'show-frame-rate-meter 1')
 
 class TestBase(ShowBase):
 	def __init__(self):
@@ -46,36 +50,50 @@ class TestBase(ShowBase):
 		#self.scene.setScale(0.25)
 		#self.scene.setPos(0, 42, 0)
 
-		self.cam.setPos(-5, 0, 3)
+		self.cam.setPos(-5, 0, 30)
 
-		newSquare = createColouredRect(0, 0, 100, 100)
+		#newSquare = createColouredRect(0, 0, 100, 100)
 
-		geomNode = GeomNode('square')
-		geomNode.addGeom(newSquare)
-		self.render.attachNewNode(geomNode)
+		#geomNode = GeomNode('square')
+		#geomNode.addGeom(newSquare)
+		#self.render.attachNewNode(geomNode)
 
-		# get nodepath for box, then reparent to render node
-		self.sphere = self.loader.loadModel("models/misc/sphere")
-		self.sphere.setScale(0.45)
-		self.sphere.reparentTo(self.render)
-		self.theta = 0.0
+		# for some reason, the fps seems to cap at 33 whether I generate 5 spheres or a few hundred
+			# should be hardware instanced like this - not 100% sure how panda3d manages this
+			# i feel like i should also probably use panda3d's Intervals to update the motion in parallel;
+					# see https://docs.panda3d.org/1.10/python/programming/intervals/index#intervals
+					# and https://docs.panda3d.org/1.10/python/introduction/tutorial/using-intervals-to-move-the-panda
+		sphereNum = 500 
+		self.spheres = np.zeros(sphereNum)
+		self.thetas = np.zeros(sphereNum)
+		self.sphere = self.loader.loadModel("../sphere")
+		self.sphereNodep = NodePath('spheres') # placeholders can be attached to another node to spawn groups of instances
+		for i in range(sphereNum):
+			placeholder = self.sphereNodep.attachNewNode("Sphere-Placeholder")
+			placeholder.setScale(0.5)
+			placeholder.setPos(0,i/4,0)
+			self.sphere.instanceTo(placeholder)
+			self.thetas[i] = 0.0
+		placeholder = render.attachNewNode("SphereGroup")
+		placeholder.setPos(-50,180,5)
+		self.sphereNodep.instanceTo(placeholder)
 
 		self.taskMgr.add(self.update, "update")
 
 	def update(self, task):
 		dt = globalClock.getDt()
-		self.theta += 2.0 * dt
-		self.sphere.setPos((cos(self.theta)*8)-8,(sin(self.theta)*8)-8,2)
-		self.sphere.setHpr(cos(self.theta),0,sin(self.theta))
+		for i in range(len(self.spheres)):
+			self.thetas[i] += (i/100 + 2.0) * dt
+			self.sphereNodep.getChild(i).setPos(i/4 - 50,180,(sin(self.thetas[i])*6)+10)
+			#self.sphereNodep.getChild(i).setHpr(cos(self.thetas[i]),0,sin(self.thetas[i]))
 
 		return task.cont
 
 app = TestBase()
 
-
-shader = Shader.load(Shader.SL_GLSL,
-                     vertex="testVertexShader.vert",
-                     fragment="testFragShader.frag")
-camera.setShader(shader)
+#shader = Shader.load(Shader.SL_GLSL,
+#                     vertex="testVertexShader.vert",
+#                     fragment="testFragShader.frag")
+#render.setShader(shader)
 
 app.run()

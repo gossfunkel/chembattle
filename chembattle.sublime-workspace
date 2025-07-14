@@ -4,6 +4,14 @@
 		"selected_items":
 		[
 			[
+				"GeomVe",
+				"GeomVertexFormat"
+			],
+			[
+				"G",
+				"Geom"
+			],
+			[
 				"add",
 				"addVertices"
 			],
@@ -506,14 +514,6 @@
 			[
 				"self",
 				"self"
-			],
-			[
-				"wor",
-				"world_position"
-			],
-			[
-				"po",
-				"position"
 			]
 		]
 	},
@@ -664,7 +664,7 @@
 			"file": "test zone/reactionBondingTest.py",
 			"settings":
 			{
-				"buffer_size": 4854,
+				"buffer_size": 6255,
 				"line_ending": "Windows",
 				"name": "from ursina import *"
 			}
@@ -673,7 +673,7 @@
 			"file": "test zone/pandaTest.py",
 			"settings":
 			{
-				"buffer_size": 2299,
+				"buffer_size": 2286,
 				"line_ending": "Windows",
 				"name": "from direct.showbase.ShowBase import ShowBase"
 			}
@@ -682,7 +682,7 @@
 			"file": "test zone/testVertexShader.vert",
 			"settings":
 			{
-				"buffer_size": 443,
+				"buffer_size": 442,
 				"line_ending": "Windows"
 			}
 		},
@@ -691,8 +691,7 @@
 			"settings":
 			{
 				"buffer_size": 379,
-				"line_ending": "Windows",
-				"name": "#version 120"
+				"line_ending": "Windows"
 			}
 		}
 	],
@@ -724,6 +723,7 @@
 	},
 	"file_history":
 	[
+		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/testFragShader.frag",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/test zone/testVertexShader.vert",
 		"/C/Users/gossfunkel/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings",
 		"/C/Users/gossfunkel/Documents/My Games/Kate/chembattle/.git/MERGE_MSG",
@@ -930,7 +930,7 @@
 	"groups":
 	[
 		{
-			"selected": 20,
+			"selected": 18,
 			"sheets":
 			[
 				{
@@ -1055,8 +1055,8 @@
 						"selection":
 						[
 							[
-								1282,
-								1282
+								10805,
+								10805
 							]
 						],
 						"settings":
@@ -1065,7 +1065,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 294.0,
+						"translation.y": 3510.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1402,15 +1402,15 @@
 					"file": "test zone/reactionBondingTest.py",
 					"settings":
 					{
-						"buffer_size": 4854,
+						"buffer_size": 6255,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1911,
-								1911
+								713,
+								713
 							]
 						],
 						"settings":
@@ -1420,7 +1420,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 294.0,
+						"translation.y": 45.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1430,15 +1430,15 @@
 					"file": "test zone/pandaTest.py",
 					"settings":
 					{
-						"buffer_size": 2299,
+						"buffer_size": 2286,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2269,
-								2269
+								326,
+								326
 							]
 						],
 						"settings":
@@ -1448,7 +1448,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 672.0,
+						"translation.y": 45.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1458,15 +1458,15 @@
 					"file": "test zone/testVertexShader.vert",
 					"settings":
 					{
-						"buffer_size": 443,
+						"buffer_size": 442,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								12,
+								12
 							]
 						],
 						"settings":
@@ -1491,17 +1491,12 @@
 						"selection":
 						[
 							[
-								333,
-								333
+								61,
+								61
 							]
 						],
 						"settings":
 						{
-							"auto_name": "#version 120",
-							"rulers":
-							[
-								80
-							],
 							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
 						},
 						"translation.x": 0.0,
