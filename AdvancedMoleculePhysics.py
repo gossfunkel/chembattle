@@ -462,9 +462,8 @@ def dLJp(r,mol,atid,sigl,epsl,bdln): # called in loops for every atom in mol, fo
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distances of that lad
 
 	# truncate to only calculate only for nearby (less than 4 fm away) atoms. May be replaced by partitioning
-	if ((dr[i] > 4) for i in dr):
-		dLJP=0.0
-	else: # calculate dLJP (8-14 from 6-12)
+	dLJP=0.0
+	if ((dr[i] < 4) for i in dr): # calculate dLJP (8-14 from 6-12)
 		#print("ep: " + str(ep))
 		#print("dr: " + str(dr))
 		# TODO

@@ -111,7 +111,7 @@ def ode(rx, ry, v0, dt):
 	a = np.transpose(np.transpose(force) / massi) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
 	v = v0 + a * dt 								# find r'(dt) = v(dt) from a 
 	rx = rx + v * dt 								# find r(dt)
-	ry + ry - v * dt
+	ry = ry - v * dt
 	return a,v,rx,ry 									# return dv/dt and v for rk4, return r for newton
 	
 def rk4(posi, posj, velo, dt):

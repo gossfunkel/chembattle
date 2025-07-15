@@ -195,6 +195,7 @@ def dLJp(r,i,sigl,epsl,bdln):
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
 	#print("dr:")
 	#print(dr)
+	dLJP=0.0
 	if ((dr[j] < 3) for j in dr):
 		#print ("round " + str(j))
 		#print("dLJP values")
@@ -207,9 +208,7 @@ def dLJp(r,i,sigl,epsl,bdln):
 		r14v=np.transpose(np.transpose(drv)*r14)
 		r8vs =np.sum(r8v,axis=0)
 		r14vs=np.sum(r14v,axis=0)
-		dLJP=24.0*(r14vs-r8vs)
-	else:
-		dLJP=0.0
+		dLJP=24.0*(r14vs-r8vs)		
 	return dLJP
 
 #bond length potential

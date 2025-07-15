@@ -109,9 +109,11 @@ def dLJp(atID, r): # called in loops for every atom in simulation
 	# calculate distance vector then absolute distance in each dimension 
 	drv  = r - molecularSim[atID,2].copy() 	# distance vector for every point
 	dr   = [np.sqrt((a[0]**)+(a[1]**)+(a[2]**)) for a in drv] 		# absolute distances of those vectors
+	# TODO: remove self from array to avoid self-interactions?
 	#print("ep: " + str(ep) + " || dr: " + str(dr))
-	dLJP = np.zeros(dimens) 									 	# force vector on atom being calculated for
+	dLJP = np.zeros(dimens) 									 	# force vector of atom being calculated for
 
+	# TODO: add a special behaviour when a particle is too close? i.e. cap maximum repuslive force (logarithm?)
 	# truncate to calculate only for nearby atoms (less than 3 angstroms away). May be replaced by partitioning
 	if ((dr[i] < 3) for i in dr): 				# calculate dLJP (8-14 from 6-12) force from distance array member
 		# NOTE: IF THERE'S A DIVIDE BY ZERO, you're calculating particle self-interactions
