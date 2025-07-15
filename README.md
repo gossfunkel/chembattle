@@ -87,3 +87,14 @@ I'm not sure if I'll want to sophisticate/modify my physics engine by integratin
 Bugfixing and streamlining this thing is gonna be hell. And then, if it all works out, I'll have a lifetime of angry emails from frustrated chemistry nerds whose favourite reaction doesn't work the way it should in my card game. I'd actually be pretty happy with that, honestly:)
 
 I'm really just looking to see if I can make something that satisfies the craving I have to play with acids and ATP and electrons doing their zappy little things. Not like people do in labs, with vials and stoppers and stirrers and so, so much patience, but like a child with a toy, feeling out the way it works. If there will be any educational value to this game, it'll be that it gets some people more familiar with the exciting world of small-molecule chemical interactions, and excited to dig deeper into the world beyond the game. The goal isn't to be educational, though; it's to play!
+
+## Screenshots
+<img width="1114" height="644" alt="image" src="https://github.com/user-attachments/assets/992f4f22-11ab-4639-9881-cd7ab9335dd0" />
+<img width="1093" height="661" alt="image" src="https://github.com/user-attachments/assets/e0192043-fa2b-4b82-972f-ab7566122576" />
+<img width="1017" height="645" alt="image" src="https://github.com/user-attachments/assets/7b8489b0-6fdc-406f-8962-d79540f5bd84" />
+<img width="1109" height="643" alt="image" src="https://github.com/user-attachments/assets/aafe71df-c324-4bf8-87d8-224de4e608f2" />
+<img width="1100" height="658" alt="image" src="https://github.com/user-attachments/assets/1cb0bde3-7ec0-479f-8008-160de8039123" />
+<img width="650" height="665" alt="image" src="https://github.com/user-attachments/assets/a6e238ff-c6ae-4388-9db2-c89de622f63c" />
+<img width="1124" height="664" alt="image" src="https://github.com/user-attachments/assets/a63731ab-d92a-4f28-96fe-090fee494735" />
+<img width="1097" height="651" alt="image" src="https://github.com/user-attachments/assets/9ed384c1-b351-454f-961a-389ec88135c2" />
+
