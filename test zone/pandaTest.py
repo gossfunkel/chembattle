@@ -1,37 +1,49 @@
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter, loadPrcFileData
+from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter
 from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib
 from panda3d.core import NodePath, DirectionalLight, PointLight, LightRampAttrib
+from panda3d.core import loadPrcFileData
+from direct.interval.IntervalGlobal import *
 from direct.filter.CommonFilters import CommonFilters
 from math import sin, cos
 import numpy as np
-  
+
+#from panda3d.core import Thread
+
 loadPrcFileData('', 'win-size 1000 600') 
 loadPrcFileData('', 'show-frame-rate-meter 1')
 loadPrcFileData('', 'hardware-animated-vertices true')
 loadPrcFileData('', 'basic-shaders-only false')
+loadPrcFileData('', 'threading-model Cull/Cull') # creates a different two-thread model: App is on its own thread, 
+										# and Cull and Draw are together on a separate thread. This is most appropriate
+										# when the total amount of time for App in your application is similar to the 
+										# total amount of time for Cull + Draw.
 
 	## how many spheres
-sphereNum = 25 
+sphereNum = 30
 
 	### physical values
 chrg = np.array([0.41 for _ in range(sphereNum)])
 mass = np.array([0.001 for _ in range(sphereNum)])
 	### some physical constants
-kb  = 0.8314459920816467 # Boltzmann
-NA  = 6.0221409e+26 #Avogardos constant x 1000 (g->kg)
-ech = 1.60217662E-19 #electron charge in coulombs
-kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
-#gravConst = 6.6743e-11 # G in m3/kg/s
-	## constant deltatime - n.b. for scientific accuracy, we would want this to have a resolution of 
-		# less than 2fs (2e-15). The current value is: 0.4ns (4e-7). 
-		# You can't see much happening with much smaller values, but the drift may be an artifact of this big error window
-setdt = 0.0000004
+kb  = 0.8314459920816467 				# Boltzmann
+NA  = 6.0221409e+26 					#Avogardos constant x 1000 (g->kg)
+ech = 1.60217662E-19 					# electron charge in coulombs
+kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 # electrostatic const in Daltons, electron charge, picosecond, angstrom units
+gravConst = 6.6743e-11 					# G in m3/kg/s
+	## constant deltatime - n.b. for scientific accuracy, we would want this to 
+		# have a resolution of less than 2fs (2e-15). 
+		# The current value is: 0.5ns (5e-7 secs). 
+		# You can't see much happening with much smaller values, but they're realistic. 
+setdt = 0.0000005
 	## derivatives of motion for calculations
-vel = np.array([[0.0,0.0,0.0] for i in range(sphereNum)])
-pos = np.array([[(sin(i)*10)+50,-cos(i)*10.0-120.0,-25.0-i/2] for i in range(sphereNum)])
+acc = np.zeros((sphereNum,3))
+vel = np.zeros((sphereNum,3))
+pos = np.array([[(sin(i)*10)+50,-cos(i)*10.0-150.0,-15.0-i/2] for i in range(sphereNum)])
 #ep = np.array([3.24 for _ in range(sphereNum)])
 #sg = np.array([0.98 for _ in range(sphereNum)])
+ep = 3.24
+sg = 0.98
 
 def createColouredRect(x, y, z, width, height, colors=None):
  	format = GeomVertexFormat.getV3n3c4()
@@ -74,40 +86,59 @@ def createColouredRect(x, y, z, width, height, colors=None):
 
 # dLJP for Hydrogen
 def dLJP(r,i):
-	ep = 3.24
-	sg = 0.98
 	#print(parti)
 	drv  = r - r[i]
 	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
 	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
-	#r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
 	dLJP=0.0
-	if ((dr[i] < 4) for i in dr): # calculate dLJP (8-14 from 6-12)
-		r8vs = np.sum(np.transpose(np.transpose(drv)*(ep*(sg**6) * (1.0/np.array(dr))**8)),axis=0)
+	if ((dr[i] < 3) for i in dr): # calculate dLJP (8-14 from 6-12)
+		r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
 		r14vs= np.sum(np.transpose(np.transpose(drv) * 2.0*ep*(sg**12) * (1.0/np.array(dr))**14),axis=0)
 		dLJP = (r14vs-r8vs)*24.0
 	return dLJP
 
 def coul(r,i,qi=0.41,qj=0.41):
 	drv = r - r[i]
-	drv=np.delete(drv,i,0) #remove ith element (no self EM interactions)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
-	r3  = kc * qi * qj * ((1.0/np.array(dr))**3.0) 					 	 	 # Coulomb's law
-	return np.sum(np.transpose(np.transpose(drv)*r3), axis=0)				 	 # transpose the distance vector, multiply by force, transpose back
+	drv=np.delete(drv,i,0) 											#remove ith element (no self EM interactions)
+	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 		# absolute distance of that lad
+	r3  = kc * qi * qj * ((1.0/np.array(dr))**3.0) 					# Coulomb's law
+	return np.sum(np.transpose(np.transpose(drv)*r3), axis=0)		# transpose the distance vector, multiply by force, transpose back
+
+def grav(r,i):
+	drv = r - r[i]
+	drv=np.delete(drv,i,0) #remove ith element (no self gravitational interactions)
+	dr  = np.sqrt(drv[0]*drv[0] + drv[1]*drv[1] + drv[2]*drv[2]) 		 # absolute distance of those lads
+	return sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
+
+def forceCalculation(i,dt):
+	# TODO FIX THIS: GLOBAL pos, vel, acc VARS SHOULD NOT BE UPDATED BY THESE RK4 ODE CALLS
+	global pos
+	global vel
+	global acc
+	force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) !!! CURRENTLY ADDING GRAVITY HALVES THE FRAMERATE
+	acc[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
+	vel[i] = vel[i] + acc[i] * dt 								# find r'(t) = v(t) from a = r''(t)
+	pos[i] = pos[i] + pos[i] * dt 							# find r(t)
+	return task.cont
 
 def ode(r, v, dt):
-	forces = np.zeros((sphereNum,3))
-	#print(force)
-	#forcej = -np.array([dLJp(rj, ri) - coul(rj, ri)])
-	#a = np.transpose(np.transpose(forces)/masses]) # find r''(dt) = a(r,q,m)
-	for i in range(sphereNum):
-		forces[i] = -dLJP(r,i) + coul(r,i) #- grav(rx,ry)
-		a = np.transpose(np.transpose(forces[i]) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-		v[i] = v[i] + a * dt 								# find r'(dt) = v(dt) from a 
-		r[i] = r[i] + v[i] * dt 							# find r(dt)
-	return a,v,r										# return dv/dt and v for rk4, return r for newton
+	#forces = np.empty((sphereNum,3))
+	#parallelPhys.start()
+	
+	# this currently generates a new task for each sphere, each time rk4 calls ide, every frame
+	# instead, each sphere should have its own task, which is called in parallel with all the others each time ode is called
+	# rk4 must then wait for all of the sphere physics tasks to complete before calling ode for the next step
+	# tasksync is enabled for physTaskChain, so the tasks should wait for the next clock tick
+	# ALSO rk4 needs to be able to non-destructively update the values of r and v in-between updates of pos, vel, acc
+	for i in sphereNum:
+		self.taskMgr.add(forceCalculation, extraArgs=[i,dt], "forceCalculation", taskChain="physTaskChain", sort=0, appendTask=True)
+	
+	return acc,vel,pos										# return dv/dt and v for rk4, return r for newton
 	
 def rk4(pos, vel, dt):
+	# couldn't figure out how to do it as a sequence
+	#rksq = Sequence(ode,ode,ode,ode,return))
+	#rksq.start()
     k1,vel,pos = ode(pos, vel, 0)
     k2,vel,pos = ode(pos, vel + k1*dt/2, dt/2)
     k3,vel,pos = ode(pos, vel + k2*dt/2, dt/2)
@@ -123,7 +154,7 @@ class TestBase(ShowBase):
 		self.filters = CommonFilters(base.win,base.cam)
 		self.filters.setBloom(blend=(0.25, 0.22, 0.28, 0.0), maxtrigger=1.1, desat=0.7, size='large')
 
-		self.cam.setPos(0, 0, 20)
+		self.cam.setPos(0, 0, 10)
 		self.cam.setHpr(0,-40,0)
 
 		dirLight 	= DirectionalLight('dirLight')
@@ -169,7 +200,14 @@ class TestBase(ShowBase):
 		placeholder.setPos(-50,180,5)
 		self.sphereNodep.instanceTo(placeholder)
 
-		self.taskMgr.add(self.update, "update")
+		self.taskMgr.setupTaskChain('physTaskChain', 
+									numThreads=3, 
+									threadPriority=1,
+									frameSync=True)
+		# parallelPhys = Parallel(name="parallelPhys")
+		# for i in range(sphereNum):
+		# 	parallelPhys.append(Func(forceCalculation, i, dt)
+		self.taskMgr.add(self.update, "update", taskChain='default')
 
 	def update(self, task):
 		global pos, vel
@@ -177,9 +215,9 @@ class TestBase(ShowBase):
 		dt = globalClock.getDt()
 		#self.plnp.setPos(180*sin(dt), 100*sin(dt), 200)
 		
-			## do multiple simulation runs per update cycle to dedicate more time to physics
-		for _ in range(2):
-			pos, vel = rk4(pos,vel,setdt)
+			## do multiple simulation runs per update cycle to dedicate more time to physics?
+		#for _ in range(2):
+		pos, vel = rk4(pos,vel,setdt)
 
 			# # update the positions of the spheres:
 		for i in range(len(self.spheres)):

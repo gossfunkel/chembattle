@@ -4,11 +4,11 @@ import numpy as np
 import math
 import sys
 
-WINDOW_WIDTH, WINDOW_HEIGHT = 600, 600
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 app 						= Ursina(size=(WINDOW_WIDTH,WINDOW_HEIGHT))
 EditorCamera()
-pivot = Entity()
-camera.fov = 100
+pivot 						= Entity()
+camera.fov 					= 100
 DirectionalLight(parent=pivot,y=2,z=3,shadows=True,rotation=(45,-45,45))
 window.borderless 			= False
 window.fullscreen 			= False
@@ -17,18 +17,18 @@ window.exit_button.enabled  = False
 window.color 				= color.black
 Entity.rotation_directions  = (1,1,1)
 
-total_T_label				= Text('Total internal heat:',origin=(1.7,-18))
-total_T_display				= Text('x',origin=(4,-16))
+total_T_label				= Text('Total internal heat:',world_position=(1.7,-18))
+total_T_display				= Text('x',world_position=(4,-16))
 collisions_count			= 0
-#collisions_label			= Text('Collisions:',origin=(-1,-18))
-mouseloc_label				= Text('Mouse position:',origin=(-1,-18))
-#collisions_display			= Text('x',origin=(-10,-16))
-mouseloc_display			= Text('x',origin=(-1,-16))
+#collisions_label			= Text('Collisions:',world_position=(-1,-18))
+mouseloc_label				= Text('Mouse position:',world_position=(-1,-18))
+#collisions_display			= Text('x',world_position=(-10,-16))
+mouseloc_display			= Text('x',world_position=(-1,-16))
 
 BC 							= False # periodic boundaries = true; reflective boundaries = false
 mass 						= [1.0,16.0]
 qs							= [0.41,-0.82] #charges of particles
-Temp0 						= 220 # temperature in Kelvin
+Temp0 						= 200 # temperature in Kelvin
 
 #min_distance = 0.1
 #max_distance = 10
@@ -56,9 +56,9 @@ NA  = 6.0221409e+26 #Avogardos constant x 1000 (g->kg)
 ech = 1.60217662E-19 #electron charge in coulombs
 kc  = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 
-n = 9 # number of atoms
+n = 30 # number of atoms
 D = 3 # number of spacial dimensions
-LL = 15 # max size of system
+LL = 30 # max size of system
 L = np.zeros([D])+LL
 
 #camera.look_at(atoms[0])

@@ -1,28 +1,31 @@
-from ursina import *
-from ursina.prefabs.first_person_controller import *
 import sys
+from direct.showbase.ShowBase import ShowBase
+from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter, loadPrcFileData
+from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib
+from panda3d.core import NodePath, DirectionalLight, PointLight, LightRampAttrib
+from direct.filter.CommonFilters import CommonFilters
+#from math import sin, cos
 import numpy as np
-import AdvancedMoleculePhysics as amp
+import PhysicsEngine as phys
 import atoms
 import ui
+  
+loadPrcFileData('', 'win-size 1080 600') 
+loadPrcFileData('', 'show-frame-rate-meter 1')
+loadPrcFileData('', 'hardware-animated-vertices true')
+loadPrcFileData('', 'basic-shaders-only false')
+loadPrcFileData('', 'window-title ChemBattle')
+#loadPrcFileData('', '')
 
-WINDOW_WIDTH, WINDOW_HEIGHT = 1080, 600
-app = Ursina(size=(WINDOW_WIDTH,WINDOW_HEIGHT))
-window.title = "ChemBattle"
-window.borderless = False
-window.fullscreen = False
-window.fps_counter.enabled = True
-window.exit_button.enabled = False
-window.color = color.black
 
-p1ground = Entity(model='plane',
+#p1ground = Entity(model='plane',
 				world_position=(25,0,25),
 				scale_x=50,
 				scale_z=50,
 				texture='white_cube',
 				texture_scale=(50,40),
 				collider='mesh')
-p2ground = Entity(model='plane',
+#p2ground = Entity(model='plane',
 				world_position=(25,0,75),
 				scale_x=50,
 				scale_z=50,
@@ -30,7 +33,7 @@ p2ground = Entity(model='plane',
 				texture_scale=(50,40),
 				collider='mesh')
 
-p1membrane = Entity(model='plane',
+#p1membrane = Entity(model='plane',
 				world_position=(25,5,20),
 				scale=50,
 				scale_y=10,
@@ -43,7 +46,7 @@ p1membrane = Entity(model='plane',
 				double_sided=True,
 				collider='box',
 				texture_scale=(20,10))
-p2membrane = Entity(model='plane',
+#p2membrane = Entity(model='plane',
 				world_position=(25,5,80),
 				scale=50,
 				scale_y=10,
@@ -58,12 +61,12 @@ p2membrane = Entity(model='plane',
 				collider='box',
 				texture_scale=(20,10))
 
-p1nucleus = Entity(world_position=(10,0,8), 
+#p1nucleus = Entity(world_position=(10,0,8), 
 					model='sphere',
 					color=color.pink,
 					collider='sphere',
 					scale=10)
-p2nucleus = Entity(world_position=(40,0,92), 
+#p2nucleus = Entity(world_position=(40,0,92), 
 					model='sphere',
 					color=color.yellow,
 					collider='sphere',
