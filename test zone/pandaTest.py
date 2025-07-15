@@ -110,16 +110,16 @@ def grav(r,i):
 	dr  = np.sqrt(drv[0]*drv[0] + drv[1]*drv[1] + drv[2]*drv[2]) 		 # absolute distance of those lads
 	return sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
 
-def forceCalculation(i,dt):
+def forceCalculation(r,v,i,dt,task):
 	# TODO FIX THIS: GLOBAL pos, vel, acc VARS SHOULD NOT BE UPDATED BY THESE RK4 ODE CALLS
 	global pos
 	global vel
 	global acc
 	force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) !!! CURRENTLY ADDING GRAVITY HALVES THE FRAMERATE
 	acc[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-	vel[i] = vel[i] + acc[i] * dt 								# find r'(t) = v(t) from a = r''(t)
-	pos[i] = pos[i] + pos[i] * dt 							# find r(t)
-	return task.cont
+	vel[i] = v[i] + acc[i] * dt 								# find r'(t) = v(t) from a = r''(t)
+	pos[i] = r[i] + vel[i] * dt 							# find r(t)
+	return task.done 		# complete the task
 
 def ode(r, v, dt):
 	#forces = np.empty((sphereNum,3))
@@ -130,8 +130,8 @@ def ode(r, v, dt):
 	# rk4 must then wait for all of the sphere physics tasks to complete before calling ode for the next step
 	# tasksync is enabled for physTaskChain, so the tasks should wait for the next clock tick
 	# ALSO rk4 needs to be able to non-destructively update the values of r and v in-between updates of pos, vel, acc
-	for i in sphereNum:
-		self.taskMgr.add(forceCalculation, extraArgs=[i,dt], "forceCalculation", taskChain="physTaskChain", sort=0, appendTask=True)
+	for i in range(sphereNum):
+		taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
 	
 	return acc,vel,pos										# return dv/dt and v for rk4, return r for newton
 	
