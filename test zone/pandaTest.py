@@ -1,41 +1,10 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter, loadPrcFileData
-from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib, NodePath
+from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib
+from panda3d.core import NodePath, DirectionalLight, PointLight, LightRampAttrib
+from direct.filter.CommonFilters import CommonFilters
 from math import sin, cos
 import numpy as np
-
-# def createColouredRect(x, z, width, height, colors=None):
-	# 	format = GeomVertexFormat.getV3c4()
-	# 	vdata   = GeomVertexData('square', format, Geom.UHDynamic)
-
-	# 	vertex  = GeomVertexWriter(vdata, 'vertex')
-	# 	color   = GeomVertexWriter(vdata, 'color')
-
-	# 	vertex.addData3(x, 0, z)
-	# 	vertex.addData3(x+width, 0, z)
-	# 	vertex.addData3(x+width, 0, z+height)
-	# 	vertex.addData3(x, 0, z+height)
-
-	# 	if colors:
-	# 		if len(colors) < 4:
-	# 			colors = (colors[0],colors[0],colors[0],1.0)
-	# 		color.addData4f(colors)
-	# 		color.addData4f(colors)
-	# 		color.addData4f(colors)
-	# 		color.addData4f(colors)
-	# 	else:
-	# 		color.addData4f(1.0,0.0,0.0,0.0)
-	# 		color.addData4f(0.0,1.0,0.0,0.0)
-	# 		color.addData4f(0.0,0.0,1.0,0.0)
-	# 		color.addData4f(0.0,0.0,0.0,1.0)
-
-	# 	tris = GeomTriangles(Geom.UHDynamic)
-	# 	tris.addVertices(0,1,2)
-	# 	tris.addVertices(2,3,0)
-
-	# 	square = Geom(vdata)
-	# 	square.addPrimitive(tris)
-	# 	return square
   
 loadPrcFileData('', 'win-size 1000 600') 
 loadPrcFileData('', 'show-frame-rate-meter 1')
@@ -55,12 +24,53 @@ ech = 1.60217662E-19 #electron charge in coulombs
 kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 #gravConst = 6.6743e-11 # G in m3/kg/s
 	## constant deltatime - n.b. for scientific accuracy, we would want this to have a resolution of 
-setdt = 0.0000003
+		# less than 2fs (2e-15). The current value is: 0.4ns (4e-7). 
+		# You can't see much happening with much smaller values, but the drift may be an artifact of this big error window
+setdt = 0.0000004
 	## derivatives of motion for calculations
-vel = np.array([[i,i,0.0] for i in range(sphereNum)])
-pos = np.array([[(sin(i)*30)+30,-cos(i)*30.0,5.0+i/2.0] for i in range(sphereNum)])
+vel = np.array([[0.0,0.0,0.0] for i in range(sphereNum)])
+pos = np.array([[(sin(i)*10)+50,-cos(i)*10.0-120.0,-25.0-i/2] for i in range(sphereNum)])
 #ep = np.array([3.24 for _ in range(sphereNum)])
 #sg = np.array([0.98 for _ in range(sphereNum)])
+
+def createColouredRect(x, y, z, width, height, colors=None):
+ 	format = GeomVertexFormat.getV3n3c4()
+ 	vdata   = GeomVertexData('square', format, Geom.UHDynamic)
+
+ 	vertex  = GeomVertexWriter(vdata, 'vertex')
+ 	color   = GeomVertexWriter(vdata, 'color')
+ 	normal 	= GeomVertexWriter(vdata, 'normal')
+
+ 	vertex.addData3(x, y, z)
+ 	vertex.addData3(x+width, y, z)
+ 	vertex.addData3(x+width, y, z+height)
+ 	vertex.addData3(x, y, z+height)
+
+ 	normal.addData3(x*x, y*(y-1), z*z)
+ 	normal.addData3((x+width)*(x+width), y*(y-1), z*z)
+ 	normal.addData3((x+width)*(x+width), y*(y-1), (z+height)*(z+height))
+ 	normal.addData3(x*x, y*(y-1), (z+height)*(z+height))
+
+ 	if colors:
+ 		if len(colors) < 4:
+ 			colors = (colors[0],colors[0],colors[0],1.0)
+ 		color.addData4f(colors)
+ 		color.addData4f(colors)
+ 		color.addData4f(colors)
+ 		color.addData4f(colors)
+ 	else:
+ 		color.addData4f(1.0,0.0,0.0,0.0)
+ 		color.addData4f(0.0,1.0,0.0,0.0)
+ 		color.addData4f(0.0,0.0,1.0,0.0)
+ 		color.addData4f(0.0,0.0,0.0,1.0)
+
+ 	tris = GeomTriangles(Geom.UHDynamic)
+ 	tris.addVertices(0,1,2)
+ 	tris.addVertices(2,3,0)
+
+ 	square = Geom(vdata)
+ 	square.addPrimitive(tris)
+ 	return square
 
 # dLJP for Hydrogen
 def dLJP(r,i):
@@ -107,29 +117,47 @@ def rk4(pos, vel, dt):
 class TestBase(ShowBase):
 	def __init__(self):
 		ShowBase.__init__(self)
-		# get nodepath for environment model, then reparent to render node
-		#self.scene = self.loader.loadModel("models/environment")
-		#self.scene.reparentTo(self.render)
-		# Apply scale and position transforms on the model.
-		#self.scene.setScale(0.25)
-		#self.scene.setPos(0, 42, 0)
 
-		self.cam.setPos(-5, 0, 30)
+		render.setShaderAuto()
 
-		#newSquare = createColouredRect(0, 0, 100, 100)
+		self.filters = CommonFilters(base.win,base.cam)
+		self.filters.setBloom(blend=(0.25, 0.22, 0.28, 0.0), maxtrigger=1.1, desat=0.7, size='large')
 
-		#geomNode = GeomNode('square')
-		#geomNode.addGeom(newSquare)
-		#self.render.attachNewNode(geomNode)
+		self.cam.setPos(0, 0, 20)
+		self.cam.setHpr(0,-40,0)
 
-		# for some reason, the fps seems to cap at 33 whether I generate 5 spheres or a few hundred
-			# should be hardware instanced like this - not 100% sure how panda3d manages this
+		dirLight 	= DirectionalLight('dirLight')
+		dirLight.setColorTemperature(6650)
+		dirLight.setShadowCaster(True, 512, 512)
+		dirLightNp  = render.attachNewNode(dirLight)
+		dirLightNp.setHpr(45,-50,0)
+		render.setLight(dirLightNp)
+
+		pointLight 	= PointLight('poiLight')
+		pointLight.setColor((0.2, 0.6, 1.1, 1))
+		pointLight.setShadowCaster(True, 512, 512)
+		#pointLight.attenuation = (1,0,1)
+		plnp = render.attachNewNode(pointLight)
+		plnp.setPos(40, 100, 120)
+		render.setLight(plnp)
+
+		render.setAttrib(LightRampAttrib.makeHdr0())
+
+		newSquare = createColouredRect(-150, 150, -250, 300, 250)
+
+		geomNode = GeomNode('square')
+		geomNode.addGeom(newSquare)
+		self.render.attachNewNode(geomNode)
+		#geomNode.getParent(0).setLightOff()
+
+		## this is now hardware instanced to generate many copies of the one sphere model
 			# i feel like i should also probably use panda3d's Intervals to update the motion in parallel;
-					# see https://docs.panda3d.org/1.10/python/programming/intervals/index#intervals
-					# and https://docs.panda3d.org/1.10/python/introduction/tutorial/using-intervals-to-move-the-panda
+				# see https://docs.panda3d.org/1.10/python/programming/intervals/index#intervals
+				# and https://docs.panda3d.org/1.10/python/introduction/tutorial/using-intervals-to-move-the-panda
 		self.spheres = np.zeros(sphereNum)
 		self.thetas = np.zeros(sphereNum)
 		self.sphere = self.loader.loadModel("../sphere")
+		self.sphere.setScale(0.5)
 		self.sphereNodep = NodePath('spheres') # placeholders can be attached to another node to spawn groups of instances
 		for i in range(sphereNum):
 			placeholder = self.sphereNodep.attachNewNode("Sphere-Placeholder")
@@ -145,12 +173,20 @@ class TestBase(ShowBase):
 
 	def update(self, task):
 		global pos, vel
-		#dt = globalClock.getDt()
-		pos, vel = rk4(pos,vel,setdt)
+		
+		dt = globalClock.getDt()
+		#self.plnp.setPos(180*sin(dt), 100*sin(dt), 200)
+		
+			## do multiple simulation runs per update cycle to dedicate more time to physics
+		for _ in range(2):
+			pos, vel = rk4(pos,vel,setdt)
+
+			# # update the positions of the spheres:
 		for i in range(len(self.spheres)):
 			#print(pos[i])
 			self.sphereNodep.getChild(i).setPos(pos[i,0],pos[i,1],pos[i,2])
-			# dance in a sine pattern:
+			
+				## dance in a sine-wave pattern:
 			#self.thetas[i] += (i/100 + 2.0) * dt
 			#self.sphereNodep.getChild(i).setPos(i/4 - 50,180,(sin(self.thetas[i])*6)+10) 
 			#self.sphereNodep.getChild(i).setHpr(cos(self.thetas[i]),0,sin(self.thetas[i]))
