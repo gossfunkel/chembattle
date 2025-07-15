@@ -87,22 +87,23 @@ def createColouredRect(x, y, z, width, height, colors=None):
 # dLJP for Hydrogen
 def dLJP(r,i):
 	#print(parti)
-	drv  = r - r[i]
-	drv=np.delete(drv,i,0) #remove ith element (no self LJ interactions)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance of that lad
+	drv  = r - r[i]																# distance vectors from r[i] to all other positions
+	drv=np.delete(drv,i,0) 														# remove ith element (no self LJ interactions)
+	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 					# absolute distance of that lad
 	dLJP=0.0
-	if ((dr[i] < 3) for i in dr): # calculate dLJP (8-14 from 6-12)
+	# can I swap this for some kind of threshold function to avoid the branch?
+	if ((dr[i] < 3) for i in dr): 												# calculate dLJP (8-14 from 6-12)
 		r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
 		r14vs= np.sum(np.transpose(np.transpose(drv) * 2.0*ep*(sg**12) * (1.0/np.array(dr))**14),axis=0)
 		dLJP = (r14vs-r8vs)*24.0
 	return dLJP
 
 def coul(r,i,qi=0.41,qj=0.41):
-	drv = r - r[i]
-	drv=np.delete(drv,i,0) 											#remove ith element (no self EM interactions)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 		# absolute distance of that lad
-	r3  = kc * qi * qj * ((1.0/np.array(dr))**3.0) 					# Coulomb's law
-	return np.sum(np.transpose(np.transpose(drv)*r3), axis=0)		# transpose the distance vector, multiply by force, transpose back
+	drv = r - r[i]																# distance vectors from r[i] to all other positions
+	drv=np.delete(drv,i,0) 														# remove ith element (no self EM interactions)
+	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 					# absolute distance of that lad
+	r3  = kc * qi * qj * ((1.0/np.array(dr))**3.0) 								# Coulomb's law
+	return np.sum(np.transpose(np.transpose(drv)*r3), axis=0)					# transpose the distance vector, multiply by force, transpose back
 
 def grav(r,i):
 	drv = r - r[i]
@@ -115,27 +116,28 @@ def forceCalculation(r,v,i,dt,task):
 	global pos
 	global vel
 	global acc
-	force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) !!! CURRENTLY ADDING GRAVITY HALVES THE FRAMERATE
+	force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 							#!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
 	acc[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-	vel[i] = v[i] + acc[i] * dt 								# find r'(t) = v(t) from a = r''(t)
-	pos[i] = r[i] + vel[i] * dt 							# find r(t)
-	return task.done 		# complete the task
+	vel[i] = v[i] + acc[i] * dt 												# find r'(t) = v(t) from a = r''(t)
+	pos[i] = r[i] + vel[i] * dt 												# find r(t)
+	return task.done 															# complete the task
 
 def ode(r, v, dt):
 	#forces = np.empty((sphereNum,3))
 	#parallelPhys.start()
 	
-	# this currently generates a new task for each sphere, each time rk4 calls ide, every frame
+	# this currently generates a new task for each sphere, each time rk4 calls ide, every frame - then destroys them all
 	# instead, each sphere should have its own task, which is called in parallel with all the others each time ode is called
 	# rk4 must then wait for all of the sphere physics tasks to complete before calling ode for the next step
 	# tasksync is enabled for physTaskChain, so the tasks should wait for the next clock tick
-	# ALSO rk4 needs to be able to non-destructively update the values of r and v in-between updates of pos, vel, acc
+	# this implementation would work for the main engine, but i really don't like having to start and stop all of these threads
 	for i in range(sphereNum):
 		taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
+	# CHECK: are these definitely up-to-date? do I even need to return them? 
+	# INSTEAD wait for threads to complete
+	return acc,vel,pos															# return dv/dt and v for rk4, return r for newton
 	
-	return acc,vel,pos										# return dv/dt and v for rk4, return r for newton
-	
-def rk4(pos, vel, dt):
+def rk4(pos, vel, dt): # currently not working properly due to ode subtask editing global arrays rather than local values r,v,a
 	# couldn't figure out how to do it as a sequence
 	#rksq = Sequence(ode,ode,ode,ode,return))
 	#rksq.start()
@@ -201,9 +203,14 @@ class TestBase(ShowBase):
 		self.sphereNodep.instanceTo(placeholder)
 
 		self.taskMgr.setupTaskChain('physTaskChain', 
-									numThreads=3, 
+									numThreads=4, 
 									threadPriority=1,
 									frameSync=True)
+		#for i in range(sphereNum):
+			# !BROKEN! - args should be passed at runtime, not construction
+			#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], 
+			#			taskChain="physTaskChain", sort=0, appendTask=True)
+	
 		# parallelPhys = Parallel(name="parallelPhys")
 		# for i in range(sphereNum):
 		# 	parallelPhys.append(Func(forceCalculation, i, dt)
@@ -217,6 +224,7 @@ class TestBase(ShowBase):
 		
 			## do multiple simulation runs per update cycle to dedicate more time to physics?
 		#for _ in range(2):
+		# TODO replace this with task management - 
 		pos, vel = rk4(pos,vel,setdt)
 
 			# # update the positions of the spheres:
