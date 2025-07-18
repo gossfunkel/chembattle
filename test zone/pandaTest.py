@@ -111,15 +111,12 @@ def grav(r,i):
 	dr  = np.sqrt(drv[0]*drv[0] + drv[1]*drv[1] + drv[2]*drv[2]) 		 # absolute distance of those lads
 	return sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
 
-def forceCalculation(r,v,i,dt,task):
-														# complete the task
-
-class ode(AsyncTask):
-	def __init__(self, r, v, dt, k):
+class ODE(AsyncTask):
+	def __init__(self, r, v, t):
 		self.r = r
 		self.v = v
-		self.a = np.empty(sphereNum,3)
-		self.dt = dt 
+		self.a = np.empty((sphereNum,3))
+		self.t = t 
 		#forces = np.empty((sphereNum,3))
 		#parallelPhys.start()
 		
@@ -130,18 +127,9 @@ class ode(AsyncTask):
 		global acc
 		force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 							#!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
 		self.a[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-		self.v[i] = self.v[i] + self.a[i] * self.dt 										# find r'(t) = v(t) from a = r''(t)
-		self.r[i] = self.r[i] + self.[i] * self.dt 											# find r(t)
+		self.v[i] = self.v[i] + self.a[i] * self.t 										# find r'(t) = v(t) from a = r''(t)
+		self.r[i] = self.r[i] + self.v[i] * self.t 											# find r(t)
 		return task.done 		
-	
-	# this currently generates a new task for each sphere, each time rk4 calls ide, every frame - then destroys them all
-	# instead, each sphere should have its own task, which is called in parallel with all the others each time ode is called
-	# rk4 must then wait for all of the sphere physics tasks to complete before calling ode for the next step
-	# tasksync is enabled for physTaskChain, so the tasks should wait for the next clock tick
-	# this implementation would work for the main engine, but i really don't like having to start and stop all of these threads
-	# CHECK: are these definitely up-to-date? do I even need to return them? 
-	# INSTEAD wait for threads to complete
-	return acc,vel,pos															# return dv/dt and v for rk4, return r for newton
 
 class TestBase(ShowBase):
 	def __init__(self):
@@ -199,7 +187,7 @@ class TestBase(ShowBase):
 		self.sphereNodep.instanceTo(placeholder)
 
 		self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr")
-		self.asyncTaskMgr.setupTaskChain('physTaskChain', 
+		#self.asyncTaskMgr.setupTaskChain('physTaskChain', 
 		#							numThreads=8, 
 		#							threadPriority=1,
 		#							frameSync=True)
@@ -220,32 +208,48 @@ class TestBase(ShowBase):
 		#self.plnp.setPos(180*sin(dt), 100*sin(dt), 200)
 		
 		## do multiple simulation runs per update cycle to dedicate more time to physics?
-		#for _ in range(2):
-		# TODO replace this with task management - 
-		# tskMgr.step() is called by p3d to call this already, can i just sort my tasks?
-		# couldn't figure out how to do it as a sequence
+		#for _ in range(2):#
+
+		# couldn't figure out how to do it as a sequence:
 		#rksq = Sequence(ode,ode,ode,ode,return))
 		#rksq.start()
+		
+		# tskMgr.step() is called by p3d to call this already, can i just sort my tasks?
+		# trying to fix it so there's a thread for every sphere but doing integration on the system as a whole (one k value per system state)
+		for j in range(sphereNum): # add one task per sphere
+			self.asyncTaskMgr.add(ODE(pos,vel,0))
+			#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
 		for i in range(4):
-			for j in range(sphereNum): # add one task per sphere
-				asyncTaskMgr.add(ODE(pos,vel,0, 1))
-				#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
-			asyncTaskMgr.waitForTasks()
 			if (i==0):
-				# trying to fix it so there's a thread for every sphere but doing integration on the system as a whole (one k value per system state)
+				k1 = np.empty((sphereNum,3))
+				self.asyncTaskMgr.waitForTasks()
 				for j in range(sphereNum): # add one task per sphere
-					k1 = asyncTaskMgr.tasks[j].a
-					asyncTaskMgr.tasks[j] = ODE(asyncTaskMgr.tasks[j].pos, asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
+					k1[j] = self.asyncTaskMgr.tasks[j].a
+					self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
 			elif (i==1):
-				k2 = calculator.a
-				calculator = ODE(calculator.pos, calculator.vel + k2*setdt/2, setdt/2) # set up for round 3
+				k2 = np.empty((sphereNum,3))
+				self.asyncTaskMgr.waitForTasks()
+				for j in range(sphereNum): # add one task per sphere
+					k2[j] = self.asyncTaskMgr.tasks[j].a
+					self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k2*setdt/2, setdt/2) # set up for round 3
 			elif (i==2):
-				k3 = calculator.a
-				calculator = ODE(calculator.pos, calculator.vel + k3*setdt, setdt)
+				k3 = np.empty((sphereNum,3))
+				self.asyncTaskMgr.waitForTasks()
+				for j in range(sphereNum): # add one task per sphere
+					k2[j] = self.asyncTaskMgr.tasks[j].a
+					self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k3*setdt, setdt) # set up for round 4
 			elif (i==3):
-				k4 = calculator.a
+				k4 = np.empty((sphereNum,3))
+				self.asyncTaskMgr.waitForTasks()
+				for j in range(sphereNum): # add one task per sphere
+					k4[j] = self.asyncTaskMgr.tasks[j].a
+					# this is messy - should only need to do this once
+					pos = self.asyncTaskMgr.tasks[j].r
+					vel = self.asyncTaskMgr.tasks[j].v
 
-		pos, vel = calculator.pos, calculator.vel + setdt/6*(k1 + 2*k2 + 2*k3 + k4)
+		self.asyncTaskMgr.waitForTasks()
+		self.asyncTaskMgr.remove(self.asyncTaskMgr.getTasks())
+		vel = vel + setdt/6*(k1 + 2*k2 + 2*k3 + k4)
 
 		# # update the positions of the spheres:
 		for i in range(len(self.spheres)):
