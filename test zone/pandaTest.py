@@ -113,6 +113,7 @@ def grav(r,i):
 
 class ODE(AsyncTask):
 	def __init__(self, r, v, t):
+		super().__init__(self)
 		self.r = r
 		self.v = v
 		self.a = np.empty((sphereNum,3))
