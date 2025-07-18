@@ -2,7 +2,7 @@ from direct.showbase.ShowBase import ShowBase
 from panda3d.core import Shader, Geom, GeomNode, GeomTriangles, GeomVertexWriter
 from panda3d.core import GeomVertexFormat, GeomVertexData, TransparencyAttrib
 from panda3d.core import NodePath, DirectionalLight, PointLight, LightRampAttrib
-from panda3d.core import loadPrcFileData
+from panda3d.core import loadPrcFileData, AsyncTaskManager, AsyncTaskChain, AsyncTask
 from direct.interval.IntervalGlobal import *
 from direct.filter.CommonFilters import CommonFilters
 from math import sin, cos
@@ -20,7 +20,7 @@ loadPrcFileData('', 'threading-model Cull/Cull') # creates a different two-threa
 										# total amount of time for Cull + Draw.
 
 	## how many spheres
-sphereNum = 30
+sphereNum = 50
 
 	### physical values
 chrg = np.array([0.41 for _ in range(sphereNum)])
@@ -33,13 +33,13 @@ kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 # electrostatic const in Daltons, elect
 gravConst = 6.6743e-11 					# G in m3/kg/s
 	## constant deltatime - n.b. for scientific accuracy, we would want this to 
 		# have a resolution of less than 2fs (2e-15). 
-		# The current value is: 0.5ns (5e-7 secs). 
+		# The current value is: 20ps (1e-8 secs). 
 		# You can't see much happening with much smaller values, but they're realistic. 
-setdt = 0.0000005
+setdt = 0.00000002
 	## derivatives of motion for calculations
 acc = np.zeros((sphereNum,3))
 vel = np.zeros((sphereNum,3))
-pos = np.array([[(sin(i)*10)+50,-cos(i)*10.0-150.0,-15.0-i/2] for i in range(sphereNum)])
+pos = np.array([[(sin(i)*5.)+50.,-cos(i)*5.0-150.0,-15.0-i/4] for i in range(sphereNum)])
 #ep = np.array([3.24 for _ in range(sphereNum)])
 #sg = np.array([0.98 for _ in range(sphereNum)])
 ep = 3.24
@@ -112,40 +112,36 @@ def grav(r,i):
 	return sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
 
 def forceCalculation(r,v,i,dt,task):
-	# TODO FIX THIS: GLOBAL pos, vel, acc VARS SHOULD NOT BE UPDATED BY THESE RK4 ODE CALLS
-	global pos
-	global vel
-	global acc
-	force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 							#!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
-	acc[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-	vel[i] = v[i] + acc[i] * dt 												# find r'(t) = v(t) from a = r''(t)
-	pos[i] = r[i] + vel[i] * dt 												# find r(t)
-	return task.done 															# complete the task
+														# complete the task
 
-def ode(r, v, dt):
-	#forces = np.empty((sphereNum,3))
-	#parallelPhys.start()
+class ode(AsyncTask):
+	def __init__(self, r, v, dt, k):
+		self.r = r
+		self.v = v
+		self.a = np.empty(sphereNum,3)
+		self.dt = dt 
+		#forces = np.empty((sphereNum,3))
+		#parallelPhys.start()
+		
+	def do_task():
+		# TODO FIX THIS: GLOBAL pos, vel, acc VARS SHOULD NOT BE UPDATED BY THESE RK4 ODE CALLS
+		global pos
+		global vel
+		global acc
+		force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 							#!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
+		self.a[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
+		self.v[i] = self.v[i] + self.a[i] * self.dt 										# find r'(t) = v(t) from a = r''(t)
+		self.r[i] = self.r[i] + self.[i] * self.dt 											# find r(t)
+		return task.done 		
 	
 	# this currently generates a new task for each sphere, each time rk4 calls ide, every frame - then destroys them all
 	# instead, each sphere should have its own task, which is called in parallel with all the others each time ode is called
 	# rk4 must then wait for all of the sphere physics tasks to complete before calling ode for the next step
 	# tasksync is enabled for physTaskChain, so the tasks should wait for the next clock tick
 	# this implementation would work for the main engine, but i really don't like having to start and stop all of these threads
-	for i in range(sphereNum):
-		taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
 	# CHECK: are these definitely up-to-date? do I even need to return them? 
 	# INSTEAD wait for threads to complete
 	return acc,vel,pos															# return dv/dt and v for rk4, return r for newton
-	
-def rk4(pos, vel, dt): # currently not working properly due to ode subtask editing global arrays rather than local values r,v,a
-	# couldn't figure out how to do it as a sequence
-	#rksq = Sequence(ode,ode,ode,ode,return))
-	#rksq.start()
-    k1,vel,pos = ode(pos, vel, 0)
-    k2,vel,pos = ode(pos, vel + k1*dt/2, dt/2)
-    k3,vel,pos = ode(pos, vel + k2*dt/2, dt/2)
-    k4,vel,pos = ode(pos, vel + k3*dt, dt)
-    return pos, vel + dt/6*(k1 + 2*k2 + 2*k3 + k4)
 
 class TestBase(ShowBase):
 	def __init__(self):
@@ -202,10 +198,11 @@ class TestBase(ShowBase):
 		placeholder.setPos(-50,180,5)
 		self.sphereNodep.instanceTo(placeholder)
 
-		self.taskMgr.setupTaskChain('physTaskChain', 
-									numThreads=4, 
-									threadPriority=1,
-									frameSync=True)
+		self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr")
+		self.asyncTaskMgr.setupTaskChain('physTaskChain', 
+		#							numThreads=8, 
+		#							threadPriority=1,
+		#							frameSync=True)
 		#for i in range(sphereNum):
 			# !BROKEN! - args should be passed at runtime, not construction
 			#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], 
@@ -222,12 +219,35 @@ class TestBase(ShowBase):
 		dt = globalClock.getDt()
 		#self.plnp.setPos(180*sin(dt), 100*sin(dt), 200)
 		
-			## do multiple simulation runs per update cycle to dedicate more time to physics?
+		## do multiple simulation runs per update cycle to dedicate more time to physics?
 		#for _ in range(2):
 		# TODO replace this with task management - 
-		pos, vel = rk4(pos,vel,setdt)
+		# tskMgr.step() is called by p3d to call this already, can i just sort my tasks?
+		# couldn't figure out how to do it as a sequence
+		#rksq = Sequence(ode,ode,ode,ode,return))
+		#rksq.start()
+		for i in range(4):
+			for j in range(sphereNum): # add one task per sphere
+				asyncTaskMgr.add(ODE(pos,vel,0, 1))
+				#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
+			asyncTaskMgr.waitForTasks()
+			if (i==0):
+				# trying to fix it so there's a thread for every sphere but doing integration on the system as a whole (one k value per system state)
+				for j in range(sphereNum): # add one task per sphere
+					k1 = asyncTaskMgr.tasks[j].a
+					asyncTaskMgr.tasks[j] = ODE(asyncTaskMgr.tasks[j].pos, asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
+			elif (i==1):
+				k2 = calculator.a
+				calculator = ODE(calculator.pos, calculator.vel + k2*setdt/2, setdt/2) # set up for round 3
+			elif (i==2):
+				k3 = calculator.a
+				calculator = ODE(calculator.pos, calculator.vel + k3*setdt, setdt)
+			elif (i==3):
+				k4 = calculator.a
 
-			# # update the positions of the spheres:
+		pos, vel = calculator.pos, calculator.vel + setdt/6*(k1 + 2*k2 + 2*k3 + k4)
+
+		# # update the positions of the spheres:
 		for i in range(len(self.spheres)):
 			#print(pos[i])
 			self.sphereNodep.getChild(i).setPos(pos[i,0],pos[i,1],pos[i,2])
