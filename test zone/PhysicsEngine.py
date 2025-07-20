@@ -36,7 +36,10 @@ drawAtts 	 = []
 # list of molecules to use for calculating bond potentials
 molecules 	 = []
 
-# for instancing graphics to gpu:
+# for instancing graphics to gpu. After further exploration, I highly doubt this is sufficient.
+# 	I'm still considering hard-coding a simple vertex shader that checks the molecularSim and chargeMatrix arrays to
+# 	generate point vertices for each sphere, and a fragment shader to load the model for each vertex. I think the 
+# 	main reason not to is if the panda3d hardware instancing is at least as efficient as this.
 atomModel = Entity(model='sphere', scale=(1,1,1), world_position=(0,0,0))
 atomNodes = NodePath('atomNodes')
 

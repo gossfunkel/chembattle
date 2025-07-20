@@ -111,22 +111,16 @@ def grav(r,i):
 	dr  = np.sqrt(drv[0]*drv[0] + drv[1]*drv[1] + drv[2]*drv[2]) 		 # absolute distance of those lads
 	return sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
 
-class ODE(AsyncTask):
-	def __init__(self, r, v, t):
-		super().__init__(self)
-		self.r = r
-		self.v = v
-		self.a = np.empty((sphereNum,3))
-		self.t = t 
-		#forces = np.empty((sphereNum,3))
-		#parallelPhys.start()
+#class ODE(Task):
+#	def __init__(self, r, v, t):
+#		super().__init__(self)
+#		self.r = r
+#		self.v = v
+#		self.a = np.empty((sphereNum,3))
+#		self.t = t 
+#		#forces = np.empty((sphereNum,3))
+#		#parallelPhys.start()
 		
-	def do_task(): 
-		force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 							#!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
-		self.a[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-		self.v[i] = self.v[i] + self.a[i] * self.t 										# find r'(t) = v(t) from a = r''(t)
-		self.r[i] = self.r[i] + self.v[i] * self.t 											# find r(t)
-		return task.done 		
 
 class TestBase(ShowBase):
 	def __init__(self):
@@ -183,22 +177,33 @@ class TestBase(ShowBase):
 		placeholder.setPos(-50,180,5)
 		self.sphereNodep.instanceTo(placeholder)
 
-		self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr").getGlobalPtr()
-		#self.asyncTaskMgr.setupTaskChain('physTaskChain', 
-		#							numThreads=8, 
-		#							threadPriority=1,
-		#							frameSync=True)
-		#for i in range(sphereNum):
-			# !BROKEN! - args should be passed at runtime, not construction
-			#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], 
-			#			taskChain="physTaskChain", sort=0, appendTask=True)
-	
+		#self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr").getGlobalPtr()
+		# create a task chain capable of multithreading
+		self.taskMgr.setupTaskChain('physTaskChain', 
+									numThreads=8, 
+									threadPriority=1,
+									frameSync=True)
+		# initialise variables and weights for rk4 in scope, each as an array of size sphereNum, populated with 3d vectors
+		self.r, self.v, self.k1, self.k2, self.k3, self.k4 = np.empty((sphereNum,3))
+		self.dt = 0.0
+		# generate a task to calculate for each sphere
+		for i in range(sphereNum):
+			# !BROKEN! - args should be passed at runtime, not construction. How to pass a pointer in python?
+			taskMgr.add(self.ode, "sphere_ode", extraArgs=[i], taskChain="physTaskChain", 
+																 sort=0, appendTask=True)
 		# parallelPhys = Parallel(name="parallelPhys")
 		# for i in range(sphereNum):
 		# 	parallelPhys.append(Func(forceCalculation, i, dt)
 		self.taskMgr.add(self.update, "update", taskChain='default')
+	
+	def ode(self, i, task): 
+		force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 								  #!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
+		a = np.array([np.transpose(np.transpose(force) / mass[i])]) 	#!!!!!!!!!!!!!!!!! hacky - only works while masses are equal
+		self.v[i] = self.v[i] + a * self.t 								# find r'(t) = v(t) from a = r''(t)
+		self.r[i] = self.r[i] + self.v[i] * self.t 						# find r(t)
+		return task.cont	
 
-	def update(self, task):
+	async def update(self, task):
 		global pos, vel
 		
 		dt = globalClock.getDt()
@@ -213,16 +218,20 @@ class TestBase(ShowBase):
 		
 		# tskMgr.step() is called by p3d to call this already, can i just sort my tasks?
 		# trying to fix it so there's a thread for every sphere but doing integration on the system as a whole (one k value per system state)
-		for j in range(sphereNum): # add one task per sphere
-			self.asyncTaskMgr.add(ODE(pos,vel,0))
-			#taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
+		#for j in range(sphereNum): # add one task per sphere
+		#	k1 = np.empty((sphereNum,3))
+		#	# run tasks in physTaskChain with (pos,vel,0)	
+		#	self.asyncTaskMgr.add(ODE(pos,vel,0))
+		#	taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
 		for i in range(4):
 			if (i==0):
-				k1 = np.empty((sphereNum,3))
-				self.asyncTaskMgr.waitForTasks()
-				for j in range(sphereNum): # add one task per sphere
-					k1[j] = self.asyncTaskMgr.tasks[j].a
-					self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
+				await taskMgr.getTasksNamed("sphere_ode").gather()
+				#self.taskMgr.waitForTasks()
+				for tsk in taskMgr.getTasksNamed("sphere_ode"): # run one task per sphere
+					tsk.start()
+					# load values from completed tasks into k1? they should probably just save to k1
+					#k1[j] = self.asyncTaskMgr.tasks[j].a
+					#self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
 			elif (i==1):
 				k2 = np.empty((sphereNum,3))
 				self.asyncTaskMgr.waitForTasks()
