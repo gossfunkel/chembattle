@@ -39,7 +39,7 @@ setdt = 0.00000002
 	## derivatives of motion for calculations
 acc = np.zeros((sphereNum,3))
 vel = np.zeros((sphereNum,3))
-pos = np.array([[(sin(i)*5.)+50.,-cos(i)*5.0-150.0,-15.0-i/4] for i in range(sphereNum)])
+pos = np.array([[(sin(i)*5.)+50.,cos(i)*5.0-150.0,-15.0-i/4] for i in range(sphereNum)])
 #ep = np.array([3.24 for _ in range(sphereNum)])
 #sg = np.array([0.98 for _ in range(sphereNum)])
 ep = 3.24
@@ -181,19 +181,19 @@ class TestBase(ShowBase):
 		# create a task chain capable of multithreading
 		self.taskMgr.setupTaskChain('physTaskChain', 
 									numThreads=8, 
-									threadPriority=1,
-									frameSync=True)
+									threadPriority=1)
 		# initialise variables and weights for rk4 in scope, each as an array of size sphereNum, populated with 3d vectors
-		self.k = np.array([np.empty((sphereNum,3)) for _ in range(4)])
-		self.r = np.empty((sphereNum,3))
-		self.v = np.empty((sphereNum,3))
-		self.dt = 0.0
+		self.k = np.array([np.zeros((sphereNum,3)) for _ in range(4)])
+		self.r = pos
+		self.v = vel
+		self.t = 0.0
 		self.rk4step = 0
+		self.tasks = []
 		# generate a task to calculate for each sphere
 		for i in range(sphereNum):
-			# !BROKEN! - args should be passed at runtime, not construction. How to pass a pointer in python?
-			taskMgr.add(self.ode, "sphere_ode", extraArgs=[i], taskChain="physTaskChain", 
-																 sort=0, appendTask=True)
+			
+			self.tasks.append(taskMgr.doMethodLater(0, self.ode, "sphere_ode", extraArgs=[i], taskChain="physTaskChain", 
+																 sort=0, appendTask=True))
 		# parallelPhys = Parallel(name="parallelPhys")
 		# for i in range(sphereNum):
 		# 	parallelPhys.append(Func(forceCalculation, i, dt)
@@ -201,37 +201,42 @@ class TestBase(ShowBase):
 	
 	def ode(self, i, task): 
 		force = -dLJP(self.r,i) + coul(self.r,i) #+ grav(r,i) 								  #!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
-
 		self.k[self.rk4step,i] = np.array([np.transpose(np.transpose(force) / mass[i])]) 	#!!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-		self.v[i] = self.v[i] + self.k[self.rk4step,i] * self.t 								# find r'(t) = v(t) from a = r''(t)
+		self.v[i] = self.v[i] + self.k[self.rk4step,i] * self.t 		# find r'(t) = v(t) from a = r''(t)
 		self.r[i] = self.r[i] + self.v[i] * self.t 						# find r(t)
-		return task.cont	
+		return task.done	
 
 	async def update(self, task):
 		global pos, vel
 		
-		dt = globalClock.getDt()
+		#dt = globalClock.getDt()
 		#self.plnp.setPos(180*sin(dt), 100*sin(dt), 200)
-		
-		## do multiple simulation runs per update cycle to dedicate more time to physics?
-		#for _ in range(2):#
 
-		# couldn't figure out how to do it as a sequence:
-		#rksq = Sequence(ode,ode,ode,ode,return))
-		#rksq.start()
-		
-		# tskMgr.step() is called by p3d to call this already, can i just sort my tasks?
-		# trying to fix it so there's a thread for every sphere but doing integration on the system as a whole (one k value per system state)
-		#for j in range(sphereNum): # add one task per sphere
-		#	k1 = np.empty((sphereNum,3))
-		#	# run tasks in physTaskChain with (pos,vel,0)	
-		#	self.asyncTaskMgr.add(ODE(pos,vel,0))
-		#	taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
 		for i in range(4):
-			await self.taskMgr.getTasksNamed("sphere_ode")
+			#print("stepping into rk4 stage " + str(i+1))
+			#currentTsk = self.taskMgr.getCurrentTask()
+			#Task.sequence(taskMgr.getTasks())
+			if (taskMgr.mgr.getActiveTasks().hasTask(self.tasks[sphereNum-1])): # wait for previous round of tasks to finish
+				for tsk in taskMgr.mgr.getActiveTasks():
+					if (tsk.name == "sphere_ode"):
+						#print("awaiting " + str(tsk))
+						await tsk
+			self.r = pos 
 			self.rk4step = i
-			for tsk in self.taskMgr.getTasksNamed("sphere_ode"): # run one task per sphere
-				tsk.again()
+			if (i == 0): 
+				self.t = 0
+				self.v = vel
+			elif (i == 1 or i == 2): 
+				self.t = setdt/2. 
+				self.v = vel + self.k[i-1] * setdt/2
+			else: 
+				self.t = setdt
+				self.v = vel + self.k[3] * setdt
+
+			for tsk in self.taskMgr.getDoLaters(): # run one task per sphere
+				if (tsk.name == "sphere_ode"):
+					#print(tsk)
+					tsk.again
 			#if (i==0):
 			#	#self.taskMgr.waitForTasks()
 			#		# load values from completed tasks into k1? they should probably just save to k1
@@ -257,16 +262,21 @@ class TestBase(ShowBase):
 			#		# this is messy - should only need to do this once
 			#		pos = self.asyncTaskMgr.tasks[j].r
 			#		vel = self.asyncTaskMgr.tasks[j].v
+		
+		if (taskMgr.getTasksNamed("sphere_ode") != 0): # wait for previous round of tasks to finish
+				for tsk in taskMgr.getTasksNamed("sphere_ode"):
+					#print("awaiting " + str(tsk))
+					await tsk
 
-		await self.taskMgr.getTasksNamed("sphere_ode").gather()
-		#self.asyncTaskMgr.remove(self.asyncTaskMgr.getTasks())
 		vel = self.v + setdt/6*(self.k[0] + 2*self.k[1] + 2*self.k[2] + self.k[3])
 		pos = self.r
+		#print(pos)
 
 		# # update the positions of the spheres:
-		for i in range(len(self.spheres)):
+		#self.sphereNodep.getChildren().setPos(pos)
+		for i in range(sphereNum):
 			#print(pos[i])
-			self.sphereNodep.getChild(i).setPos(pos[i,0],pos[i,1],pos[i,2])
+			self.sphereNodep.getChild(i).setFluidPos(pos[i,0],pos[i,1],pos[i,2])
 			
 				## dance in a sine-wave pattern:
 			#self.thetas[i] += (i/100 + 2.0) * dt
