@@ -184,8 +184,11 @@ class TestBase(ShowBase):
 									threadPriority=1,
 									frameSync=True)
 		# initialise variables and weights for rk4 in scope, each as an array of size sphereNum, populated with 3d vectors
-		self.r, self.v, self.k1, self.k2, self.k3, self.k4 = np.empty((sphereNum,3))
+		self.k = np.array([np.empty((sphereNum,3)) for _ in range(4)])
+		self.r = np.empty((sphereNum,3))
+		self.v = np.empty((sphereNum,3))
 		self.dt = 0.0
+		self.rk4step = 0
 		# generate a task to calculate for each sphere
 		for i in range(sphereNum):
 			# !BROKEN! - args should be passed at runtime, not construction. How to pass a pointer in python?
@@ -197,9 +200,10 @@ class TestBase(ShowBase):
 		self.taskMgr.add(self.update, "update", taskChain='default')
 	
 	def ode(self, i, task): 
-		force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 								  #!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
-		a = np.array([np.transpose(np.transpose(force) / mass[i])]) 	#!!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-		self.v[i] = self.v[i] + a * self.t 								# find r'(t) = v(t) from a = r''(t)
+		force = -dLJP(self.r,i) + coul(self.r,i) #+ grav(r,i) 								  #!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
+
+		self.k[self.rk4step,i] = np.array([np.transpose(np.transpose(force) / mass[i])]) 	#!!!!!!!!!!!!!!!!! hacky - only works while masses are equal
+		self.v[i] = self.v[i] + self.k[self.rk4step,i] * self.t 								# find r'(t) = v(t) from a = r''(t)
 		self.r[i] = self.r[i] + self.v[i] * self.t 						# find r(t)
 		return task.cont	
 
@@ -224,38 +228,40 @@ class TestBase(ShowBase):
 		#	self.asyncTaskMgr.add(ODE(pos,vel,0))
 		#	taskMgr.add(forceCalculation, "forceCalculation", extraArgs=[r,v,i,dt], taskChain="physTaskChain", sort=0, appendTask=True)
 		for i in range(4):
-			if (i==0):
-				await taskMgr.getTasksNamed("sphere_ode").gather()
-				#self.taskMgr.waitForTasks()
-				for tsk in taskMgr.getTasksNamed("sphere_ode"): # run one task per sphere
-					tsk.start()
-					# load values from completed tasks into k1? they should probably just save to k1
-					#k1[j] = self.asyncTaskMgr.tasks[j].a
-					#self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
-			elif (i==1):
-				k2 = np.empty((sphereNum,3))
-				self.asyncTaskMgr.waitForTasks()
-				for j in range(sphereNum): # add one task per sphere
-					k2[j] = self.asyncTaskMgr.tasks[j].a
-					self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k2*setdt/2, setdt/2) # set up for round 3
-			elif (i==2):
-				k3 = np.empty((sphereNum,3))
-				self.asyncTaskMgr.waitForTasks()
-				for j in range(sphereNum): # add one task per sphere
-					k2[j] = self.asyncTaskMgr.tasks[j].a
-					self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k3*setdt, setdt) # set up for round 4
-			elif (i==3):
-				k4 = np.empty((sphereNum,3))
-				self.asyncTaskMgr.waitForTasks()
-				for j in range(sphereNum): # add one task per sphere
-					k4[j] = self.asyncTaskMgr.tasks[j].a
-					# this is messy - should only need to do this once
-					pos = self.asyncTaskMgr.tasks[j].r
-					vel = self.asyncTaskMgr.tasks[j].v
+			await self.taskMgr.getTasksNamed("sphere_ode")
+			self.rk4step = i
+			for tsk in self.taskMgr.getTasksNamed("sphere_ode"): # run one task per sphere
+				tsk.again()
+			#if (i==0):
+			#	#self.taskMgr.waitForTasks()
+			#		# load values from completed tasks into k1? they should probably just save to k1
+			#		#k1[j] = self.asyncTaskMgr.tasks[j].a
+			#		#self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k1*setdt/2, setdt/2) # set up for round 2
+			#elif (i==1):
+			#	k2 = np.empty((sphereNum,3))
+			#	self.asyncTaskMgr.waitForTasks()
+			#	for j in range(sphereNum): # add one task per sphere
+			#		k2[j] = self.asyncTaskMgr.tasks[j].a
+			#		self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k2*setdt/2, setdt/2) # set up for round 3
+			#elif (i==2):
+			#	k3 = np.empty((sphereNum,3))
+			#	self.asyncTaskMgr.waitForTasks()
+			#	for j in range(sphereNum): # add one task per sphere
+			#		k2[j] = self.asyncTaskMgr.tasks[j].a
+			#		self.asyncTaskMgr.tasks[j] = ODE(self.asyncTaskMgr.tasks[j].pos, self.asyncTaskMgr.tasks[j].vel + k3*setdt, setdt) # set up for round 4
+			#elif (i==3):
+			#	k4 = np.empty((sphereNum,3))
+			#	self.asyncTaskMgr.waitForTasks()
+			#	for j in range(sphereNum): # add one task per sphere
+			#		k4[j] = self.asyncTaskMgr.tasks[j].a
+			#		# this is messy - should only need to do this once
+			#		pos = self.asyncTaskMgr.tasks[j].r
+			#		vel = self.asyncTaskMgr.tasks[j].v
 
-		self.asyncTaskMgr.waitForTasks()
-		self.asyncTaskMgr.remove(self.asyncTaskMgr.getTasks())
-		vel = vel + setdt/6*(k1 + 2*k2 + 2*k3 + k4)
+		await self.taskMgr.getTasksNamed("sphere_ode").gather()
+		#self.asyncTaskMgr.remove(self.asyncTaskMgr.getTasks())
+		vel = self.v + setdt/6*(self.k[0] + 2*self.k[1] + 2*self.k[2] + self.k[3])
+		pos = self.r
 
 		# # update the positions of the spheres:
 		for i in range(len(self.spheres)):
