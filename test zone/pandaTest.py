@@ -121,11 +121,7 @@ class ODE(AsyncTask):
 		#forces = np.empty((sphereNum,3))
 		#parallelPhys.start()
 		
-	def do_task():
-		# TODO FIX THIS: GLOBAL pos, vel, acc VARS SHOULD NOT BE UPDATED BY THESE RK4 ODE CALLS
-		global pos
-		global vel
-		global acc
+	def do_task(): 
 		force = -dLJP(r,i) + coul(r,i) #+ grav(r,i) 							#!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
 		self.a[i] = np.transpose(np.transpose(force) / mass[i]) 	# !!!!!!!!!!!!!!!!! hacky - only works while masses are equal
 		self.v[i] = self.v[i] + self.a[i] * self.t 										# find r'(t) = v(t) from a = r''(t)
@@ -187,7 +183,7 @@ class TestBase(ShowBase):
 		placeholder.setPos(-50,180,5)
 		self.sphereNodep.instanceTo(placeholder)
 
-		self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr")
+		self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr").getGlobalPtr()
 		#self.asyncTaskMgr.setupTaskChain('physTaskChain', 
 		#							numThreads=8, 
 		#							threadPriority=1,

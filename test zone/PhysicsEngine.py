@@ -16,14 +16,18 @@ import atoms as ats
 #  ===== === = CLASS DATA = === ===== 
 
 # molecularSim holds the maim simulation data. initialised as a list for loading. Later converted to numpy ndarray
-	# 	each array on the top level contains the data for a given particle (atom) in the molecular simulation
-	# This is effectively a dataset storing a mass and charge field. Mass is located at position, charge is located to 
-	# 	(hybridised/energised) atomic orbitals within a set distance of this same position. Masses are associated with charges. 
-	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevVelocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass, 7 previousForce [x,y,z] ]
+	# 	each array on the top level contains the data for a given particle (atom) in the simulation
+	# This is effectively a dataset storing a mass and charge field. Mass is located at position, charges have associated
+	# atoms which limit their potential energy (used to derive possible positions). Masses are associated with charges. 
+	# 	[0[ typeID ],1[ bonds&angles ],2[ position [x,y,z] ],3[ prevVelocity [x,y,z] ],4[ charge ],5 moleculeID,6 mass]
 
 	# packaging positions like this will make it easier to send them over to the GPU as a bulk, rather than having to create
 	# 	separate objects for each atom and call the GPU every time, bottlenecking at the draw stage. aka instance rendering
 molecularSim = []
+# chargeMatrix holds data for simulating mobile charges/electrons. 
+	# 	each array on the top level contains the data for a given charge (electron) in the simulation
+	# [0[ atomIndex],1[ potEnergy ],2[ position [x,y,z ] ],3[ prevVelocity [x,y,z] ]]
+chargeMatrix = []
 # stores values for lookup
 # 	[0 name ,1[ sigma ],2[ epsilon ]]
 atomTypes 	 = []
@@ -51,7 +55,7 @@ kTh = 35300.0  #same explanation as Kr but with bending energy
 kB  = 0.8314459920816467 # Boltzmann constant in A^2 D ps^-2 K^-1
 kA  = 6.0221409e+26 #Avogadros constant x 1000 (g->kg)
 kEq = 1.60217662E-19 #electron charge in coulombs
-kQcs = 8.9875517923E9*NA*1E30*ech*ech/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
+kQcs = 8.9875517923E9*kA*1E30*kEq*kEq/1E24 #electrostatic constant in Daltons, electron charges, picosecond, angstrom units
 
 # ===== === = CLASS METHODS = === ===== 
 
