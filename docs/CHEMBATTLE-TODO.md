@@ -1,5 +1,14 @@
 # CHEMBATTLE TODO LIST
 
+1) fix multithreading in pandaTest.py
+2) implement charge system where electrons have potential energy which defines constraints on their position relative to their atom in test
+3) make a shader which glows brighter where electrons are near each other to highlight bonds and lone pairs
+4) finish mocking up the ui in panda3d or shaders
+5) bring all of the existing ui and interface elements together and update main.py to be as ursina-free as it's getting
+6) finish debugging PhysicsEngine.py and link it in to main.py
+7) add some cards and decor for a prototype level/game (primordial soup?)
+8) polish up and share the prototype:)
+
 - chemical bonding
 	Currently, the bonds are handled as spring potentials assigned to the atoms in code. This makes for a really awkward system to manage multiple bonds and angles on an atom, and would require juicy calculations to change chemical bonds, by exact specifications to ensure conformity to chemical laws. With the right system of estimations, I believe I can make a chemical-like bonding system through the management of the movement and sharing of charge.
 	While electrons themselves don't position themselves with maximum distance between them, chemical bonds on a single atom do. This gives the characteristic linear, trigonal planar, pyramidal, and higher geometric shapes of molecules around atoms. As such, atoms can have bonding positions constrained to these geometries simply by avoiding the other bonding positions on the atom (including lone pairs as such). Electron orbital geometry differs significantly, and does play a role in the behaviour of atomic systems, but for our (classical, competitive, entertainment) purposes, it will be acceptable to bypass this behaviour. The Pauli Exclusion Principle will dictate some part in this by giving charge characteristics as it incriments on an atom. The charge is treated as a bulk (electrons aren't individuated from the quantity of charge), but that bulk is not uniform, in that it is spread across a potential gradient, where some charge is manifest in electrons of a higher potential than others. Electrons, being 'fuzzy' like this, are less important for the game engine than the character of charge, as any difference in potential will reach a local minimum regardless of the individual electrons which play the manifest role of this interaction, much like how liquids move down gravity gradients in a 'pouring' fashion. The game can just compute charge moving from one atom to another when there is an available 'space' for higher-potential charge to displace into. This will dovetail with a VSEPR model that defines the 'sharing' of charge between atoms, where both atoms 'have' charge on the terms that they have spacial proximity to the other atom they're sharing with. This sharing mechanism will have to be carefully defined to localise charge between nuclei, not at the probability maxima of electron positions.
