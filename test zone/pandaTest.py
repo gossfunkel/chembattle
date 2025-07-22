@@ -20,28 +20,38 @@ loadPrcFileData('', 'threading-model Cull/Cull') # creates a different two-threa
 										# when the total time doing App is similar to the total time for Cull + Draw.
 
 	## how many spheres
-sphereNum = 100
+sphereNum = 20
+	## how many electrons
+elecNum = 20
 
-	### physical values
-chrg = np.array([0.41 for _ in range(sphereNum)])
-mass = np.array([0.001 for _ in range(sphereNum)])
 	### some physical constants
-kb  = 0.8314459920816467 				# Boltzmann
-NA  = 6.0221409e+26 					#Avogardos constant x 1000 (g->kg)
-ech = 1.60217662E-19 					# electron charge in coulombs
-kc = 8.9875517923E9*NA*1E30*ech*ech/1E24 # electrostatic const in Daltons, electron charge, picosecond, angstrom units
-gravConst = 6.6743e-11 					# G in m3/kg/s
-	## constant deltatime - n.b. for scientific accuracy, we would want this to 
-		# have a resolution of less than 2fs (2e-15). 
-		# The current value is: 2ps (2e-9 secs). 
-		# You can't see much happening with much smaller values, but they're realistic. 
-setdt = 0.2E-8
+kb  = 0.8314459920816467 				  # Boltzmann constant
+NA  = 6.0221409e+26 					  # Avogadro's constant x 1000 (g->kg)
+ech = -1.60217662E-19 					  # electron charge (coulombs)
+pch = 1.60217733E-19 					  # proton charge (coulombs)
+kc  = 8.9875517923E9*NA*1E30*ech*ech/1E24 # electrostatic const (Daltons, electron charge, picosecond, angstrom units)
+amH = 1.6735575E-27 					  # atomic mass of Hydrogen (kg)
+gravConst = 6.6743e-11 					  # G (m3/kg/s)
+	### physical values
+chrg = np.array([(pch + ech) for _ in range(sphereNum)]) 	# TODO: ech moves with electrons
+mass = np.array([amH for _ in range(sphereNum)])
+#chrg = np.array([0.41 for _ in range(sphereNum)]) 			# what units are these? how could a hydrogen atom have 4100000000000000000 electrons' worth of charge???
+#mass = np.array([0.001 for _ in range(sphereNum)]) 		# units ?? if these are kg, each 'hydrogen' atom weighs a gram
+	## constant deltatime - n.b. for scientific accuracy, we require this to have a resolution of under 2fs (2e-15 seconds). 
+		# The current value is: 0.1as! (1e-19 secs) 
+		# Appropriately scaled masses and charges are required to get to realistic timescales
+		# n.b. a ray of light travels the bond length of molecular hydrogen (H2) in 0.247attoseconds
+		# atomic unit of time is 24.189as. neutral pions decay into gamma rays after 85as.
+setdt = 0.1E-18
 	## derivatives of motion for calculations
-acc = np.zeros((sphereNum,3))
-vel = np.zeros((sphereNum,3))
-pos = np.array([[(sin(i)*2.)+50.,cos(i)*2.0-150.0,-15.0-i/4.] for i in range(sphereNum)])
+acc = np.zeros((sphereNum,3)) 									# a in m/s/s? A/ps/ps?
+vel = np.zeros((sphereNum,3)) 									# v in m/s? A/ps?
+#pos = np.array([[(sin(i)*2.)+50.,cos(i)*2.0-150.0,-15.0-i/4.] for i in range(sphereNum)])
+pos = np.array([[50.+i,-150.,-15.] for i in range(sphereNum)])  # r in m? Angstroms?
+electrons = np.array([pos]) 									# electron positions (m? A?)
 #ep = np.array([3.24 for _ in range(sphereNum)])
 #sg = np.array([0.98 for _ in range(sphereNum)])
+	## Lennard-Jones parameters for Hydrogen's dipole effects
 ep = 3.24
 sg = 0.98
 
@@ -85,42 +95,23 @@ def createColouredRect(x, y, z, width, height, colors=None):
  	return square
 
 # dLJP for Hydrogen
-def dLJP(r,i):
+def dLJP(dr,drv):
 	#print(parti)
-	drv  = r - r[i]																# distance vectors from r[i] to all other positions
-	drv=np.delete(drv,i,0) 														# remove ith element (no self LJ interactions)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 					# absolute distance of that lad
 	dLJP=0.0
 	# can I swap this for some kind of threshold function to avoid the branch?
 	if ((dr[i] < 3) for i in dr): 												# calculate dLJP (8-14 from 6-12)
+
 		r8vs = np.sum(np.transpose(np.transpose(drv) * ep*(sg**6) * (1.0/np.array(dr))**8),axis=0)
 		r14vs= np.sum(np.transpose(np.transpose(drv) * 2.0*ep*(sg**12) * (1.0/np.array(dr))**14),axis=0)
 		dLJP = (r14vs-r8vs)*24.0
 	return dLJP
 
-def coul(r,i,qi=0.41,qj=0.41):
-	drv = r - r[i]																# distance vectors from r[i] to all other positions
-	drv=np.delete(drv,i,0) 														# remove ith element (no self EM interactions)
-	dr=[np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 					# absolute distance of that lad
-	r3  = kc * qi * qj * ((1.0/np.array(dr))**3.0) 								# Coulomb's law
+def coul(dr,drv,i,qi=0.41,qj=0.41):
+	r3  = kc * qi * qj * ((1.0/np.array(dr))**3.0) 								# Coulomb's law BROKEN ONLY WORKS FOR TWO CHARGES
 	return np.sum(np.transpose(np.transpose(drv)*r3), axis=0)					# transpose the distance vector, multiply by force, transpose back
 
-def grav(r,i):
-	drv = r - r[i]
-	drv=np.delete(drv,i,0) #remove ith element (no self gravitational interactions)
-	dr  = np.sqrt(drv[0]*drv[0] + drv[1]*drv[1] + drv[2]*drv[2]) 		 # absolute distance of those lads
-	return sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
-
-#class ODE(Task):
-#	def __init__(self, r, v, t):
-#		super().__init__(self)
-#		self.r = r
-#		self.v = v
-#		self.a = np.empty((sphereNum,3))
-#		self.t = t 
-#		#forces = np.empty((sphereNum,3))
-#		#parallelPhys.start()
-		
+def grav(dr,i):
+	return np.sum(gravConst * mass[i] * mss / np.transpose(np.transpose(dr)**2) for mss in mass)
 
 class TestBase(ShowBase):
 	def __init__(self):
@@ -131,7 +122,7 @@ class TestBase(ShowBase):
 		self.filters = CommonFilters(base.win,base.cam)
 		self.filters.setBloom(blend=(0.25, 0.22, 0.28, 0.0), maxtrigger=1.1, desat=0.7, size='large')
 
-		self.cam.setPos(0, 0, 10)
+		self.cam.setPos(2, 25, -6)
 		self.cam.setHpr(0,-40,0)
 
 		dirLight 	= DirectionalLight('dirLight')
@@ -158,15 +149,13 @@ class TestBase(ShowBase):
 		self.render.attachNewNode(geomNode)
 		#geomNode.getParent(0).setLightOff()
 
-		## this is now hardware instanced to generate many copies of the one sphere model
-			# i feel like i should also probably use panda3d's Intervals to update the motion in parallel;
-				# see https://docs.panda3d.org/1.10/python/programming/intervals/index#intervals
-				# and https://docs.panda3d.org/1.10/python/introduction/tutorial/using-intervals-to-move-the-panda
+		## this should now use hardware instancing to generate many copies of the one sphere model:
 		self.spheres = np.zeros(sphereNum)
-		#self.thetas = np.zeros(sphereNum)
+		self.elecs = np.zeros(elecNum)
 		self.sphere = self.loader.loadModel("../sphere")
 		self.sphere.setScale(0.5)
-		self.sphereNodep = NodePath('spheres') # placeholders can be attached to another node to spawn groups of instances
+		self.sphereNodep = NodePath('spheres') 
+		# placeholders can be attached to another node to spawn groups of instances
 		for i in range(sphereNum):
 			placeholder = self.sphereNodep.attachNewNode("Sphere-Placeholder")
 			placeholder.setScale(0.5)
@@ -177,6 +166,7 @@ class TestBase(ShowBase):
 		placeholder.setPos(-50,180,5)
 		self.sphereNodep.instanceTo(placeholder)
 
+		# tasks method commented out. To reactivate, ensure to add 'async' to update method declaration
 		#self.asyncTaskMgr = AsyncTaskManager("asyncTaskMgr").getGlobalPtr()
 		# create a task chain capable of multithreading
 		#self.taskMgr.setupTaskChain('physTaskChain', 
@@ -189,7 +179,7 @@ class TestBase(ShowBase):
 		self.t = 0.0
 		self.rk4step = 0
 		#self.tasks = []
-		# generate a task/interval to calculate for each sphere
+		# generate an interval to calculate for each sphere
 		self.odeParallel = Parallel(name="odeParallel")
 		for i in range(sphereNum):
 			self.odeParallel.append(Func(self.ode, i))
@@ -198,10 +188,12 @@ class TestBase(ShowBase):
 		self.taskMgr.add(self.update, "update", taskChain='default')
 	
 	def ode(self, i): 
-		force = -dLJP(self.r,i) + coul(self.r,i) #+ grav(r,i) 								  #!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
-		self.k[self.rk4step,i] = np.array([np.transpose(np.transpose(force) / mass[i])]) 	#!!!!!!!!!!!!!!!!! hacky - only works while masses are equal
-		self.v[i] = self.v[i] + self.k[self.rk4step,i] * self.t 		# find r'(t) = v(t) from a = r''(t)
-		self.r[i] = self.r[i] + self.v[i] * self.t 						# find r(t)
+		drv = np.delete(self.r - self.r[i],i,0) 							# distance vectors from r[i] to all *other* positions
+		dr  = [np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] 		# absolute distance of that lad
+		force = -dLJP(dr,drv) + coul(dr,drv,i) #- grav(dr,i) 				# calculate F   - 	!!! CURRENTLY, ADDING GRAVITY HALVES THE FRAMERATE
+		self.k[self.rk4step,i] = np.array([np.transpose(np.transpose(force) / mass[i])]) 	#!!!!!!!!!! hacky - only works while masses are equal
+		self.v[i] = self.v[i] + self.k[self.rk4step,i] * self.t 			# find r'(t) = v(t) from a = r''(t)
+		self.r[i] = self.r[i] + self.v[i] * self.t 							# find r(t)
 		return 1 # task.done	
 
 	def update(self, task):
@@ -210,8 +202,8 @@ class TestBase(ShowBase):
 		#dt = globalClock.getDt()
 		#self.plnp.setPos(180*sin(dt), 100*sin(dt), 200)
 
-		# run 200 physics calculations per tick
-		for j in range(200):
+		# run 4 physics calculations per tick
+		for j in range(4):
 			for i in range(4):
 				#print("stepping into rk4 stage " + str(i+1))
 				#currentTsk = self.taskMgr.getCurrentTask()

@@ -146,7 +146,7 @@ def coul(atID): # called once per particle, calculates field effect as a whole
 	drv 		= r - r[atID] #distance in each dimension
 	drv 		= np.delete(drv,atID,0) #remove ith element (no self-interactions)
 	dr 			= [np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]) for a in drv] #absolute distance
-	r3 			= molecularSim[atID,4].copy() * qs * kQcs * ((1.0 / np.array(dr)**3.0) # Coulomb's law      TODO Update constants
+	r3 			= molecularSim[atID,4].copy() * qs * kQcs * (1.0 / np.array(dr)**3.0) # Coulomb's law      TODO Update constants
 	forcefield  = np.transpose(np.transpose(drv) * r3) # transpose the distance array, multiply by force, transpose back
 	#return np.zeros(dimens) # uncomment to disable EM field force
 	return np.sum(forcefield,axis=0) # sum the value of axis 0 of the transposed & multiplied array
@@ -225,7 +225,7 @@ def dBA(aps,atomID,neighbour,th00,e0): # called once per bonded atom to each ato
 		# 2 loop over particles bonded to neighbour -1 (no two-member angles! angles need 3+ points)
 		for angledAtom in range(len(moleculeSim[neighbour,1])) if (moleculeSim[neighbour,1,angledAtom] != atID): 
 			# 2.1 load indices from angles array
-			a3 = int(moleculeSim[neighbour,1,angledAtom]])
+			a3 = int(moleculeSim[neighbour,1,angledAtom])
 			#print("a1: " + str(a1) + ", a2: " + str(a2) + ", a3: " + str(a3))
 
 			# 2.2 calculate the vectors between the atoms' current positions
@@ -304,7 +304,7 @@ def CreateMol(molName, numMolsCreate, player, position): 							# BROKEN : BONDS
 			newAtomData[0] = tpindex
 			# 4.2.2 load values - name, sigma(i), epsilon(i),population=1 for newly initialised type
 				# atomType format:	[name,[ sigma ],[ epsilon ],mass]
-			atTypes.append(newat.name,[newat.sig],[newat.eps]],1)
+			atTypes.append(newat.name,[newat.sig],[newat.eps],1)
 		else: 
 			# type already loaded, index value already copied
 			# increment population of atomType
