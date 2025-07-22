@@ -42,7 +42,8 @@ For now, I can say that there are plans for different biomes based on different 
 
 If you can lend a hand, let me know, but for now, I'm having fun figuring out this insane project! I'm teaching myself everything I need to know (with some help and advice from anyone who's actually educated and studied in the relevant fields), so you won't need a degree to make sense of it.
 
-## Screenshots
+## Screenshots and Video Previews
+https://github.com/user-attachments/assets/a78174f4-a33b-4b0c-bd1c-40500a4526af
 <img width="1114" height="644" alt="image" src="https://github.com/user-attachments/assets/992f4f22-11ab-4639-9881-cd7ab9335dd0" />
 <img width="1093" height="661" alt="image" src="https://github.com/user-attachments/assets/e0192043-fa2b-4b82-972f-ab7566122576" />
 <img width="1017" height="645" alt="image" src="https://github.com/user-attachments/assets/7b8489b0-6fdc-406f-8962-d79540f5bd84" />
