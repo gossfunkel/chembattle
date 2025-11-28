@@ -1,6 +1,6 @@
 # Hi! Welcome to the dev page for Chembattle <3
 
-This is my recent passion project that's occupied me lately. In a whiff of inspiration, a vision came to me of a 1v1 RTS-style card-based game, in which users create, develop, and utilise chemicals against each other. 
+This is a little passion project I'm hoping to revive one day. In a whiff of inspiration, a vision came to me of a 1v1 RTS-style card-based game, in which users create, develop, and utilise chemicals against each other. 
 
 I've not worked on a dev project in years, and honestly wasn't planning on it, but if it helps me waste less time and paper drawing out molecular diagrams for no good reason, I'll take it. I hope it ends up fun for more people than just me!
 
